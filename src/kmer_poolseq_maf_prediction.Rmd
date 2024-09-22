@@ -1,0 +1,175 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+rm(list = ls())
+
+library(ggplot2)
+library(plyr)
+```
+
+```{r}
+kmer_pairs = read.table("/mnt/scratch/robe1195/Josephs_Lab_Projects/kmers_poolseq/kmer_pairs.txt", fill = T, col.names = c("pos", "k1", "c1", "k2", "c2", "k3", "c3", "k4", "c4"))
+
+# exclude sites with non-isolated snps
+kmer_pairs = kmer_pairs[!(kmer_pairs$k1 == ""),]
+kmer_pairs = kmer_pairs[!(kmer_pairs$k2 == ""),]
+kmer_pairs = kmer_pairs[(kmer_pairs$k3 == ""),]
+
+kmer_pairs = kmer_pairs[(mapply(function(x,y) sum(x!=y),strsplit(kmer_pairs$k1,""),strsplit(kmer_pairs$k2,"")) == 1),]
+
+kmer_pairs = kmer_pairs[(mapply(function(x,y) which(x!=y),strsplit(kmer_pairs$k1,""),strsplit(kmer_pairs$k2,"")) == 16),]
+       
+kmer_pairs = kmer_pairs[(c(1000, diff(kmer_pairs$pos)) > 15),] # remove non-isolated snps
+           
+kmer_pairs$c1 = as.numeric(kmer_pairs$c1)
+kmer_pairs$c2 = as.numeric(kmer_pairs$c2)
+
+# calculate minor allele frequency
+kmer_pairs$kmer_maf = pmin(kmer_pairs$c1, kmer_pairs$c2)/(kmer_pairs$c1 + kmer_pairs$c2)
+
+# load in actual allele freqs from simulations
+true_af = read.table("/mnt/scratch/robe1195/Josephs_Lab_Projects/kmers_poolseq/slim_allele_freqs.txt", col.names = c("chrom", "pos", "af"))
+
+# calculate minor allele frequencies
+true_af$af = as.numeric(true_af$af)
+true_af$snp_maf = pmin(true_af$af, 1 - true_af$af)
+
+# compare snp and k-mer mafs
+compare_maf = merge(true_af[,c("pos", "snp_maf")], kmer_pairs, by = "pos")
+compare_maf = compare_maf[!is.na(compare_maf$snp_maf),]
+
+# round k-mer mafs to nearest increment 
+cor.test(compare_maf$snp_maf, compare_maf$kmer_maf, method = "spearman")
+
+ggplot(compare_maf, aes(x = snp_maf, y = kmer_maf)) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0) +
+  theme_classic() +
+  labs(x = "True MAF", y = "Predicted MAF from k-mers")
+
+# what about for k-mers above some frequency threshold
+my_test = cor.test(compare_maf$snp_maf, compare_maf$kmer_maf, method = "spearman")
+
+ggplot(compare_maf, aes(x = snp_maf, y = kmer_maf)) +
+  geom_density_2d_filled() +
+  geom_abline(slope = 1, intercept = 0) +
+  theme_classic() +
+  theme(text = element_text(size = 20)) +
+  labs(x = "True MAF", y = "Predicted MAF from k-mers", title = paste("rho =", signif(my_test$estimate, 2), "; p =", signif(my_test$p.value, 2)))
+ggsave("/mnt/home/robe1195/tmp/kmer_maf_vs_truth_pool-seq.png", height= 7, width = 8)
+
+# site-frequency spectrum
+plotdata = melt(as.data.table(compare_maf[,c("pos", "snp_maf", "kmer_maf")]), id = "pos")
+
+ggplot(plotdata, aes(x = round(value*50), fill = variable)) +
+  geom_density(alpha = 0.5) +
+  theme_classic()
+
+ggplot(plotdata, aes(x = kmer_maf*50)) +
+  geom_density() +
+  theme_classic()
+
+ggplot(compare_maf, aes(x = snp_maf)) +
+  geom_histogram(binwidth = 0.05) +
+  theme_classic()
+
+ggplot(compare_maf, aes(x = kmer_maf)) +
+  geom_histogram(binwidth = 0.05) +
+  theme_classic()
+
+ggplot(compare_maf, aes(x = snp_maf)) +
+  geom_histogram(breaks = seq(from = 0, to = 0.5, by = 0.02)) +
+  theme_classic()
+
+ggplot(compare_maf, aes(x = kmer_maf)) +
+  geom_histogram(breaks = seq(from = 0, to = 0.5, by = 0.02)) +
+  theme_classic()
+
+# calculate error
+compare_maf$error = abs(compare_maf$kmer_maf - compare_maf$snp_maf)
+
+sum(compare_maf$error < 0.1)/nrow(compare_maf)
+
+ggplot(confident_sites, aes(x = total_cov, y = error)) +
+  geom_point() +
+  theme_classic()
+
+#
+compare_maf$snp_maf_bins = cut(compare_maf$snp_maf, breaks = seq(from = 0, to = 0.5, by = 0.05))
+compare_maf$kmer_maf_bins = cut(compare_maf$kmer_maf, breaks = seq(from = 0, to = 0.5, by = 0.05))
+
+observed <- table(compare_maf$kmer_maf_bins)  # Observed frequencies
+expected <- table(compare_maf$snp_maf_bins)  # Expected frequencies
+
+observed = observed[(expected != 0)]
+expected = expected[(expected != 0)]
+
+# Calculate Chi-Square statistic manually
+chi_sq_statistic <- sum((observed - expected)^2 / expected)
+df <- length(observed) - 1
+p_value <- 1 - pchisq(chi_sq_statistic, df)
+
+# Print results
+print(paste("Chi-Square Statistic:", chi_sq_statistic))
+print(paste("Degrees of Freedom:", df))
+print(paste("P-value:", p_value))
+
+```
+
+```{r}
+kmer_counts = read.table("/mnt/scratch/robe1195/Josephs_Lab_Projects/kmers_poolseq/kmer_counts.txt", col.names = c("k1", "c1"))
+
+alphabet = c("A","T","G","C")
+
+results = NULL
+
+while(nrow(kmer_counts) > 0){
+  # get focal k-mer
+  focal_kmer = kmer_counts[1,"k1"]
+  print(focal_kmer)
+
+  # generate variant k-mers
+  central_base = substr(focal_kmer, 16, 16)
+
+  var_bases = alphabet[!(alphabet %in% central_base)]
+
+  variant_kmers = rep(focal_kmer, times = 3)
+
+  for(i in 1:3){
+    var_base = var_bases[i]
+    substr(variant_kmers[i], 16, 16) = var_base
+  }
+
+  # add reverse complements
+  variant_kmers = c(variant_kmers, chartr("ATGC","TACG",variant_kmers))
+
+  # 
+  variant_kmers_index = which(kmer_counts$k1 %in% variant_kmers)
+  print(variant_kmers_index)
+
+  # store 
+  found_variant_kmers = kmer_counts[variant_kmers_index,"k1"]
+  found_variant_counts = kmer_counts[variant_kmers_index,"c1"]
+  
+  result = rbind(result, data.frame(focal_kmer, paste(found_variant_kmers, sep = ";"), paste(found_variant_counts, sep = ";")))
+  
+  # remove focal and variant k-mers from count table
+  kmer_counts = kmer_counts[c(-1, -1*variant_kmers_index),]
+
+}
+
+
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.

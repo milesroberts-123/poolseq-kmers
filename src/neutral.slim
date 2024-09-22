@@ -1,0 +1,38 @@
+initialize() {
+	defineConstant("L", 1e6);
+	initializeSLiMOptions(nucleotideBased=T);
+	initializeAncestralNucleotides(randomNucleotides(L));
+	initializeMutationTypeNuc("m1", 0.5, "f", 0.0);
+	initializeGenomicElementType("g1", m1, 1.0, mmJukesCantor(1e-7));
+	initializeGenomicElement(g1, 0, L-1);
+	initializeRecombinationRate(1e-8);
+}
+
+1 early() {
+	//c = sim.chromosome;
+	//catn("Ancestral: " + paste(c.ancestralNucleotides(format="char")));
+	//catn("positions: " + paste(0:(L-1)));
+	//catn();
+	catn("Creating subpopulations...");
+	sim.addSubpop("p1", 500);
+}
+
+5000 late() {
+
+	// random sample of 10 individuals
+	catn("Randomly sampling population...");
+	gs = p1.sampleIndividuals(25).genomes;
+
+	// output vcf of sample
+	catn("Outputting vcf...");
+	gs.outputVCF(filePath = "slim.vcf", simplifyNucleotides=T);
+
+	// output genome sequences of sample
+	catn("Outputting fasta...");
+	i = 1;
+	for (g in gs){
+		writeFile("slim.fasta", ">" + i, append = T);
+		writeFile("slim.fasta", paste(g.nucleotides(format="char"), sep = ""), append = T);
+		i = i + 1;
+	}
+}
