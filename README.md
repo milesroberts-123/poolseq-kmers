@@ -22,7 +22,11 @@ What about when the genome sequence is not repetitive? I could vary the shannon 
 
 * count k-mers with kmc
 
-* pair up k-mers that differ by one bp to identify mutations, calculate allele frequencies
+* use smudgeplot to get k-mers that differ at central base pair
+
+* calculate minor allele frequencies based on minor k-mer coverage
+
+* map k-mer coverages back to actual sequences using seqkit
 
 ## parameters
 

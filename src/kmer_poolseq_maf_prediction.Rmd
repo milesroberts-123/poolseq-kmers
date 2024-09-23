@@ -12,24 +12,34 @@ rm(list = ls())
 
 library(ggplot2)
 library(plyr)
+
+strReverse <- function(x) sapply(lapply(strsplit(x, NULL), rev), paste, collapse="")
+
 ```
 
 ```{r}
-kmer_pairs = read.table("/mnt/scratch/robe1195/Josephs_Lab_Projects/kmers_poolseq/kmer_pairs.txt", fill = T, col.names = c("pos", "k1", "c1", "k2", "c2", "k3", "c3", "k4", "c4"))
+
+kmer_pairs = read.table("/mnt/scratch/robe1195/Josephs_Lab_Projects/kmers_poolseq/smudgetest_middle_sequences.tsv", col.names = c("k1"))
+
+kmer_covs = read.table("/mnt/scratch/robe1195/Josephs_Lab_Projects/kmers_poolseq/smudgetest_middle_coverages.tsv", col.names = c("c1", "c2"))
+
+kmer_pairs = cbind(kmer_pairs, kmer_covs)
+
+#kmer_pairs = read.table("/mnt/scratch/robe1195/Josephs_Lab_Projects/kmers_poolseq/kmer_pairs.txt", fill = T, col.names = c("pos", "k1", "c1", "k2", "c2", "k3", "c3", "k4", "c4"))
 
 # exclude sites with non-isolated snps
-kmer_pairs = kmer_pairs[!(kmer_pairs$k1 == ""),]
-kmer_pairs = kmer_pairs[!(kmer_pairs$k2 == ""),]
-kmer_pairs = kmer_pairs[(kmer_pairs$k3 == ""),]
+#kmer_pairs = kmer_pairs[!(kmer_pairs$k1 == ""),]
+#kmer_pairs = kmer_pairs[!(kmer_pairs$k2 == ""),]
+#kmer_pairs = kmer_pairs[(kmer_pairs$k3 == ""),]
 
-kmer_pairs = kmer_pairs[(mapply(function(x,y) sum(x!=y),strsplit(kmer_pairs$k1,""),strsplit(kmer_pairs$k2,"")) == 1),]
+#kmer_pairs = kmer_pairs[(mapply(function(x,y) #sum(x!=y),strsplit(kmer_pairs$k1,""),strsplit(kmer_pairs$k2,"")) == 1),]
 
-kmer_pairs = kmer_pairs[(mapply(function(x,y) which(x!=y),strsplit(kmer_pairs$k1,""),strsplit(kmer_pairs$k2,"")) == 16),]
+#kmer_pairs = kmer_pairs[(mapply(function(x,y) which(x!=y),strsplit(kmer_pairs$k1,""),strsplit(kmer_pairs$k2,"")) == 16),]
        
-kmer_pairs = kmer_pairs[(c(1000, diff(kmer_pairs$pos)) > 15),] # remove non-isolated snps
+#kmer_pairs = kmer_pairs[(c(1000, diff(kmer_pairs$pos)) > 15),] # remove non-isolated snps
            
-kmer_pairs$c1 = as.numeric(kmer_pairs$c1)
-kmer_pairs$c2 = as.numeric(kmer_pairs$c2)
+#kmer_pairs$c1 = as.numeric(kmer_pairs$c1)
+#kmer_pairs$c2 = as.numeric(kmer_pairs$c2)
 
 # calculate minor allele frequency
 kmer_pairs$kmer_maf = pmin(kmer_pairs$c1, kmer_pairs$c2)/(kmer_pairs$c1 + kmer_pairs$c2)
@@ -41,8 +51,31 @@ true_af = read.table("/mnt/scratch/robe1195/Josephs_Lab_Projects/kmers_poolseq/s
 true_af$af = as.numeric(true_af$af)
 true_af$snp_maf = pmin(true_af$af, 1 - true_af$af)
 
+# get key for position to k-mers
+pos_kmer_key = read.table("/mnt/scratch/robe1195/Josephs_Lab_Projects/kmers_poolseq/center_kmer_pairs.txt", fill = T)
+
+pos_kmer_key = pos_kmer_key[(pos_kmer_key$V4 == ""),]
+pos_kmer_key = pos_kmer_key[(pos_kmer_key$V2 != ""),]
+
+pos_kmer_key$leftk = substr(pos_kmer_key$V2, 1, 15)
+pos_kmer_key$rightk = substr(pos_kmer_key$V2, 17, 31)
+
 # compare snp and k-mer mafs
-compare_maf = merge(true_af[,c("pos", "snp_maf")], kmer_pairs, by = "pos")
+kmer_pairs$leftk = substr(kmer_pairs$k1, 1, 15)
+kmer_pairs$rightk = substr(kmer_pairs$k1, 17, 31)
+
+compare_maf = merge(pos_kmer_key, kmer_pairs, by = c("leftk", "rightk"))
+
+pos_kmer_key$leftk = chartr("ATGC","TACG",pos_kmer_key$leftk)
+pos_kmer_key$rightk = chartr("ATGC","TACG",pos_kmer_key$rightk)
+
+pos_kmer_key$leftk = strReverse(pos_kmer_key$leftk)
+pos_kmer_key$leftk = strReverse(pos_kmer_key$rightk)
+compare_maf_rc = merge(pos_kmer_key, kmer_pairs, by = c("leftk", "rightk"))
+
+names(compare_maf)[3] = "pos"
+
+compare_maf = merge(true_af[,c("pos", "snp_maf")], compare_maf, by = "pos")
 compare_maf = compare_maf[!is.na(compare_maf$snp_maf),]
 
 # round k-mer mafs to nearest increment 
@@ -62,22 +95,23 @@ ggplot(compare_maf, aes(x = snp_maf, y = kmer_maf)) +
   geom_abline(slope = 1, intercept = 0) +
   theme_classic() +
   theme(text = element_text(size = 20)) +
-  labs(x = "True MAF", y = "Predicted MAF from k-mers", title = paste("rho =", signif(my_test$estimate, 2), "; p =", signif(my_test$p.value, 2)))
+  labs(x = "True MAF", y = "Predicted MAF from k-mers", title = paste("rho =", signif(my_test$estimate, 2), "; p =", paste(format(signif(my_test$p.value, 2), digits = 2))))
+
 ggsave("/mnt/home/robe1195/tmp/kmer_maf_vs_truth_pool-seq.png", height= 7, width = 8)
 
 # site-frequency spectrum
 plotdata = melt(as.data.table(compare_maf[,c("pos", "snp_maf", "kmer_maf")]), id = "pos")
 
-ggplot(plotdata, aes(x = round(value*50), fill = variable)) +
+ggplot(plotdata, aes(x = value, fill = variable)) +
   geom_density(alpha = 0.5) +
   theme_classic()
 
-ggplot(plotdata, aes(x = kmer_maf*50)) +
+ggplot(kmer_pairs, aes(x = kmer_maf)) +
   geom_density() +
   theme_classic()
 
-ggplot(compare_maf, aes(x = snp_maf)) +
-  geom_histogram(binwidth = 0.05) +
+ggplot(true_af[(true_af$snp_maf >= 0.05),], aes(x = snp_maf)) +
+  geom_density() +
   theme_classic()
 
 ggplot(compare_maf, aes(x = kmer_maf)) +
@@ -94,6 +128,8 @@ ggplot(compare_maf, aes(x = kmer_maf)) +
 
 # calculate error
 compare_maf$error = abs(compare_maf$kmer_maf - compare_maf$snp_maf)
+
+summary(compare_maf$error)
 
 sum(compare_maf$error < 0.1)/nrow(compare_maf)
 
@@ -126,13 +162,21 @@ print(paste("P-value:", p_value))
 ```{r}
 kmer_counts = read.table("/mnt/scratch/robe1195/Josephs_Lab_Projects/kmers_poolseq/kmer_counts.txt", col.names = c("k1", "c1"))
 
+ggplot(kmer_counts, aes(x = c1)) +
+  geom_histogram(binwidth = 1) +
+  geom_vline(xintercept = 5) +
+  theme_classic()
+
+# loop over k-mers to find ones that putative snps
 alphabet = c("A","T","G","C")
 
-results = NULL
+results = list()
 
+j = 1
 while(nrow(kmer_counts) > 0){
   # get focal k-mer
   focal_kmer = kmer_counts[1,"k1"]
+  focal_counts = kmer_counts[1,"c1"]
   print(focal_kmer)
 
   # generate variant k-mers
@@ -158,8 +202,15 @@ while(nrow(kmer_counts) > 0){
   found_variant_kmers = kmer_counts[variant_kmers_index,"k1"]
   found_variant_counts = kmer_counts[variant_kmers_index,"c1"]
   
-  result = rbind(result, data.frame(focal_kmer, paste(found_variant_kmers, sep = ";"), paste(found_variant_counts, sep = ";")))
-  
+  if(!identical(found_variant_kmers, character(0))){
+      results[[j]] = data.frame(focal_kmer,
+                            focal_counts,
+                            found_kmers = paste(found_variant_kmers, sep = ";"),
+                            found_counts = paste(found_variant_counts, sep = ";"))
+
+    j = j + 1
+  }
+
   # remove focal and variant k-mers from count table
   kmer_counts = kmer_counts[c(-1, -1*variant_kmers_index),]
 

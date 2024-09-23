@@ -47,3 +47,17 @@ join -t' ' -1 1 -2 1 -o 2.1,2.2 <(sort center_kmer_pair.txt) <(cat kmer_counts.s
 echo $i $(cat center_kmer_pair_counts.txt | tr '\n' ' ') >> kmer_pairs.txt
 
 done
+
+# get key for k-mers to snp positions
+readarray posarray < snp_positions.txt
+rm center_kmer_pairs.txt
+for i in "${posarray[@]}"
+do
+echo Extracting k-mers for snp $i
+
+center_start=$(($i-15))
+center_end=$(($i+15))
+
+cat slim.fasta | seqkit subseq -r $(echo $center_start):$(echo $center_end) | grep -v "^>" | sort -u | tr '\n' ' ' | echo $i $(cat -) >> center_kmer_pairs.txt
+done
+
