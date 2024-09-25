@@ -17,11 +17,24 @@ initialize() {
 	sim.addSubpop("p1", 500);
 }
 
+early(){
+	if(sim.cycle % 1000 == 0){
+		catn(sim.cycle);
+	}
+
+}
+
 5000 late() {
+
+	// randomly sample one individual to use for reference
+	reference = p1.sampleIndividuals(1).genomes;
+	catn("Outputting fasta...");
+	writeFile("reference.fasta", ">ref", append = T);
+	writeFile("reference.fasta", paste(reference.nucleotides(format="char"), sep = ""), append = T);
 
 	// random sample of 10 individuals
 	catn("Randomly sampling population...");
-	gs = p1.sampleIndividuals(25).genomes;
+	gs = p1.sampleIndividuals(50).genomes;
 
 	// output vcf of sample
 	catn("Outputting vcf...");

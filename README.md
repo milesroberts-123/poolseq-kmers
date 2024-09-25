@@ -38,4 +38,6 @@ What about when the genome sequence is not repetitive? I could vary the shannon 
 
 * coverage cutoff for k-mers
 
+## notes
 
+Dang, smudgeplot is going through a big update right now, which is just my luck. 

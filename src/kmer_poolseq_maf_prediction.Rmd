@@ -18,10 +18,10 @@ strReverse <- function(x) sapply(lapply(strsplit(x, NULL), rev), paste, collapse
 ```
 
 ```{r}
+# load pairs of k-mers
+kmer_pairs = read.table("/mnt/scratch/robe1195/Josephs_Lab_Projects/kmers_poolseq/kmerpairs_sequences.tsv", col.names = c("k1"))
 
-kmer_pairs = read.table("/mnt/scratch/robe1195/Josephs_Lab_Projects/kmers_poolseq/smudgetest_middle_sequences.tsv", col.names = c("k1"))
-
-kmer_covs = read.table("/mnt/scratch/robe1195/Josephs_Lab_Projects/kmers_poolseq/smudgetest_middle_coverages.tsv", col.names = c("c1", "c2"))
+kmer_covs = read.table("/mnt/scratch/robe1195/Josephs_Lab_Projects/kmers_poolseq/kmerpairs_coverages.tsv", col.names = c("c1", "c2"))
 
 kmer_pairs = cbind(kmer_pairs, kmer_covs)
 
@@ -45,7 +45,7 @@ kmer_pairs = cbind(kmer_pairs, kmer_covs)
 kmer_pairs$kmer_maf = pmin(kmer_pairs$c1, kmer_pairs$c2)/(kmer_pairs$c1 + kmer_pairs$c2)
 
 # load in actual allele freqs from simulations
-true_af = read.table("/mnt/scratch/robe1195/Josephs_Lab_Projects/kmers_poolseq/slim_allele_freqs.txt", col.names = c("chrom", "pos", "af"))
+true_af = read.table("/mnt/scratch/robe1195/Josephs_Lab_Projects/kmers_poolseq/slim_allele_freqs.txt", col.names = c("chrom", "pos", "af", "ac"))
 
 # calculate minor allele frequencies
 true_af$af = as.numeric(true_af$af)
@@ -54,8 +54,9 @@ true_af$snp_maf = pmin(true_af$af, 1 - true_af$af)
 # get key for position to k-mers
 pos_kmer_key = read.table("/mnt/scratch/robe1195/Josephs_Lab_Projects/kmers_poolseq/center_kmer_pairs.txt", fill = T)
 
-pos_kmer_key = pos_kmer_key[(pos_kmer_key$V4 == ""),]
+#pos_kmer_key = pos_kmer_key[(pos_kmer_key$V4 == ""),]
 pos_kmer_key = pos_kmer_key[(pos_kmer_key$V2 != ""),]
+pos_kmer_key = pos_kmer_key[(pos_kmer_key$V3 != ""),]
 
 pos_kmer_key$leftk = substr(pos_kmer_key$V2, 1, 15)
 pos_kmer_key$rightk = substr(pos_kmer_key$V2, 17, 31)
@@ -98,6 +99,14 @@ ggplot(compare_maf, aes(x = snp_maf, y = kmer_maf)) +
   labs(x = "True MAF", y = "Predicted MAF from k-mers", title = paste("rho =", signif(my_test$estimate, 2), "; p =", paste(format(signif(my_test$p.value, 2), digits = 2))))
 
 ggsave("/mnt/home/robe1195/tmp/kmer_maf_vs_truth_pool-seq.png", height= 7, width = 8)
+
+# smudgeplot
+ggplot(compare_maf, aes(x = kmer_maf, y = (c1+c2)/0.7763392)) +
+  geom_density_2d_filled() +
+  geom_hline(yintercept = 50) +
+  theme_classic() +
+  theme(text = element_text(size = 20)) +
+  labs(x = "Minor k-mer frequency", y = "Total pair coverage")
 
 # site-frequency spectrum
 plotdata = melt(as.data.table(compare_maf[,c("pos", "snp_maf", "kmer_maf")]), id = "pos")
