@@ -13,6 +13,7 @@ rule all:
 
 include: "rules/bcftools.smk"
 include: "rules/bwa.smk"
+include: "rules/compress.smk"
 include: "rules/fastp.smk"
 include: "rules/iss.smk"
 include: "rules/kmc.smk"
