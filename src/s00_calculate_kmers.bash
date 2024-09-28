@@ -10,23 +10,30 @@ bcftools view --samples-file samples.txt -Oz -o samples.vcf.gz slim.vcf.gz
 bcftools +fill-tags samples.vcf.gz -Oz > samples_filled.vcf.gz
 bcftools query -f '%CHROM %POS %AF %AC\n' samples_filled.vcf.gz > slim_allele_freqs.txt
 
+# separate out samples vs random reference
+mamba activate seqkit
+seqkit grep -v -p 1 -p 2 slim.fasta > samples.fasta
+
 ## generate reads from slim simulation
 #iss generate -g slim.fasta --cpus 4 --model miseq -n 300000 --abundance uniform --output reads
-iss generate -g samples.fasta --cpus 8 --model miseq -n 166667 --abundance uniform --output reads
+mamba activate insilicoseq
+#iss generate -g samples.fasta --cpus 8 --model miseq -n 166667 --abundance uniform --output reads
+iss generate -g samples.fasta --cpus 8 --model miseq -n 333334 --abundance uniform --output reads
 
 ## trim reads
 #fastp -u 40 -q 30 -l 31 -i reads_R1.fastq -I reads_R2.fastq -o trimmed_R1.fastq -O trimmed_R2.fastq
-fastp -u 40 -q 30 -l 31 -i reads_R1.fastq -I reads_R2.fastq -o trimmed_paired_R1.fastq -O trimmed_paired_R2.fastq --unpaired-1 trimmed_unpaired_R1.fastq --unpaired-2 trimmed_unpaired_R2.fastq
+mamba activate fastp
+fastp -u 40 -q 30 -l 31 -i reads_R1.fastq -I reads_R2.fastq -o trimmed_paired_R1.fastq -O trimmed_paired_R2.fastq --unpaired1 trimmed_unpaired_R1.fastq --unpaired2 trimmed_unpaired_R2.fastq
 
 ## count k-mers
+mamba activate kmc
 mkdir tmp_kmc
 
-kmc -ci3 -k31 trimmed_paired_R1.fastq tmp_R1 tmp_kmc
-kmc -ci3 -k31 trimmed_paired_R2.fastq tmp_R2 tmp_kmc
-kmc -ci3 -k31 trimmed_unpaired_R1.fastq tmp_u_R1 tmp_kmc
-kmc -ci3 -k31 trimmed_unpaired_R2.fastq tmp_u_R2 tmp_kmc
+kmc -ci1 -k31 trimmed_paired_R1.fastq tmp_R1 tmp_kmc
+kmc -ci1 -k31 trimmed_paired_R2.fastq tmp_R2 tmp_kmc
+kmc -ci1 -k31 trimmed_unpaired_R1.fastq tmp_u_R1 tmp_kmc
+kmc -ci1 -k31 trimmed_unpaired_R2.fastq tmp_u_R2 tmp_kmc
 
-#kmc_tools simple tmp_R1 tmp_R2 union union_R1_R2
 kmc_tools simple tmp_R1 tmp_R2 union union_R1_R2
 kmc_tools simple union_R1_R2 tmp_u_R1 union union_R1_R2_u1
 kmc_tools simple union_R1_R2_u1 tmp_u_R2 union union_R1_R2_u1_u2
@@ -39,30 +46,31 @@ kmc_tools transform union_R1_R2_u1_u2 dump kmer_counts.txt
 #kmc_tools transform fake_kmers dump fake_kmer_counts.txt
 
 # convert tab to space delimiter
-cat kmer_counts.txt | tr '\t' ' ' > kmer_counts.space
+#cat kmer_counts.txt | tr '\t' ' ' > kmer_counts.space
 
 # loop over slim vcf
 zcat samples_filled.vcf.gz | grep -v "^#" | cut -f 2 > snp_positions.txt
 
-readarray posarray < snp_positions.txt
+#readarray posarray < snp_positions.txt
 
-rm kmer_pairs.txt
-for i in "${posarray[@]}"
-do
-echo Extracting k-mers for snp $i
+#rm kmer_pairs.txt
+#for i in "${posarray[@]}"
+#do
+#echo Extracting k-mers for snp $i
 
-center_start=$(($i-15))
-center_end=$(($i+15))
+#center_start=$(($i-15))
+#center_end=$(($i+15))
 
-cat samples.fasta | seqkit subseq -r $(echo $center_start):$(echo $center_end) | grep -v "^>" | sort -u > center_kmer_pair.txt
+#cat samples.fasta | seqkit subseq -r $(echo $center_start):$(echo $center_end) | grep -v "^>" | sort -u > center_kmer_pair.txt
 
-join -t' ' -1 1 -2 1 -o 2.1,2.2 <(sort center_kmer_pair.txt) <(cat kmer_counts.space) > center_kmer_pair_counts.txt
+#join -t' ' -1 1 -2 1 -o 2.1,2.2 <(sort center_kmer_pair.txt) <(cat kmer_counts.space) > center_kmer_pair_counts.txt
 
-echo $i $(cat center_kmer_pair_counts.txt | tr '\n' ' ') >> kmer_pairs.txt
+#echo $i $(cat center_kmer_pair_counts.txt | tr '\n' ' ') >> kmer_pairs.txt
 
-done
+#done
 
 # get key for k-mers to snp positions
+mamba activate seqkit
 readarray posarray < snp_positions.txt
 rm center_kmer_pairs.txt
 for i in "${posarray[@]}"
@@ -76,4 +84,17 @@ cat slim.fasta | seqkit subseq -r $(echo $center_start):$(echo $center_end) | gr
 done
 
 # run smudgeplot to extract pairs of k-mers that differ at the central bp
+mamba activate smudgeplot
 smudgeplot.py hetkmers --middle kmer_counts.txt
+
+# align reads to reference
+bwa index ref.fasta
+bwa mem -R '@RG\tID:{samplePe}\tSM:{samplePe}' -t 8 ref.fasta trimmed_paired_R1.fastq trimmed_paired_R2.fastq | samtools sort -O bam > trimmed.bam
+
+# create mpileup file with samtools
+# varscan to call snps
+mamba activate varscan
+samtools mpileup -f ref.fasta trimmed.bam | varscan pileup2snp --min-coverage 10 > calls.tsv
+
+
+
