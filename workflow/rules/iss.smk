@@ -1,10 +1,10 @@
 def get_L(wildcards):
         L = parameters.loc[parameters["ID"] == wildcards.ID, "L"]
-        return float(L.iloc[0])
+        return int(L.iloc[0])
 
 def get_cov(wildcards):
         cov = parameters.loc[parameters["ID"] == wildcards.ID, "cov"]
-        return float(cov.iloc[0])
+        return int(cov.iloc[0])
 
 rule iss:
 	input:
