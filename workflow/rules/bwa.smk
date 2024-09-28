@@ -5,12 +5,19 @@ rule bwa:
 		read2 = "trimmed_paired_R2_{ID}.fastq"
 	output:
 		"trimmed_{ID}.bam"
-	threads: 8 
+	threads: 2
+	resources:
+		mem_mb_per_cpu=8000,
+		time=239
+	conda:
+		"../envs/bwa.yml"
+	log: 
+		"logs/bwa_{ID}.log"
 	shell:
 		"""
 		# index reference
-		bwa index {input.reffasta}
+		bwa index {input.reffasta} &> {log}
 
 		# align reads to reference
-		bwa mem -R '@RG\tID:{wildcards.ID}\tSM:{wildcards.ID}' -t threads {input.reffasta} {input.read1} {input.read2} | samtools sort -O bam > {output}
+		bwa mem -R '@RG\tID:{wildcards.ID}\tSM:{wildcards.ID}' -t {threads} {input.reffasta} {input.read1} {input.read2} | samtools sort -O bam > {output} &> {log}
 		"""

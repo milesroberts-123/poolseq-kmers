@@ -10,16 +10,18 @@ rule bcftools:
                 time=239
         conda:
                 "../envs/bcftools.yml"
+	log:
+		"logs/bcftools_{ID}.log"
 	shell:
 		"""
 		# compress simulation outputs
-		bgzip slim_{wildcards.ID}.vcf
-		tabix slim_{wildcards.ID}.vcf.gz
+		bgzip slim_{wildcards.ID}.vcf &> {log}
+		tabix slim_{wildcards.ID}.vcf.gz &> {log}
 
 		# remove reference
-		bcftools view --samples-file ../config/samples.txt -Oz -o {output.samplevcf} slim_{wildcards.ID}.vcf.gz
+		bcftools view --samples-file ../config/samples.txt -Oz -o {output.samplevcf} slim_{wildcards.ID}.vcf.gz &> {log}
 
 		# calculate allele frequencies
-		bcftools +fill-tags {output.samplevcf} -Oz > samples_filled_{wildcards.ID}.vcf.gz
-		bcftools query -f '%CHROM %POS %AF %AC\n' samples_filled_{wildcards.ID}.vcf.gz > {output.allelefreq}
+		bcftools +fill-tags {output.samplevcf} -Oz > samples_filled_{wildcards.ID}.vcf.gz &> {log}
+		bcftools query -f '%CHROM %POS %AF %AC\n' samples_filled_{wildcards.ID}.vcf.gz > {output.allelefreq} &> {log}
 		"""

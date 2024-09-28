@@ -10,5 +10,7 @@ rule iss:
                 time=239
         conda:
                 "../envs/iss.yml"
+	log:
+		"logs/iss_{ID}.log"
 	shell:
-		"iss generate -g {input} --cpus {threads} --model miseq -n 333334 --abundance uniform --output reads_{wildcards.ID}"
+		"iss generate -g {input} --cpus {threads} --model miseq -n 333334 --abundance uniform --output reads_{wildcards.ID} &> {log}"
