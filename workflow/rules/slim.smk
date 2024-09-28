@@ -22,6 +22,10 @@ def get_kappa(wildcards):
         kappa = parameters.loc[parameters["ID"] == wildcards.ID, "kappa"]
         return float(kappa.iloc[0])
 
+def get_L(wildcards):
+        L = parameters.loc[parameters["ID"] == wildcards.ID, "L"]
+        return float(L.iloc[0])
+
 rule slim:
 	input:
 		"../config/parameters.tsv"
@@ -37,6 +41,7 @@ rule slim:
 		mu=get_mu,
 		R=get_R,
 		kappa=get_kappa,
+		L=get_L
 	threads: 1
 	resources:
 		mem_mb_per_cpu=8000,
@@ -46,5 +51,5 @@ rule slim:
 	shell:
 		"""
 		# run simulation
-		slim -d ID={wildcards.ID} -d sigma={params.sigma} -d N={params.N} -d mu={params.mu} -d R={params.R} -d kappa={params.kappa} -d n={params.n} scripts/neutral.slim &> {log}
+		slim -d ID={wildcards.ID} -d sigma={params.sigma} -d N={params.N} -d mu={params.mu} -d R={params.R} -d kappa={params.kappa} -d n={params.n} -d={params.L} scripts/neutral.slim &> {log}
 		"""
