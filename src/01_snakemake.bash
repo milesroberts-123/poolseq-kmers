@@ -8,7 +8,6 @@
 #SBATCH --mail-user=robe1195@msu.edu
 #SBATCH --partition=josephsnodes
 #SBATCH --account=josephsnodes
-#SBATCH --reservation=centos_compute
 
 # output information about how this job is running using bash commands
 echo "This job is running on $HOSTNAME on `date`"
