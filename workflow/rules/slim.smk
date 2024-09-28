@@ -51,5 +51,5 @@ rule slim:
 	shell:
 		"""
 		# run simulation
-		slim -d ID={wildcards.ID} -d sigma={params.sigma} -d N={params.N} -d mu={params.mu} -d R={params.R} -d kappa={params.kappa} -d n={params.n} -d={params.L} scripts/neutral.slim &> {log}
+		slim -d ID={wildcards.ID} -d sigma={params.sigma} -d N={params.N} -d mu={params.mu} -d R={params.R} -d kappa={params.kappa} -d n={params.n} -d L={params.L} scripts/neutral.slim &> {log}
 		"""
