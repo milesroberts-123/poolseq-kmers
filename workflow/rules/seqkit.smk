@@ -18,10 +18,10 @@ rule seqkit:
 	shell:
 		"""
 		# create file with reference genome removed
-		seqkit grep -v -n -p 1 -p 2 {input.slimfasta} > {output.samplefasta} &>> {log}
+		seqkit grep -v -n -p 1 -p 2 {input.slimfasta} > {output.samplefasta}
 
 		# get a haploid reference genome
-		seqkit grep -n -p 1 {input.slimfasta} > {output.reffasta} &>> {log}
+		seqkit grep -n -p 1 {input.slimfasta} > {output.reffasta}
 		
 		# get list of snp positions
 		zcat {input.vcffilled} | grep -v "^#" | cut -f 2 > {output.snppos}
