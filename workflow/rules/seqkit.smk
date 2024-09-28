@@ -18,10 +18,10 @@ rule seqkit:
 	shell:
 		"""
 		# create file with reference genome removed
-		seqkit grep -v -n -p 1 -p 2 {input.slimfasta} > {output.samplefasta} &> {log}
+		seqkit grep -v -n -p 1 -p 2 {input.slimfasta} > {output.samplefasta} &>> {log}
 
 		# get a haploid reference genome
-		seqkit grep -n -p 1 {input.slimfasta} > {output.reffasta} &> {log}
+		seqkit grep -n -p 1 {input.slimfasta} > {output.reffasta} &>> {log}
 		
 		# get list of snp positions
 		zcat {input.vcffilled} | grep -v "^#" | cut -f 2 > {output.snppos}
@@ -37,7 +37,7 @@ rule seqkit:
 		# loop over snp positions
 		for i in "${{posarray[@]}}"
 		do
-			echo Extracting k-mers for snp $i &> {log}
+			echo Extracting k-mers for snp $i &>> {log}
 
 			center_start=$(($i-15))
 			center_end=$(($i+15))
