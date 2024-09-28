@@ -30,8 +30,8 @@ rule slim:
 	input:
 		"../config/parameters.tsv"
 	output:
-		temp("slim_{ID}.vcf"),
-		temp("slim_{ID}.fasta")
+		"slim_{ID}.vcf",
+		"slim_{ID}.fasta"
 	log:
 		"logs/slim/{ID}.log"
 	params:

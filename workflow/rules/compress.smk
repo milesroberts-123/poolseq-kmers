@@ -14,6 +14,6 @@ rule compress:
 		"logs/compress/{ID}.log"
 	shell:
 		"""
-			bgzip {input} &> {log}
-			tabix {input}.gz &> {log}
+		bgzip {input} &> {log}
+		tabix {input}.gz &> {log}
 		"""
