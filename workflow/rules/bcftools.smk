@@ -1,6 +1,7 @@
 rule bcftools:
 	input:
-		"slim_{ID}.vcf",
+		"slim_{ID}.vcf.gz",
+		"slim_{ID}.vcf.gz.tbi",
 	output:
 		samplevcf = "samples_{ID}.vcf.gz",
 		allelefreq = "slim_allele_freqs_{ID}.txt",
@@ -15,15 +16,6 @@ rule bcftools:
 		"logs/bcftools/{ID}.log"
 	shell:
 		"""
-		# compress simulation outputs
-		if [ -e "{input}.gz" ]; then
-			bgzip {input} &> {log}
-		fi
-
-		if [ -e "{input}.gz.tbi" ]; then
-			tabix {input}.gz &> {log}
-		fi
-
 		# remove reference
 		bcftools view --samples-file ../config/ref.txt -Oz -o {output.samplevcf} {input}.gz &> {log}
 
