@@ -12,9 +12,9 @@ rule iss:
 	output:
 		"reads_{ID}_R1.fastq",
 		"reads_{ID}_R2.fastq"
-	threads: 1
+	threads: 4
 	resources:
-		mem_mb_per_cpu=8000,
+		mem_mb_per_cpu=2000,
 		time=239
 	conda:
 		"../envs/iss.yaml"
