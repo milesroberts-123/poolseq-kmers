@@ -12,7 +12,7 @@ rule fastp:
 		mem_mb_per_cpu=8000,
 		time=239
 	conda:
-		"../envs/fastp.yml"
+		"../envs/fastp.yaml"
 	log: 
 		"logs/fastp_{ID}.log"
 	shell:

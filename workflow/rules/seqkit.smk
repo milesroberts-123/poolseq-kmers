@@ -12,7 +12,7 @@ rule seqkit:
 		mem_mb_per_cpu=8000,
 		time=239
 	conda:
-		"../envs/seqkit.yml"
+		"../envs/seqkit.yaml"
 	log: 
 		"logs/seqkit_{ID}.log"
 	shell:
@@ -35,7 +35,7 @@ rule seqkit:
 		fi
 		
 		# loop over snp positions
-		for i in "${posarray[@]}"
+		for i in "${{posarray[@]}}"
 		do
 			echo Extracting k-mers for snp $i &> {log}
 

@@ -9,7 +9,7 @@ rule smudgeplot:
 		mem_mb_per_cpu=8000,
 		time=239
 	conda:
-		"../envs/smudgeplot.yml"
+		"../envs/smudgeplot.yaml"
 	log: 
 		"logs/smudgeplot_{ID}.log"
 	shell:

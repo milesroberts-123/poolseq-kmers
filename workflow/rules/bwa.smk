@@ -10,7 +10,7 @@ rule bwa:
 		mem_mb_per_cpu=8000,
 		time=239
 	conda:
-		"../envs/bwa.yml"
+		"../envs/bwa.yaml"
 	log: 
 		"logs/bwa_{ID}.log"
 	shell:

@@ -1,0 +1,22 @@
+# load packages
+import pandas as pd
+
+# load samples
+parameters = pd.read_table("../config/parameters.tsv", sep="\t", dtype={"ID": str}).set_index(["ID"], drop=False)
+
+# gather all images for training CNN
+rule all:
+	input:
+		expand("calls_{ID}.tsv", ID=parameters.index.get_level_values("ID")),
+		expand("kmerpairs_{ID}_coverages.tsv", ID=parameters.index.get_level_values("ID")),
+		expand("kmerpairs_{ID}_sequences.tsv", ID=parameters.index.get_level_values("ID")),
+
+include: "rules/bcftools.smk"
+include: "rules/bwa.smk"
+include: "rules/fastp.smk"
+include: "rules/iss.smk"
+include: "rules/kmc.smk"
+include: "rules/seqkit.smk"
+include: "rules/slim.smk"
+include: "rules/smudgeplot.smk"
+include: "rules/varscan.smk"

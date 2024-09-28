@@ -9,7 +9,7 @@ rule varscan:
 		mem_mb_per_cpu=8000,
 		time=239
 	conda:
-		"../envs/varscan.yml"
+		"../envs/varscan.yaml"
 	log: 
 		"logs/varscan_{ID}.log"
 	shell:

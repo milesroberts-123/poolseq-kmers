@@ -11,7 +11,7 @@ rule kmc:
 		mem_mb_per_cpu=8000,
 		time=239
 	conda:
-		"../envs/kmc.yml"
+		"../envs/kmc.yaml"
 	log: 
 		"logs/kmc_{ID}.log"
 	shell:
