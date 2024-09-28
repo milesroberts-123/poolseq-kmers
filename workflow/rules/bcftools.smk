@@ -21,5 +21,5 @@ rule bcftools:
 
 		# calculate allele frequencies
 		bcftools +fill-tags {output.samplevcf} -Oz -o {output.filledvcf} &> {log}
-		bcftools query -f '%CHROM %POS %AF %AC\n' {output.filledvcf} > {output.allelefreq} &> {log}
+		bcftools query -f '%CHROM %POS %AF %AC\n' -o {output.allelefreq} {output.filledvcf} &> {log}
 		"""
