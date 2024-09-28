@@ -24,18 +24,18 @@ rule kmc:
 		mkdir tmp_kmc_{wildcards.ID}
 
 		# count k-mers
-		kmc -ci1 -k31 {input.pread1} tmp_R1_{wildcards.ID} tmp_kmc_{wildcards.ID} &> {log}
-		kmc -ci1 -k31 {input.pread2} tmp_R2_{wildcards.ID} tmp_kmc_{wildcards.ID} &> {log}
-		kmc -ci1 -k31 {input.uread1} tmp_u_R1_{wildcards.ID} tmp_kmc_{wildcards.ID} &> {log}
-		kmc -ci1 -k31 {input.uread2} tmp_u_R2_{wildcards.ID} tmp_kmc_{wildcards.ID} &> {log}
+		kmc -ci1 -k31 {input.pread1} tmp_R1_{wildcards.ID} tmp_kmc_{wildcards.ID} &>> {log}
+		kmc -ci1 -k31 {input.pread2} tmp_R2_{wildcards.ID} tmp_kmc_{wildcards.ID} &>> {log}
+		kmc -ci1 -k31 {input.uread1} tmp_u_R1_{wildcards.ID} tmp_kmc_{wildcards.ID} &>> {log}
+		kmc -ci1 -k31 {input.uread2} tmp_u_R2_{wildcards.ID} tmp_kmc_{wildcards.ID} &>> {log}
 
 		# combine k-mer counts into one database
-		kmc_tools simple tmp_R1_{wildcards.ID} tmp_R2_{wildcards.ID} union union_R1_R2_{wildcards.ID} &> {log}
-		kmc_tools simple union_R1_R2 tmp_u_R1_{wildcards.ID} union union_R1_R2_u1_{wildcards.ID} &> {log}
-		kmc_tools simple union_R1_R2_u1 tmp_u_R2_{wildcards.ID} union union_R1_R2_u1_u2_{wildcards.ID} &> {log}
+		kmc_tools simple tmp_R1_{wildcards.ID} tmp_R2_{wildcards.ID} union union_R1_R2_{wildcards.ID} &>> {log}
+		kmc_tools simple union_R1_R2_{wildcards.ID} tmp_u_R1_{wildcards.ID} union union_R1_R2_u1_{wildcards.ID} &>> {log}
+		kmc_tools simple union_R1_R2_u1_{wildcards.ID} tmp_u_R2_{wildcards.ID} union union_R1_R2_u1_u2_{wildcards.ID} &>> {log}
 
 		# dump all k-mers to text file
-		kmc_tools transform union_R1_R2_u1_u2_{wildcards.ID} dump {output} &> {log}
+		kmc_tools transform union_R1_R2_u1_u2_{wildcards.ID} dump {output} &>> {log}
 
 		# delete tmp directory
 		rm -r tmp_*_{wildcards.ID}
