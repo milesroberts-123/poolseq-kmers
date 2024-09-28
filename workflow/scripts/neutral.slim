@@ -5,14 +5,14 @@ initialize() {
 	initializeGenomicElementType("g1", m1, 1.0, mmJukesCantor(mu));
 	initializeGenomicElement(g1, 0, asInteger(L)-1);
 	initializeRecombinationRate(R);
-
-	// reschedule simulation end
-	community.rescheduleScriptBlock(s1, start=asInteger(kappa), end=asInteger(kappa));
 }
 
 1 early() {
 	catn("Creating subpopulations...");
 	sim.addSubpop("p1", asInteger(N));
+
+	// reschedule simulation end
+	community.rescheduleScriptBlock(s1, start=asInteger(kappa), end=asInteger(kappa));
 }
 
 early(){
