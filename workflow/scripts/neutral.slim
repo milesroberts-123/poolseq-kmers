@@ -1,19 +1,18 @@
 initialize() {
 	initializeSLiMOptions(nucleotideBased=T);
-	initializeAncestralNucleotides(randomNucleotides(L));
+	initializeAncestralNucleotides(randomNucleotides(asInteger(L)));
 	initializeMutationTypeNuc("m1", 0.5, "f", 0.0);
 	initializeGenomicElementType("g1", m1, 1.0, mmJukesCantor(mu));
-	initializeGenomicElement(g1, 0, L-1);
+	initializeGenomicElement(g1, 0, asInteger(L)-1);
 	initializeRecombinationRate(R);
 
 	// reschedule simulation end
-	community.rescheduleScriptBlock(s1, start=kappa, end=kappa);
-
+	community.rescheduleScriptBlock(s1, start=asInteger(kappa), end=asInteger(kappa));
 }
 
 1 early() {
 	catn("Creating subpopulations...");
-	sim.addSubpop("p1", N);
+	sim.addSubpop("p1", asInteger(N));
 }
 
 early(){
@@ -25,7 +24,7 @@ early(){
 s1 10000000 late() {
 	// random sample of 10 individuals
 	catn("Randomly sampling population...");
-	gs = p1.sampleIndividuals(n).genomes;
+	gs = p1.sampleIndividuals(asInteger(n)).genomes;
 
 	// output vcf of sample
 	catn("Outputting vcf...");
