@@ -17,7 +17,7 @@ rule bcftools:
 	shell:
 		"""
 		# remove reference
-		bcftools view --samples-file ../config/ref.txt -Oz -o {output.samplevcf} {input}.gz &> {log}
+		bcftools view --samples-file ^../config/ref.txt -Oz -o {output.samplevcf} {input}.gz &> {log}
 
 		# calculate allele frequencies
 		bcftools +fill-tags {output.samplevcf} -Oz > {output.filledvcf} &> {log}
