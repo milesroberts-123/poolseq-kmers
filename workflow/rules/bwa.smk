@@ -19,5 +19,5 @@ rule bwa:
 		bwa index {input.reffasta} &>> {log}
 
 		# align reads to reference
-		bwa mem -R '@RG\tID:{wildcards.ID}\tSM:{wildcards.ID}' -t {threads} {input.reffasta} {input.read1} {input.read2} | samtools sort -O bam > {output}
+		bwa mem -R '@RG\\tID:{wildcards.ID}\\tSM:{wildcards.ID}' -t {threads} {input.reffasta} {input.read1} {input.read2} | samtools sort -O bam > {output}
 		"""

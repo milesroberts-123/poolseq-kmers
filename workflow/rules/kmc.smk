@@ -16,6 +16,11 @@ rule kmc:
 		"logs/kmc/{ID}.log"
 	shell:
 		"""
+		# create directory
+		if [ -d "tmp_kmc_{wildcards.ID}" ]; then
+			rm -r tmp_kmc_{wildcards.ID}
+		fi
+
 		mkdir tmp_kmc_{wildcards.ID}
 
 		# count k-mers
