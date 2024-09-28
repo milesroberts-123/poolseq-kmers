@@ -12,15 +12,20 @@ rule bcftools:
 	conda:
 		"../envs/bcftools.yaml"
 	log:
-		"logs/bcftools_{ID}.log"
+		"logs/bcftools/{ID}.log"
 	shell:
 		"""
 		# compress simulation outputs
-		bgzip slim_{wildcards.ID}.vcf &> {log}
-		tabix slim_{wildcards.ID}.vcf.gz &> {log}
+		if [ -e "{input}.gz" ]; then
+			bgzip {input} &> {log}
+		fi
+
+		if [ -e "{input}.gz.tbi" ]; then
+			tabix {input}.gz &> {log}
+		fi
 
 		# remove reference
-		bcftools view --samples-file ../config/ref.txt -Oz -o {output.samplevcf} slim_{wildcards.ID}.vcf.gz &> {log}
+		bcftools view --samples-file ../config/ref.txt -Oz -o {output.samplevcf} {input}.gz &> {log}
 
 		# calculate allele frequencies
 		bcftools +fill-tags {output.samplevcf} -Oz > {output.filledvcf} &> {log}

@@ -11,7 +11,7 @@ rule varscan:
 	conda:
 		"../envs/varscan.yaml"
 	log: 
-		"logs/varscan_{ID}.log"
+		"logs/varscan/{ID}.log"
 	shell:
 		"""
 		samtools mpileup -f {input.reffasta} {input.trimbam} | varscan pileup2snp > {output} &> {log}

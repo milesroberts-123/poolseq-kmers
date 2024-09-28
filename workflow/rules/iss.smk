@@ -19,7 +19,7 @@ rule iss:
 	conda:
 		"../envs/iss.yaml"
 	log:
-		"logs/iss_{ID}.log"
+		"logs/iss/{ID}.log"
 	params:
 		L = get_L,
 		cov = get_cov

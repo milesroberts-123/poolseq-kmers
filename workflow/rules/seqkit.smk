@@ -14,7 +14,7 @@ rule seqkit:
 	conda:
 		"../envs/seqkit.yaml"
 	log: 
-		"logs/seqkit_{ID}.log"
+		"logs/seqkit/{ID}.log"
 	shell:
 		"""
 		# create file with reference genome removed

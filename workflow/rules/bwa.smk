@@ -12,7 +12,7 @@ rule bwa:
 	conda:
 		"../envs/bwa.yaml"
 	log: 
-		"logs/bwa_{ID}.log"
+		"logs/bwa/{ID}.log"
 	shell:
 		"""
 		# index reference

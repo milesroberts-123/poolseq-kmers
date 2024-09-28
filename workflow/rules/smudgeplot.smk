@@ -11,6 +11,6 @@ rule smudgeplot:
 	conda:
 		"../envs/smudgeplot.yaml"
 	log: 
-		"logs/smudgeplot_{ID}.log"
+		"logs/smudgeplot/{ID}.log"
 	shell:
 		"smudgeplot.py hetkmers -o kmerpairs_{wildcards.ID} --middle {input} &> {log}"

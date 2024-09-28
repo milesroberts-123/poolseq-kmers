@@ -14,6 +14,6 @@ rule fastp:
 	conda:
 		"../envs/fastp.yaml"
 	log: 
-		"logs/fastp_{ID}.log"
+		"logs/fastp/{ID}.log"
 	shell:
 		"fastp -u 40 -q 30 -l 31 -i {input.read1} -I {input.read2} -o {output.pread1} -O {output.pread2} --unpaired1 {output.uread1} --unpaired2 {output.uread2} &> {log}"

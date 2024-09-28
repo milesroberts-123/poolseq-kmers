@@ -13,7 +13,7 @@ rule kmc:
 	conda:
 		"../envs/kmc.yaml"
 	log: 
-		"logs/kmc_{ID}.log"
+		"logs/kmc/{ID}.log"
 	shell:
 		"""
 		mkdir tmp_kmc_{wildcards.ID}
