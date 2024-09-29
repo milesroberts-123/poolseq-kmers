@@ -22,9 +22,9 @@ early(){
 }
 
 s1 10000000 late() {
-	// random sample of 10 individuals
+	// random sample of individuals, grab an extra individual to use as a refernce
 	catn("Randomly sampling population...");
-	gs = p1.sampleIndividuals(asInteger(n)).genomes;
+	gs = p1.sampleIndividuals(asInteger(n) + 1).genomes;
 
 	// output vcf of sample
 	catn("Outputting vcf...");

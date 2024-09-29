@@ -7,7 +7,8 @@ params = expand.grid(
   mu = c(1e-8),
   R = c(1e-8),
   cov = c(20, 50, 80, 100, 200),
-  L = c(1e6)
+  L = c(1e6),
+  sequencer = c("miseq", "hiseq", "nextseq", "novaseq")
 )
 
 params$ID = 1:nrow(params)

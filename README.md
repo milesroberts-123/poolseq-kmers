@@ -44,6 +44,8 @@ Dang, smudgeplot is going through a big update right now, which is just my luck.
 
 ## to do
 
+- [x] add option to vary sequencing machine
+
 - [ ] update to smudgeplot >0.3.0, once we're able to get k-mer sequences again
 
 - [ ] figure out how to use unpaired reads in varscan 
