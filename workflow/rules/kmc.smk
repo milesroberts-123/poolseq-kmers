@@ -38,5 +38,5 @@ rule kmc:
 		kmc_tools transform union_R1_R2_u1_u2_{wildcards.ID} dump {output} &>> {log}
 
 		# delete tmp directory
-		rm -r tmp_*_{wildcards.ID}
+		rm -r tmp_*_{wildcards.ID} union_*_{wildcards.ID}
 		"""

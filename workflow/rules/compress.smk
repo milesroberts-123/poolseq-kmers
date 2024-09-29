@@ -2,8 +2,8 @@ rule compress:
 	input:
 		"slim_{ID}.vcf",
 	output:
-		"slim_{ID}.vcf.gz",
-		"slim_{ID}.vcf.gz.tbi"
+		temp("slim_{ID}.vcf.gz"),
+		temp("slim_{ID}.vcf.gz.tbi")
 	threads: 1
 	resources:
 		mem_mb_per_cpu=8000,

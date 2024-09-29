@@ -6,7 +6,7 @@ rule seqkit:
 		samplefasta = "samples_{ID}.fasta",
 		reffasta = "ref_{ID}.fasta",
 		poskey = "center_kmer_pairs_{ID}.txt",
-		snppos = "snp_positions_{ID}.txt"
+		snppos = temp("snp_positions_{ID}.txt")
 	threads: 1
 	resources:
 		mem_mb_per_cpu=8000,
