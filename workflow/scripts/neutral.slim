@@ -12,7 +12,7 @@ initialize() {
 	sim.addSubpop("p1", asInteger(N));
 
 	// reschedule simulation end
-	community.rescheduleScriptBlock(s1, start=asInteger(kappa), end=asInteger(kappa));
+	community.rescheduleScriptBlock(s1, start=10*asInteger(N), end=10*asInteger(N));
 }
 
 early(){

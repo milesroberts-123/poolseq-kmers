@@ -1,15 +1,16 @@
 # create data frame of workflow parameters
-params = data.frame(
-  ID = 1:5,
-  N = 1000,
-  sigma = 0,
+params = expand.grid(
+  rep = c(1:5),
+  N = c(500, 1000, 5000, 10000),
   n = c(5, 10, 25, 50, 100),
-  mu = 1e-8,
-  R = 1e-8,
-  kappa = 10000,
-  cov = 100,
-  L = 1e6
+  sigma = c(0, 0.5, 1),
+  mu = c(1e-9, 5e-9, 1e-8),
+  R = c(1e-9, 1e-8, 1e-7),
+  cov = c(20, 50, 80, 100, 200),
+  L = c(5e5, 1e6, 5e6)
 )
+
+params$ID = 1:nrow(params)
 
 # save
 write.table(params, "../config/parameters.tsv", sep = "\t", quote = F, row.names = F)
