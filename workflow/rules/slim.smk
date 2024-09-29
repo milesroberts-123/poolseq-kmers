@@ -36,7 +36,6 @@ rule slim:
 		n=get_n,
 		mu=get_mu,
 		R=get_R,
-		kappa=get_kappa,
 		L=get_L
 	threads: 1
 	resources:
@@ -47,5 +46,5 @@ rule slim:
 	shell:
 		"""
 		# run simulation
-		slim -d ID={wildcards.ID} -d sigma={params.sigma} -d N={params.N} -d mu={params.mu} -d R={params.R} -d kappa={params.kappa} -d n={params.n} -d L={params.L} scripts/neutral.slim &> {log}
+		slim -d ID={wildcards.ID} -d sigma={params.sigma} -d N={params.N} -d mu={params.mu} -d R={params.R} -d n={params.n} -d L={params.L} scripts/neutral.slim &> {log}
 		"""
