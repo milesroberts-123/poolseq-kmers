@@ -4,7 +4,7 @@ rule varscan:
 		trimbam = "trimmed_{ID}.bam"
 	output:
 		"calls_{ID}.tsv"
-	threads: 8
+	threads: 1
 	resources:
 		mem_mb_per_cpu=8000,
 		time=239

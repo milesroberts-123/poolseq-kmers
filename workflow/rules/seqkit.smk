@@ -1,3 +1,7 @@
+def get_L(wildcards):
+        L = parameters.loc[parameters["ID"] == wildcards.ID, "L"]
+        return int(L.iloc[0])
+
 rule seqkit:
 	input:
 		vcffilled= "samples_filled_{ID}.vcf.gz",
@@ -11,6 +15,8 @@ rule seqkit:
 	resources:
 		mem_mb_per_cpu=8000,
 		time=239
+	params:
+		L=get_L
 	conda:
 		"../envs/seqkit.yaml"
 	log: 
@@ -39,9 +45,20 @@ rule seqkit:
 		do
 			echo Extracting k-mers for snp $i &>> {log}
 
+			# calculate bounds of k-mers
 			center_start=$(($i-15))
 			center_end=$(($i+15))
 
+			# check if bounds of k-mer extend beyond edges of chromosome
+			if [ "$center_start" -lt 1 ]; then
+				continue
+			fi
+
+			if [ "$center_end" -gt {params.L} ]; then
+				continue
+			fi
+			
+			# extract k-mers
 			cat {output.samplefasta} | seqkit subseq -r $(echo $center_start):$(echo $center_end) | grep -v "^>" | sort -u | tr '\n' ' ' | echo $i $(cat -) >> {output.poskey}
 		done
 		"""
