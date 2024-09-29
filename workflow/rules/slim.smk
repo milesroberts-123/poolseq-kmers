@@ -4,11 +4,11 @@ def get_sigma(wildcards):
 
 def get_N(wildcards):
         N = parameters.loc[parameters["ID"] == wildcards.ID, "N"]
-        return float(N.iloc[0])
+        return int(N.iloc[0])
 
 def get_n(wildcards):
         n = parameters.loc[parameters["ID"] == wildcards.ID, "n"]
-        return float(n.iloc[0])
+        return int(n.iloc[0])
 
 def get_mu(wildcards):
         mu = parameters.loc[parameters["ID"] == wildcards.ID, "mu"]
@@ -18,13 +18,9 @@ def get_R(wildcards):
         R = parameters.loc[parameters["ID"] == wildcards.ID, "R"]
         return float(R.iloc[0])
 
-def get_kappa(wildcards):
-        kappa = parameters.loc[parameters["ID"] == wildcards.ID, "kappa"]
-        return float(kappa.iloc[0])
-
 def get_L(wildcards):
         L = parameters.loc[parameters["ID"] == wildcards.ID, "L"]
-        return float(L.iloc[0])
+        return int(L.iloc[0])
 
 rule slim:
 	input:
