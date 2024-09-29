@@ -26,7 +26,7 @@ rule iss:
 		"logs/iss/{ID}.log"
 	params:
 		L = get_L,
-		cov = get_cov
+		cov = get_cov,
 		sequencer = get_sequencer
 	shell:
 		"""
