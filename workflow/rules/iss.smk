@@ -49,5 +49,5 @@ rule iss:
 		fi
 
 		# simulate reads
-		iss generate -g {input} --cpus {threads} --model miseq -n $nreads --abundance uniform --output reads_{wildcards.ID} &> {log}
+		iss generate -g {input} --cpus {threads} --model {params.sequencer} -n $nreads --abundance uniform --output reads_{wildcards.ID} &> {log}
 		"""
