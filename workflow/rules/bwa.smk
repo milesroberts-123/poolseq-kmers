@@ -4,7 +4,7 @@ rule bwa:
 		read1 = "trimmed_paired_R1_{ID}.fastq",
 		read2 = "trimmed_paired_R2_{ID}.fastq"
 	output:
-		"trimmed_{ID}.bam"
+		temp("trimmed_{ID}.bam")
 	threads: 2
 	resources:
 		mem_mb_per_cpu=8000,

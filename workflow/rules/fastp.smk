@@ -3,10 +3,10 @@ rule fastp:
 		read1 = "reads_{ID}_R1.fastq",
 		read2 = "reads_{ID}_R2.fastq"
 	output:
-		pread1 = "trimmed_paired_R1_{ID}.fastq",
-		pread2 = "trimmed_paired_R2_{ID}.fastq",
-		uread1 = "trimmed_unpaired_R1_{ID}.fastq",
-		uread2 = "trimmed_unpaired_R2_{ID}.fastq"
+		pread1 = temp("trimmed_paired_R1_{ID}.fastq"),
+		pread2 = temp("trimmed_paired_R2_{ID}.fastq"),
+		uread1 = temp("trimmed_unpaired_R1_{ID}.fastq"),
+		uread2 = temp("trimmed_unpaired_R2_{ID}.fastq")
 	threads: 1
 	resources:
 		mem_mb_per_cpu=8000,

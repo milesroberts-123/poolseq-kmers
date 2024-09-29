@@ -10,8 +10,8 @@ rule iss:
 	input:
 		"samples_{ID}.fasta"
 	output:
-		"reads_{ID}_R1.fastq",
-		"reads_{ID}_R2.fastq"
+		temp("reads_{ID}_R1.fastq"),
+		temp("reads_{ID}_R2.fastq")
 	threads: 4
 	resources:
 		mem_mb_per_cpu=2000,
