@@ -41,3 +41,9 @@ What about when the genome sequence is not repetitive? I could vary the shannon 
 ## notes
 
 Dang, smudgeplot is going through a big update right now, which is just my luck. 
+
+## to do
+
+- [ ] update to smudgeplot >0.3.0, once we're able to get k-mer sequences again
+
+- [ ] figure out how to use unpaired reads in varscan 
