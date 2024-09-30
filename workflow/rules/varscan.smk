@@ -14,5 +14,5 @@ rule varscan:
 		"logs/varscan/{ID}.log"
 	shell:
 		"""
-		samtools mpileup -f {input.reffasta} {input.trimbam} | varscan pileup2snp > {output} &> {log}
+		samtools mpileup -f {input.reffasta} {input.trimbam} | varscan pileup2snp 1> {output} 2> {log}
 		"""
