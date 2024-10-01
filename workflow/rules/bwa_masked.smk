@@ -1,10 +1,10 @@
-rule bwa:
+rule bwa_masked:
 	input:
-		reffasta = "ref_{ID}.fasta",
+		reffasta = "ref_masked_{ID}.fasta",
 		read1 = "trimmed_paired_R1_{ID}.fastq",
 		read2 = "trimmed_paired_R2_{ID}.fastq"
 	output:
-		temp("trimmed_{ID}.bam")
+		temp("trimmed_masked_{ID}.bam")
 	threads: 2
 	resources:
 		mem_mb_per_cpu=8000,
@@ -12,7 +12,7 @@ rule bwa:
 	conda:
 		"../envs/bwa.yaml"
 	log: 
-		"logs/bwa/{ID}.log"
+		"logs/bwa_masked/{ID}.log"
 	shell:
 		"""
 		# index reference
