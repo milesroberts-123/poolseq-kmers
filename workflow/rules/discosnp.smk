@@ -13,7 +13,8 @@ rule discosnp:
 	threads: 1
 	resources:
 		mem_mb_per_cpu=8000,
-		time=239
+		time=239,
+		load = 1
 	conda:
 		"../envs/discosnp.yaml"
 	log: 
