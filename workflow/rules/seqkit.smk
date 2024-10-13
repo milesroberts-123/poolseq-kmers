@@ -8,7 +8,7 @@ rule seqkit:
 		slimfasta = "slim_{ID}.fasta"
 	output:
 		samplefasta = "samples_{ID}.fasta",
-		reffasta = "ref_full_{ID}.fasta",
+		reffasta = "ref_{ID}.fasta",
 		poskey = "center_kmer_pairs_{ID}.txt",
 		snppos = temp("snp_positions_{ID}.txt")
 	threads: 1

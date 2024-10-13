@@ -1,0 +1,56 @@
+initialize() {
+	initializeSLiMOptions(nucleotideBased=T);
+	initializeAncestralNucleotides(randomNucleotides(asInteger(L)));
+	initializeMutationTypeNuc("m1", 0.5, "f", 0.0);
+	initializeGenomicElementType("g1", m1, 1.0, mmJukesCantor(mu));
+	initializeGenomicElement(g1, 0, asInteger(L)-1);
+	initializeRecombinationRate(R);
+}
+
+1 early() {
+	// add subpopulations
+	catn("Creating subpopulations...");
+	sim.addSubpop("p1", asInteger(N));
+	sim.addSubpop("p2", asInteger(N));
+	p1.setMigrationRates(p2, m);
+	p2.setMigrationRates(p1, m);
+
+	// reschedule simulation end
+	community.rescheduleScriptBlock(s1, start=10*asInteger(N), end=10*asInteger(N));
+}
+
+early(){
+	if(sim.cycle % 1000 == 0){
+		catn(sim.cycle);
+	}
+}
+
+s1 10000000 late() {
+	// random sample of individuals, grab an extra individual to use as a refernce
+	catn("Randomly sampling population...");
+	gs1 = p1.sampleIndividuals(asInteger(n) + 1).genomes;
+	gs2 = p2.sampleIndividuals(asInteger(n)).genomes;
+
+	// output vcf of sample
+	catn("Outputting vcf...");
+	gs1.outputVCF(filePath = paste("slim_p1_" + ID + ".vcf", sep = ""), simplifyNucleotides=T);
+	gs2.outputVCF(filePath = paste("slim_p2_" + ID + ".vcf", sep = ""), simplifyNucleotides=T);
+
+	// output genome sequences of sample
+	catn("Outputting fasta for p1...");
+	i = 1;
+	for (g in gs1){
+		writeFile(paste("slim_p1_" + ID + ".fasta", sep = ""), ">" + i, append = T);
+		writeFile(paste("slim_p1_" + ID + ".fasta", sep = ""), paste(g.nucleotides(format="char"), sep = ""), append = T);
+		i = i + 1;
+	}
+
+	catn("Outputting fasta for p2...")
+	j = 1;
+        for (g in gs2){
+                writeFile(paste("slim_p2_" + ID + ".fasta", sep = ""), ">" + i, append = T);
+                writeFile(paste("slim_p2_" + ID + ".fasta", sep = ""), paste(g.nucleotides(format="char"), sep = ""), append = T);
+                j = j + 1;
+        }
+
+}

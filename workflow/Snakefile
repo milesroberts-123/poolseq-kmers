@@ -7,21 +7,23 @@ parameters = pd.read_table("../config/parameters.tsv", sep="\t", dtype={"ID": st
 # gather all images for training CNN
 rule all:
 	input:
-		expand("calls_full_{ID}.tsv", ID=parameters.index.get_level_values("ID")),
-		expand("calls_masked_{ID}.tsv", ID=parameters.index.get_level_values("ID")),
+		expand("calls_{ID}.tsv", ID=parameters.index.get_level_values("ID")),
 		expand("kmerpairs_{ID}_coverages.tsv", ID=parameters.index.get_level_values("ID")),
 		expand("kmerpairs_{ID}_sequences.tsv", ID=parameters.index.get_level_values("ID")),
+		expand("discoRes_ad_{ID}.txt", ID=parameters.index.get_level_values("ID"))
 
-include: "rules/bcftools.smk"
-include: "rules/bedtools.smk"
-include: "rules/bwa_full.smk"
-include: "rules/bwa_masked.smk"
+include: "rules/bcftools_discosnp.smk"
+include: "rules/bcftools_slim.smk"
+#include: "rules/bedtools.smk"
+include: "rules/bwa.smk"
+#include: "rules/bwa_masked.smk"
 include: "rules/compress.smk"
+include: "rules/discosnp.smk"
 include: "rules/fastp.smk"
 include: "rules/iss.smk"
 include: "rules/kmc.smk"
 include: "rules/seqkit.smk"
 include: "rules/slim.smk"
 include: "rules/smudgeplot.smk"
-include: "rules/varscan_full.smk"
-include: "rules/varscan_masked.smk"
+include: "rules/varscan.smk"
+#include: "rules/varscan_masked.smk"

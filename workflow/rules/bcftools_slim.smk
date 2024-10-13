@@ -1,4 +1,4 @@
-rule bcftools:
+rule bcftools_slim:
 	input:
 		compvcf = "slim_{ID}.vcf.gz",
 		vcfidx = "slim_{ID}.vcf.gz.tbi",
@@ -13,7 +13,7 @@ rule bcftools:
 	conda:
 		"../envs/bcftools.yaml"
 	log:
-		"logs/bcftools/{ID}.log"
+		"logs/bcftools_slim/{ID}.log"
 	shell:
 		"""
 		# remove reference

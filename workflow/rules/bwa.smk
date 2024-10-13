@@ -1,10 +1,10 @@
-rule bwa_full:
+rule bwa:
 	input:
-		reffasta = "ref_full_{ID}.fasta",
+		reffasta = "ref_{ID}.fasta",
 		read1 = "trimmed_paired_R1_{ID}.fastq",
 		read2 = "trimmed_paired_R2_{ID}.fastq"
 	output:
-		temp("trimmed_full_{ID}.bam")
+		temp("trimmed_{ID}.bam")
 	threads: 2
 	resources:
 		mem_mb_per_cpu=8000,

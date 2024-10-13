@@ -12,6 +12,7 @@ rm(list = ls())
 
 library(ggplot2)
 library(plyr)
+library(MASS)
 
 strReverse <- function(x) sapply(lapply(strsplit(x, NULL), rev), paste, collapse="")
 
@@ -61,6 +62,7 @@ params = read.table("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/co
 results = NULL
 
 for(i in params$ID){
+#for(i in 591:1000){
   print(paste("Processing simulation ", i, "...", sep = ""))
   
 # load pairs of k-mers
@@ -197,17 +199,27 @@ rm(compare_maf_kmer, compare_maf_kmer_varscan, compare_maf_varscan, kmer_covs, k
 
 }
 
-
 pares = merge(params, results, by = "ID")
 
-pares$cov = as.factor(pares$cov)
-pares$n = as.factor(pares$n)
+write.table(pares, paste("../results/", today, "/performance_metrics.txt",sep = "",), sep = " ")
+```
 
+```{r}
 # compare sensitivities for SNPs represented in reference
-ggplot(pares[(pares$n == 50),]) +
-  geom_boxplot(aes(x = cov, y = kmer_tpr), color = "red") +
-  geom_boxplot(aes(x = cov, y = varscan_tpr), color = "blue") +
-  labs(x = "Coverage", y = "Sensitivity (true positive rate)")
+tpr_plot_data = melt(as.data.table(pares[,c("ID", "cov", "n", "sequencer", "kmer_tpr", "varscan_tpr")]), id = c("ID", "cov", "n", "sequencer"))
+
+tpr_plot_data$variable = gsub("_tpr", "", tpr_plot_data$variable)
+
+tpr_plot_data$cov = as.factor(tpr_plot_data$cov)
+tpr_plot_data$n = as.factor(tpr_plot_data$n)
+
+ggplot(tpr_plot_data[(tpr_plot_data$n == 50 & tpr_plot_data$sequencer == "miseq"),], aes(x = cov, y = value, color = variable)) +
+  geom_boxplot() +
+  theme_classic() +
+  theme(text = element_text(size = 20)) +
+  labs(x = "Coverage", y = "Sensitivity (true positive rate)", color = "Method", title = "pool size = 50; MiSeq")
+
+ggsave(paste("../results/", today, "/sensitivity_50_miseq.png", sep = ""), height = 7, width = 8)
 
 # hold pool size constant and increase coverage
 ggplot(pares[(pares$n == 5),], aes(x = cov, y = kmer_vs_truth_maf_cor)) +
@@ -288,13 +300,13 @@ ggplot(compare_maf_kmer, aes(x = snp_maf, y = snp_maf_varscan)) +
 kmer_test = cor.test(compare_maf_kmer$snp_maf, compare_maf_kmer$kmer_maf, method = "spearman")
 
 ggplot(compare_maf_kmer, aes(x = snp_maf, y = kmer_maf)) +
-  geom_density_2d_filled() +
+  geom_point() +
   geom_abline(slope = 1, intercept = 0) +
   theme_classic() +
   theme(text = element_text(size = 20)) +
   labs(x = "True MAF", y = "Predicted MAF from k-mers", title = paste("rho =", signif(kmer_test$estimate, 4), "; p =", paste(format(signif(kmer_test$p.value, 2), digits = 2))))
 
-ggsave(paste("/mnt/home/robe1195/Josephs_Lab_Projects/poolseq-kmers/results/", today,  "/","kmer_maf_vs_truth_pool-seq.png", sep = ""), height= 7, width = 8)
+ggsave(paste("/mnt/home/robe1195/Josephs_Lab_Projects/poolseq-kmers/results/", today,  "/","kmer_maf_vs_truth_pool-seq.png", sep = ""), height= 7, width = 7)
 
 varscan_test = cor.test(compare_maf_kmer$snp_maf, compare_maf_kmer$snp_maf_varscan, method = "spearman")
 
@@ -403,8 +415,208 @@ print(paste("P-value:", p_value))
 
 ```
 
+## correlations between true and predicted minor allele frequencies
 ```{r}
-kmer_counts = read.table("/mnt/scratch/robe1195/Josephs_Lab_Projects/kmers_poolseq/kmer_counts.txt", col.names = c("k1", "c1"))
+# load pairs of k-mers
+kmer_pairs = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/", "kmerpairs_938_sequences.tsv", sep = ""), col.names = c("k1"))
+
+kmer_covs = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/kmerpairs_938_coverages.tsv", sep = ""), col.names = c("c1", "c2"))
+
+kmer_pairs = cbind(kmer_pairs, kmer_covs)
+
+# calculate minor allele frequency
+kmer_pairs$kmer_maf = pmin(kmer_pairs$c1, kmer_pairs$c2)/(kmer_pairs$c1 + kmer_pairs$c2)
+
+# load in actual allele freqs from simulations
+true_af = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/slim_allele_freqs_938.txt", sep = ""), col.names = c("chrom", "pos", "af", "ac"))
+
+true_af$ac = as.numeric(true_af$ac)
+
+true_af = true_af[complete.cases(true_af),]
+
+# calculate minor allele frequencies
+true_af$af = as.numeric(true_af$af)
+true_af$snp_maf = pmin(true_af$af, 1 - true_af$af)
+
+# get key for position to k-mers
+pos_kmer_key = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/center_kmer_pairs_938.txt", sep = ""), fill = T, col.names = c("pos", "k1", "k2", "k3", "k4"))
+
+pos_kmer_key$leftk = substr(pos_kmer_key$k1, 1, 15)
+pos_kmer_key$rightk = substr(pos_kmer_key$k1, 17, 31)
+
+# compare snp and k-mer mafs
+kmer_pairs$leftk = substr(kmer_pairs$k1, 1, 15)
+kmer_pairs$rightk = substr(kmer_pairs$k1, 17, 31)
+
+pos_kmer_pairs = merge(pos_kmer_key, kmer_pairs, by = c("leftk", "rightk"))
+
+# get snps that pair with reverse complements
+pos_kmer_key$leftk_rc = chartr("ATGC","TACG",pos_kmer_key$leftk)
+pos_kmer_key$rightk_rc = chartr("ATGC","TACG",pos_kmer_key$rightk)
+
+pos_kmer_key$leftk_rc = strReverse(pos_kmer_key$leftk_rc)
+pos_kmer_key$rightk_rc = strReverse(pos_kmer_key$rightk_rc)
+
+pos_kmer_key$rightk = pos_kmer_key$leftk_rc 
+pos_kmer_key$leftk = pos_kmer_key$rightk_rc
+
+pos_kmer_pairs_rc = merge(pos_kmer_key, kmer_pairs, by = c("leftk", "rightk"))
+
+# merge reverse complement and regular sets
+any(duplicated(c(pos_kmer_pairs$pos, pos_kmer_pairs_rc$pos)))
+
+pos_kmer_pairs = rbind(pos_kmer_pairs, pos_kmer_pairs_rc[,c(-8,-9)])
+
+# do some filtering
+# remove low coverage k-mer pairs
+# remove tri-allelic k-mers
+pos_kmer_pairs = pos_kmer_pairs[(pos_kmer_pairs$c1 >=4 & pos_kmer_pairs$c2 >= 4),]
+pos_kmer_pairs = pos_kmer_pairs[( (pos_kmer_pairs$k3 == "") | is.na(pos_kmer_pairs$k3)),]
+
+compare_maf_kmer = merge(true_af[,c("pos", "snp_maf")], pos_kmer_pairs, by = "pos")
+
+# include varscan calls
+varscan = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/calls_938.tsv", sep = ""), header = T)
+
+varscan$snp_maf_varscan = pmin(varscan$Reads1, varscan$Reads2)/(varscan$Reads1 + varscan$Reads2)
+
+names(varscan)[2] = "pos"
+
+# compare varscan and ground truth
+compare_maf_varscan = merge(true_af[,c("pos", "snp_maf")], varscan, by = "pos")
+
+# compare k-mer and varscan
+compare_maf_kmer_varscan = merge(compare_maf_kmer, varscan, by = "pos")
+
+# round k-mer mafs to nearest increment 
+kmer_test = cor.test(compare_maf_kmer$snp_maf, compare_maf_kmer$kmer_maf, method = "pearson")
+
+varscan_test = cor.test(compare_maf_varscan$snp_maf, compare_maf_varscan$snp_maf_varscan, method = "pearson")
+
+# create plots
+p1 = ggplot(compare_maf_kmer, aes(x = snp_maf, y = kmer_maf)) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0, lwd = 2, color = "purple") +
+  theme_classic() +
+  theme(text = element_text(size = 10)) +
+  labs(x = "True MAF", y = "MAF from k-mers", title = paste("rho =", signif(kmer_test$estimate, 3), "  p =", paste(format(signif(kmer_test$p.value, 3), digits = 3))))
+
+p2 = ggplot(compare_maf_varscan, aes(x = snp_maf, y = snp_maf_varscan)) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0, lwd = 2, color = "purple") +
+  theme_classic() +
+  theme(text = element_text(size = 10)) +
+  labs(x = "True MAF", y = "MAF from varscan", title = paste("rho =", signif(varscan_test$estimate, 3), "  p =", paste(format(signif(varscan_test$p.value, 3), digits = 3))))
+
+ggarrange(p1, p2, nrow = 2, ncol = 1, labels = c("A", "B"), font.label = list(size = 12))
+
+ggsave(paste("../results/", today, "/true_vs_predicted_maf.png", sep = ""), height = 6, width = 3, unit = "in")
+```
+
+```{r}
+kmer_pairs = read.table("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/testpairs_sequences.tsv", col.names = c("k1"))
+
+kmer_counts = read.table("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/testpairs_coverages.tsv", col.names = c("c1", "c2"))
+
+kmer_pairs = cbind(kmer_pairs, kmer_counts)
+
+# calculate minor allele frequency
+nidv = 5
+ploidy = 2
+
+kmer_pairs$kmer_maf = round(pmin(kmer_pairs$c1, kmer_pairs$c2)/(kmer_pairs$c1 + kmer_pairs$c2)*nidv*ploidy)
+
+# filter out k-mers below coverage thresholds
+kmer_pairs = kmer_pairs[( (kmer_pairs$c1 > 3) & (kmer_pairs$c2 > 3) ),]
+
+
+
+kmer_counts = read.table("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/kmer_counts_161.txt", col.names = c("k1", "c1"))
+
+# frequency vs coverage
+ggplot(kmer_counts[(kmer_counts$c1 >=4 ),], aes(x = c1)) +
+  geom_histogram(binwidth = 1) +
+  geom_vline(xintercept = 4) +
+  theme_classic()
+
+# frequency*coverage vs coverage
+freq = table(kmer_counts$c1)
+
+cov = as.numeric(names(freq))
+freq = as.vector(freq)
+
+trans_spectrum = data.frame(
+  freq = freq,
+  freq_cov = freq*cov,
+  cov = cov
+)
+
+ggplot(trans_spectrum, aes(x = cov, y = freq_cov)) +
+  geom_bar(stat = "identity") +
+  theme_classic()
+
+#
+testmers = read.table("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/testmers.txt", col.names = c("k1", "c1"))
+
+table(testmers$c1)/nrow(testmers) * 100
+
+# try modeling coverage of a k-mer based on it's frequency in a pool
+lamb = 60 # average haploid sequencing coverage
+rho = 0.8 # dispersion due to sequencing biases
+i = 3 # number of genomes where k-mer is present
+n = 60 # number of genomes in pool
+
+plotdata = data.frame(
+  x = rnbinom(1000, mu = (i/n)*lamb, size = (i/n)*(lamb/rho))
+)
+
+ggplot(plotdata, aes(x)) +
+  geom_histogram(binwidth = 1) +
+  geom_vline(xintercept = (i/n)*lamb)
+
+# try fitting poisson to distribution
+fitdistr(kmer_counts$c1, "poisson", method = "L-BFGS-B", lower = 0.1, upper = 0.5)
+
+fitdistr(kmer_counts$c1[], "negative binomial")
+
+ggplot(trans_spectrum, aes(x = cov, y = freq/sum(freq))) +
+  geom_bar(stat = "identity") +
+  geom_point(aes(y=dpois(cov, 6.7055415264)), colour="red") +
+  theme_classic()
+
+ggplot(kmer_counts, aes(x = c1)) +
+  geom_histogram(binwidth = 1) +
+  geom_point(aes(y=dpois(c1, 1.0344408452)), colour="red") +
+  geom_vline(xintercept = 4) +
+  theme_classic()
+
+ggplot(data.frame(x=c(0:10)), aes(x)) +
+    geom_point(aes(y=dpois(x, 1)), colour="red")
+```
+
+#
+```{r}
+disco = read.table("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/discoRes_840_ad.txt", col.names = c("CHROM", "POS", "c1", "c2"))
+
+slim = read.table("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/slim_allele_freqs_840.txt", col.names = c("CHROM", "POS", "snp_af", "ac"))
+
+disco$kmer_min_af = pmin(disco$c1, disco$c2)/(disco$c1 + disco$c2)
+
+slim$snp_min_af = pmin(slim$snp_af, 1 - slim$snp_af)
+
+all_min_af = merge(slim, disco, by = c("CHROM", "POS"), all.x = T, all.y = T)
+
+cor.test(all_min_af$snp_min_af, all_min_af$kmer_min_af, method = "spearman")
+
+ggplot(all_min_af, aes(x = snp_min_af, y = kmer_min_af)) +
+  geom_point() +
+  theme_classic() +
+  geom_abline(slope = 1, intercept = 0)
+```
+
+# DEPRECATED
+```{r}
+kmer_counts = read.table("/mnt/scratch/robe1195/Josephs_Lab_Projects/kmers_poolseq/kmer_counts_1.txt", col.names = c("k1", "c1"))
 
 ggplot(kmer_counts, aes(x = c1)) +
   geom_histogram(binwidth = 1) +
