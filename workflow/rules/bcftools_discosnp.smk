@@ -5,7 +5,6 @@ rule bcftools_discosnp:
 	output:
 		fai = temp("ref_{ID}.fasta.fai"),
 		header = temp("discoRes_header_{ID}.vcf"),
-		sorted = temp("discoRes_sorted_{ID}.vcf"),
 		bgzip = temp("discoRes_sorted_{ID}.vcf.gz"),
 		tbi = temp("discoRes_sorted_{ID}.vcf.gz.tbi"),
 		final = "discoRes_ad_{ID}.txt"
@@ -27,10 +26,10 @@ rule bcftools_discosnp:
 		bcftools reheader --fai {output.fai} {input.vcf} | sed 's:TySNP:Ty=SNP:g' > {output.header}
 
 		# sort vcf
-		bcftools sort {output.header} > {output.sorted}
+		bcftools sort {output.header} > discoRes_sorted_{wildcards.ID}.vcf
 
 		# index vcf
-		bgzip {output.sorted}
+		bgzip discoRes_sorted_{wildcards.ID}.vcf
 		tabix {output.bgzip}
 
 		# output allele depths
