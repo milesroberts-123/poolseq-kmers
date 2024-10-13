@@ -23,7 +23,7 @@ rule discosnp:
 	shell:
 		"""
 		# combine reads into one set
-		zcat {input.pread1} {input.pread2} {input.uread1} {input.uread2} > {output.tmpread}
+		cat {input.pread1} {input.pread2} {input.uread1} {input.uread2} > {output.tmpread}
 
 		# create file of files
 		echo "{output.tmpread}" > {output.fof}

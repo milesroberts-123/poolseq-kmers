@@ -201,7 +201,7 @@ rm(compare_maf_kmer, compare_maf_kmer_varscan, compare_maf_varscan, kmer_covs, k
 
 pares = merge(params, results, by = "ID")
 
-write.table(pares, paste("../results/", today, "/performance_metrics.txt",sep = "",), sep = " ")
+write.table(pares, paste("/mnt/ufs18/home-010/robe1195/Josephs_Lab_Projects/poolseq-kmers/results/", today, "/performance_metrics.txt",sep = ""), sep = " ")
 ```
 
 ```{r}
@@ -210,8 +210,18 @@ tpr_plot_data = melt(as.data.table(pares[,c("ID", "cov", "n", "sequencer", "kmer
 
 tpr_plot_data$variable = gsub("_tpr", "", tpr_plot_data$variable)
 
+tpr_plot_data$cov_per_n = as.factor(tpr_plot_data$cov/(tpr_plot_data$n * 2))
+
 tpr_plot_data$cov = as.factor(tpr_plot_data$cov)
 tpr_plot_data$n = as.factor(tpr_plot_data$n)
+
+ggplot(tpr_plot_data, aes(x = cov_per_n, y = value, color = variable)) +
+  geom_boxplot() +
+  theme_classic() +
+  theme(text = element_text(size = 20)) +
+  labs(x = "Coverage per haploid genome", y = "Sensitivity (true positive rate)", color = "Method", title = "All instruments")
+
+ggsave(paste("../results/", today, "/coverage_vs_sensitivity.png", sep = ""), height = 7, width = 10, unit = "in")
 
 ggplot(tpr_plot_data[(tpr_plot_data$n == 50 & tpr_plot_data$sequencer == "miseq"),], aes(x = cov, y = value, color = variable)) +
   geom_boxplot() +
