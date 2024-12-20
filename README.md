@@ -50,6 +50,8 @@ Dang, smudgeplot is going through a big update right now, which is just my luck.
 
 - [x] add discosnp for comparison
 
+- [ ] add poolsnp: https://github.com/capoony/PoolSNP
+
 - [ ] update to smudgeplot >0.3.0, once we're able to get k-mer sequences again
 
 - [ ] figure out how to use unpaired reads in varscan 

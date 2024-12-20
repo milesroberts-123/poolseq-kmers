@@ -1,4 +1,4 @@
-rule fastp:
+rule fastp_one_pop:
 	input:
 		read1 = "reads_{ID}_R1.fastq",
 		read2 = "reads_{ID}_R2.fastq"

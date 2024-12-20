@@ -3,16 +3,14 @@ title: "R Notebook"
 output:
   html_document:
     df_print: paged
+  pdf_document: default
 ---
-
-This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
-
-Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
 
 ```{r}
 rm(list = ls())
 
 library(DiagrammeR)
+library(ggplot2)
 
 today = Sys.Date()
 ```
@@ -24,37 +22,46 @@ dateFormat  YYYY-MM-DD
 title Timeline
 
 section Objective 1
-Simulate reference bias             :active,          first_1,    2025-07-01, 2025-09-01
-Simulate Fst                :active,        first_2,    2025-07-01, 2025-09-01
-Write                :active,        first_2,    2025-07-01, 2025-09-01
+Estimating allele frequencies             :active,          first_1,    2025-06-01, 2025-009-01
+Site frequency spectrum                :active,        first_2,    2025-08-15, 2025-11-15
+Population differentiation                 :active,        first_2,    2025-11-01, 2026-02-01
+Trait mapping                 :active,        first_2,    2026-01-15, 2026-04-15
+Selection                 :active,        first_2,    2026-04-01, 2026-07-01
+Write                :active,        first_2,    2026-06-15, 2026-09-15
+Peer review                :active,        first_2,    2026-09-15, 2027-01-01
 
 section Objective 2
-Pool Silphium accessions      :active,    import_1,   2025-09-01, 2025-11-01
-Apply k-mer enrichment tests      :active,    import_2,   2025-09-01, 2025-11-01
-Write      :active,    import_2,   2025-09-01, 2025-11-01
+Demographic inference                :active,        first_2,    2026-09-01, 2026-12-01
+Population differentiation                 :active,        first_2,    2026-11-15, 2027-02-15
+Trait mapping                 :active,        first_2,    2027-02-01, 2027-05-01
+Selection                 :active,        first_2,    2027-04-15, 2027-07-15
+Write      :active,    import_2,   2027-07-01, 2027-09-01
+Peer review      :active,    import_2,   2027-09-01, 2027-12-01
 
-section Objective 3
-List available datasets      :active,    import_1,   2025-11-01, 2026-01-01
-Develop and test workflow      :active,    import_2,   2025-11-01, 2026-01-01
-Write      :active,    import_2,   2025-11-01, 2026-01-01
-
+section Broader impacts
+Attend 2025 Breeding Summit      :active,    import_1,   2025-06-01, 2025-07-01
+Prepare 2026 course      :active,    import_1,   2025-07-01, 2026-04-01
+Forever Green lab meeting pilot      :active,    import_1,   2026-04-01, 2026-05-01
+Revise Course      :active,    import_1,   2026-05-01, 2026-06-01
+Plant Breeding Summit      :active,    import_1,   2026-06-15, 2026-07-01
+Revise Course      :active,    import_1,   2026-07-01, 2027-06-01
+Plant Breeding Summit      :active,    import_1,   2027-06-01, 2027-07-01
+Convert to online format      :active,    import_1,   2027-07-01, 2027-12-01
+Undergraduate mentorhsip      :active,    import_1,   2025-07-01, 2026-07-01
+Undergraduate mentorship      :active,    import_1,   2026-07-01, 2027-07-01
+Undergraduate mentorship      :active,    import_1,   2027-07-01, 2028-06-01
 ")
 
-g1$x$config = list(ganttConfig = list(
-  axisFormatter = list(list(
-    "%b" 
-    ,htmlwidgets::JS(
-      'function(d){ return d.getDay() == 1 }' 
-    )
-  ))
-))
+#g1$x$config = list(ganttConfig = list(
+#  axisFormatter = list(list(
+#    "%b" 
+#    ,htmlwidgets::JS(
+#      'function(d){ return d.getDay() == 1 }' 
+#    )
+#  ))
+#))
 
 g1
 
+#ggsave(paste("../results/", today, "/gantt_chart.png", sep = ""), g1)
 ```
-
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
-
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
-
-The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.

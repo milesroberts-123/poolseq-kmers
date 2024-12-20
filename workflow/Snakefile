@@ -4,26 +4,46 @@ import pandas as pd
 # load samples
 parameters = pd.read_table("../config/parameters.tsv", sep="\t", dtype={"ID": str}).set_index(["ID"], drop=False)
 
+# split into paired-end and single-end
+one_pop_params = parameters[parameters["simtype"] == "onepop"]
+
+two_pop_params = parameters[parameters["simtype"] == "twopop"]
+
+wildcard_constraints:
+	ID="\d+"
+
 # gather all images for training CNN
 rule all:
 	input:
-		expand("calls_{ID}.tsv", ID=parameters.index.get_level_values("ID")),
-		expand("kmerpairs_{ID}_coverages.tsv", ID=parameters.index.get_level_values("ID")),
-		expand("kmerpairs_{ID}_sequences.tsv", ID=parameters.index.get_level_values("ID")),
-		expand("discoRes_ad_{ID}.txt", ID=parameters.index.get_level_values("ID"))
+		expand("calls_{ID}_p1.tsv", ID=two_pop_params.index.get_level_values("ID")),
+		expand("calls_{ID}_p2.tsv", ID=two_pop_params.index.get_level_values("ID")),
+		#expand("kmerpairs_{ID}_p1_coverages.tsv", ID=two_pop_params.index.get_level_values("ID")),
+		#expand("kmerpairs_{ID}_p1_sequences.tsv", ID=two_pop_params.index.get_level_values("ID")),
+		#expand("kmerpairs_{ID}_p2_coverages.tsv", ID=two_pop_params.index.get_level_values("ID")),
+		#expand("kmerpairs_{ID}_p2_sequences.tsv", ID=two_pop_params.index.get_level_values("ID")),
+		#expand("discoRes_ad_{ID}_p1.txt", ID=two_pop_params.index.get_level_values("ID")),
+		#expand("discoRes_ad_{ID}_p2.txt", ID=two_pop_params.index.get_level_values("ID")),
+		expand("calls_{ID}.tsv", ID=one_pop_params.index.get_level_values("ID")),
+		#expand("kmerpairs_{ID}_coverages.tsv", ID=one_pop_params.index.get_level_values("ID")),
+		#expand("kmerpairs_{ID}_sequences.tsv", ID=one_pop_params.index.get_level_values("ID")),
+		#expand("discoRes_ad_{ID}.txt", ID=one_pop_params.index.get_level_values("ID")),
+
 
 include: "rules/bcftools_discosnp.smk"
 include: "rules/bcftools_slim.smk"
-#include: "rules/bedtools.smk"
-include: "rules/bwa.smk"
-#include: "rules/bwa_masked.smk"
+include: "rules/bwa_one_pop.smk"
+include: "rules/bwa_two_pop.smk"
+#include: "rules/bwa.smk"
 include: "rules/compress.smk"
 include: "rules/discosnp.smk"
-include: "rules/fastp.smk"
-include: "rules/iss.smk"
+include: "rules/fastp_one_pop.smk"
+include: "rules/fastp_two_pop.smk"
+include: "rules/iss_one_pop.smk"
+include: "rules/iss_two_pop.smk"
 include: "rules/kmc.smk"
-include: "rules/seqkit.smk"
+include: "rules/seqkit_one_pop.smk"
+include: "rules/seqkit_two_pop.smk"
 include: "rules/slim.smk"
 include: "rules/smudgeplot.smk"
-include: "rules/varscan.smk"
-#include: "rules/varscan_masked.smk"
+include: "rules/varscan_one_pop.smk"
+include: "rules/varscan_two_pop.smk"

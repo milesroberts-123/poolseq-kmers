@@ -42,18 +42,17 @@ def get_L(wildcards):
         L = parameters.loc[parameters["ID"] == wildcards.ID, "L"]
         return int(L.iloc[0])
 
-rule slim:
+rule slim_two_pop:
 	input:
 		"../config/parameters.tsv"
 	output:
 		temp("slim_{ID}.vcf"),
-		temp("slim_{ID}.fasta")
+		temp("slim_{ID}.fasta"),
 	log:
 		"logs/slim/{ID}.log"
 	params:
 		simtype=get_simtype,
 		sigma=get_sigma,
-		N=get_N,
 		N1=get_N1,
 		N2=get_N2,
 		mg1=get_mg1,
@@ -70,11 +69,5 @@ rule slim:
 		"../envs/slim.yaml"
 	shell:
 		"""
-		if [ "{params.simtype}" == "onepop" ]; then
-			slim -d ID={wildcards.ID} -d sigma={params.sigma} -d N={params.N} -d mu={params.mu} -d R={params.R} -d n={params.n} -d L={params.L} scripts/neutral.slim &> {log}
-		fi
-
-		if [ "{params.simtype}" == "twopop" ]; then
-			slim -d ID={wildcards.ID} -d sigma={params.sigma} -d N={params.N} -d mu={params.mu} -d R={params.R} -d n={params.n} -d L={params.L} scripts/two_pop.slim &> {log}
-		fi
+		slim -d ID={wildcards.ID} -d N1={params.N1} -d N2={params.N2} -d mg1={params.mg1} -d mg2={params.mg2} -d mu={params.mu} -d R={params.R} -d n={params.n} -d L={params.L} scripts/two_pop.slim &> {log}
 		"""
