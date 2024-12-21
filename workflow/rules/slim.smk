@@ -89,6 +89,6 @@ rule slim:
 		fi
 
 		if [ "{params.simtype}" == "sweep" ]; then
-			slim -d ID={wildcards.ID} -d h={params.h} -d s={params.s}-d sigma={params.sigma} -d N={params.N} -d mu={params.mu} -d R={params.R} -d n={params.n} -d L={params.L} scripts/sweep.slim &> {log}
+			slim -d ID={wildcards.ID} -d h={params.h} -d s={params.s} -d sigma={params.sigma} -d N={params.N} -d mu={params.mu} -d R={params.R} -d n={params.n} -d L={params.L} scripts/sweep.slim &> {log}
 		fi
 		"""
