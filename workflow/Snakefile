@@ -31,7 +31,8 @@ rule all:
 		expand("discoRes_ad_{ID}.txt", ID=one_pop_params.index.get_level_values("ID")),
 		expand("slim_allele_freqs_{ID}.txt", ID=one_pop_params.index.get_level_values("ID")),
 
-include: "rules/bcftools_discosnp.smk"
+include: "rules/bcftools_discosnp_one_pop.smk"
+include: "rules/bcftools_discosnp_two_pop.smk"
 include: "rules/bcftools_slim_one_pop.smk"
 include: "rules/bcftools_slim_two_pop.smk"
 include: "rules/bwa_one_pop.smk"

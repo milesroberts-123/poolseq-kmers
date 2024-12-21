@@ -8,7 +8,7 @@ def get_num_genos(wildcards):
 
 rule seqkit_two_pop:
 	input:
-		vcffilled= "samples_filled_{ID}.vcf.gz",
+		vcffilled= "samples_filled_{ID}_p1p2.vcf.gz",
 		slimfasta = "slim_{ID}.fasta"
 	output:
 		tempsamplefasta = temp("temp_samples_{ID}.fasta"),

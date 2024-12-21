@@ -1,4 +1,4 @@
-rule bcftools_discosnp:
+rule bcftools_discosnp_one_pop:
 	input:
 		ref = "ref_{ID}.fasta",
 		vcf = "discoRes_{ID}_k_31_c_3_D_100_P_3_b_0_coherent.vcf",
