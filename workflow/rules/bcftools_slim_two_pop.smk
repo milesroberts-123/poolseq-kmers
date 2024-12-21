@@ -33,9 +33,6 @@ rule bcftools_slim_two_pop:
 		samples=get_samples
 	shell:
 		"""
-		# remove reference
-		# bcftools view --samples-file ^../config/ref.txt -Oz -o {output.samplevcf} {input.compvcf} &> {log}
-
 		# calculate allele frequencies
 		bcftools +fill-tags {input.compvcf} -Oz -o {output.filledvcf} &> {log}
 
