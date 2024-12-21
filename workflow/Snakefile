@@ -5,7 +5,7 @@ import pandas as pd
 parameters = pd.read_table("../config/parameters.tsv", sep="\t", dtype={"ID": str}).set_index(["ID"], drop=False)
 
 # split into paired-end and single-end
-one_pop_params = parameters[parameters["simtype"] == "onepop"]
+one_pop_params = parameters[(parameters["simtype"] == "onepop") | (parameters["simtype"] == "sweep")]
 
 two_pop_params = parameters[parameters["simtype"] == "twopop"]
 
@@ -17,15 +17,15 @@ rule all:
 	input:
 		expand("calls_{ID}_p1.tsv", ID=two_pop_params.index.get_level_values("ID")),
 		expand("calls_{ID}_p2.tsv", ID=two_pop_params.index.get_level_values("ID")),
-		#expand("kmerpairs_{ID}_p1_coverages.tsv", ID=two_pop_params.index.get_level_values("ID")),
-		#expand("kmerpairs_{ID}_p1_sequences.tsv", ID=two_pop_params.index.get_level_values("ID")),
-		#expand("kmerpairs_{ID}_p2_coverages.tsv", ID=two_pop_params.index.get_level_values("ID")),
-		#expand("kmerpairs_{ID}_p2_sequences.tsv", ID=two_pop_params.index.get_level_values("ID")),
+		expand("kmerpairs_{ID}_p1_coverages.tsv", ID=two_pop_params.index.get_level_values("ID")),
+		expand("kmerpairs_{ID}_p1_sequences.tsv", ID=two_pop_params.index.get_level_values("ID")),
+		expand("kmerpairs_{ID}_p2_coverages.tsv", ID=two_pop_params.index.get_level_values("ID")),
+		expand("kmerpairs_{ID}_p2_sequences.tsv", ID=two_pop_params.index.get_level_values("ID")),
 		#expand("discoRes_ad_{ID}_p1.txt", ID=two_pop_params.index.get_level_values("ID")),
 		#expand("discoRes_ad_{ID}_p2.txt", ID=two_pop_params.index.get_level_values("ID")),
 		expand("calls_{ID}.tsv", ID=one_pop_params.index.get_level_values("ID")),
-		#expand("kmerpairs_{ID}_coverages.tsv", ID=one_pop_params.index.get_level_values("ID")),
-		#expand("kmerpairs_{ID}_sequences.tsv", ID=one_pop_params.index.get_level_values("ID")),
+		expand("kmerpairs_{ID}_coverages.tsv", ID=one_pop_params.index.get_level_values("ID")),
+		expand("kmerpairs_{ID}_sequences.tsv", ID=one_pop_params.index.get_level_values("ID")),
 		#expand("discoRes_ad_{ID}.txt", ID=one_pop_params.index.get_level_values("ID")),
 
 

@@ -26,6 +26,14 @@ def get_mg2(wildcards):
         mg2 = parameters.loc[parameters["ID"] == wildcards.ID, "mg2"]
         return float(mg2.iloc[0])
 
+def get_h(wildcards):
+        h = parameters.loc[parameters["ID"] == wildcards.ID, "h"]
+        return float(h.iloc[0])
+
+def get_s(wildcards):
+        s = parameters.loc[parameters["ID"] == wildcards.ID, "s"]
+        return float(s.iloc[0])
+
 def get_n(wildcards):
         n = parameters.loc[parameters["ID"] == wildcards.ID, "n"]
         return int(n.iloc[0])
@@ -59,6 +67,8 @@ rule slim:
 		mg1=get_mg1,
 		mg2=get_mg2,
 		n=get_n,
+		h=get_h,
+		s=get_s,
 		mu=get_mu,
 		R=get_R,
 		L=get_L
@@ -76,5 +86,9 @@ rule slim:
 
 		if [ "{params.simtype}" == "twopop" ]; then
 			slim -d ID={wildcards.ID} -d sigma={params.sigma} -d N={params.N} -d mu={params.mu} -d R={params.R} -d n={params.n} -d L={params.L} scripts/two_pop.slim &> {log}
+		fi
+
+		if [ "{params.simtype}" == "twopop" ]; then
+			slim -d ID={wildcards.ID} -d h={params.h} -d s={params.s}-d sigma={params.sigma} -d N={params.N} -d mu={params.mu} -d R={params.R} -d n={params.n} -d L={params.L} scripts/sweep.slim &> {log}
 		fi
 		"""
