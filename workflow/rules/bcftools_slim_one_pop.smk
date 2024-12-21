@@ -1,4 +1,4 @@
-rule bcftools_slim:
+rule bcftools_slim_one_pop:
 	input:
 		compvcf = "slim_{ID}.vcf.gz",
 		vcfidx = "slim_{ID}.vcf.gz.tbi",
