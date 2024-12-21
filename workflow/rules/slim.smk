@@ -88,7 +88,7 @@ rule slim:
 			slim -d ID={wildcards.ID} -d sigma={params.sigma} -d N={params.N} -d mu={params.mu} -d R={params.R} -d n={params.n} -d L={params.L} scripts/two_pop.slim &> {log}
 		fi
 
-		if [ "{params.simtype}" == "twopop" ]; then
+		if [ "{params.simtype}" == "sweep" ]; then
 			slim -d ID={wildcards.ID} -d h={params.h} -d s={params.s}-d sigma={params.sigma} -d N={params.N} -d mu={params.mu} -d R={params.R} -d n={params.n} -d L={params.L} scripts/sweep.slim &> {log}
 		fi
 		"""
