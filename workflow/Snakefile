@@ -21,12 +21,12 @@ rule all:
 		expand("kmerpairs_{ID}_p1_sequences.tsv", ID=two_pop_params.index.get_level_values("ID")),
 		expand("kmerpairs_{ID}_p2_coverages.tsv", ID=two_pop_params.index.get_level_values("ID")),
 		expand("kmerpairs_{ID}_p2_sequences.tsv", ID=two_pop_params.index.get_level_values("ID")),
-		#expand("discoRes_ad_{ID}_p1.txt", ID=two_pop_params.index.get_level_values("ID")),
-		#expand("discoRes_ad_{ID}_p2.txt", ID=two_pop_params.index.get_level_values("ID")),
+		expand("discoRes_ad_{ID}_p1.txt", ID=two_pop_params.index.get_level_values("ID")),
+		expand("discoRes_ad_{ID}_p2.txt", ID=two_pop_params.index.get_level_values("ID")),
 		expand("calls_{ID}.tsv", ID=one_pop_params.index.get_level_values("ID")),
 		expand("kmerpairs_{ID}_coverages.tsv", ID=one_pop_params.index.get_level_values("ID")),
 		expand("kmerpairs_{ID}_sequences.tsv", ID=one_pop_params.index.get_level_values("ID")),
-		#expand("discoRes_ad_{ID}.txt", ID=one_pop_params.index.get_level_values("ID")),
+		expand("discoRes_ad_{ID}.txt", ID=one_pop_params.index.get_level_values("ID")),
 
 
 include: "rules/bcftools_discosnp.smk"
@@ -35,15 +35,18 @@ include: "rules/bwa_one_pop.smk"
 include: "rules/bwa_two_pop.smk"
 #include: "rules/bwa.smk"
 include: "rules/compress.smk"
-include: "rules/discosnp.smk"
+include: "rules/discosnp_one_pop.smk"
+include: "rules/discosnp_two_pop.smk"
 include: "rules/fastp_one_pop.smk"
 include: "rules/fastp_two_pop.smk"
 include: "rules/iss_one_pop.smk"
 include: "rules/iss_two_pop.smk"
-include: "rules/kmc.smk"
+include: "rules/kmc_one_pop.smk"
+include: "rules/kmc_two_pop.smk"
 include: "rules/seqkit_one_pop.smk"
 include: "rules/seqkit_two_pop.smk"
 include: "rules/slim.smk"
-include: "rules/smudgeplot.smk"
+include: "rules/smudgeplot_one_pop.smk"
+include: "rules/smudgeplot_two_pop.smk"
 include: "rules/varscan_one_pop.smk"
 include: "rules/varscan_two_pop.smk"

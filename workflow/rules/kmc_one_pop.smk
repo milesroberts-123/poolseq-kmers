@@ -1,4 +1,4 @@
-rule kmc:
+rule kmc_one_pop:
 	input:
                 pread1 = "trimmed_paired_R1_{ID}.fastq",
                 pread2 = "trimmed_paired_R2_{ID}.fastq",

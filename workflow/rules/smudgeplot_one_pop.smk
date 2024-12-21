@@ -1,4 +1,4 @@
-rule smudgeplot:
+rule smudgeplot_one_pop:
 	input:
 		"kmer_counts_{ID}.txt"
 	output:
