@@ -20,7 +20,7 @@ rule bcftools_slim_two_pop:
 		samplevcf = temp("samples_{ID}.vcf.gz"),
 		allelefreq_p1 = "slim_allele_freqs_{ID}_p1.txt",
 		allelefreq_p2 = "slim_allele_freqs_{ID}_p2.txt",
-		filledvcf = temp("samples_filled_{ID}.vcf.gz")
+		filledvcf = temp("samples_filled_{ID}_p1p2.vcf.gz")
 	threads: 1
 	resources:
 		mem_mb_per_cpu=8000,
