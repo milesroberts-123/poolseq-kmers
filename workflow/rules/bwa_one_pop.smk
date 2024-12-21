@@ -1,4 +1,4 @@
-rule bwa:
+rule bwa_one_pop:
 	input:
 		reffasta = "ref_{ID}.fasta",
 		read1 = "trimmed_paired_R1_{ID}.fastq",

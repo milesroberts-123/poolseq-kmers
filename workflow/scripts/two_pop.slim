@@ -10,13 +10,19 @@ initialize() {
 1 early() {
 	// add subpopulations
 	catn("Creating subpopulations...");
-	sim.addSubpop("p1", asInteger(N));
-	sim.addSubpop("p2", asInteger(N));
-	p1.setMigrationRates(p2, m);
-	p2.setMigrationRates(p1, m);
+	sim.addSubpop("p1", asInteger(N1));
+	sim.addSubpop("p2", asInteger(N2));
+	p1.setMigrationRates(p2, mg1);
+	p2.setMigrationRates(p1, mg2);
+
+	// Configure log file
+	//log = community.createLogFile(paste("slim_" + ID + ".log", sep = ""));
+	//log.addCustomColumn("ID", "asInteger(ID);");
+	//log.addCustomColumn("FST_POPULATION", "calcFST(p1.genomes, p2.genomes);");
+	//log.addCustomColumn("FST_SAMPLE", "calcFST(gs1, gs2);");
 
 	// reschedule simulation end
-	community.rescheduleScriptBlock(s1, start=10*asInteger(N), end=10*asInteger(N));
+	community.rescheduleScriptBlock(s1, start=10*asInteger(N1 + N2), end=10*asInteger(N1 + N2));
 }
 
 early(){
@@ -28,29 +34,45 @@ early(){
 s1 10000000 late() {
 	// random sample of individuals, grab an extra individual to use as a refernce
 	catn("Randomly sampling population...");
-	gs1 = p1.sampleIndividuals(asInteger(n) + 1).genomes;
-	gs2 = p2.sampleIndividuals(asInteger(n)).genomes;
+	sp1 = p1.sampleIndividuals(asInteger(n) + 1);
+	sp2 = p2.sampleIndividuals(asInteger(n));
 
+	gs1 = sp1.genomes;
+	gs2 = sp2.genomes;
+
+	gs12 = c(gs1, gs2);
+
+	//defineGlobal("gs1", gs1);
+	//defineGlobal("gs2", gs2);
+	
 	// output vcf of sample
 	catn("Outputting vcf...");
-	gs1.outputVCF(filePath = paste("slim_p1_" + ID + ".vcf", sep = ""), simplifyNucleotides=T);
-	gs2.outputVCF(filePath = paste("slim_p2_" + ID + ".vcf", sep = ""), simplifyNucleotides=T);
+	//gs1.outputVCF(filePath = paste("slim_p1_" + ID + ".vcf", sep = ""), simplifyNucleotides=T);
+	//gs2.outputVCF(filePath = paste("slim_p2_" + ID + ".vcf", sep = ""), simplifyNucleotides=T);
+	gs12.outputVCF(filePath = paste("slim_" + ID + ".vcf", sep = ""), simplifyNucleotides=T);
 
 	// output genome sequences of sample
-	catn("Outputting fasta for p1...");
+	catn("Outputting fasta...");
 	i = 1;
-	for (g in gs1){
-		writeFile(paste("slim_p1_" + ID + ".fasta", sep = ""), ">" + i, append = T);
-		writeFile(paste("slim_p1_" + ID + ".fasta", sep = ""), paste(g.nucleotides(format="char"), sep = ""), append = T);
+	for (g in gs12){
+		writeFile(paste("slim_" + ID + ".fasta", sep = ""), ">" + i, append = T);
+		writeFile(paste("slim_" + ID + ".fasta", sep = ""), paste(g.nucleotides(format="char"), sep = ""), append = T);
 		i = i + 1;
 	}
 
-	catn("Outputting fasta for p2...")
-	j = 1;
-        for (g in gs2){
-                writeFile(paste("slim_p2_" + ID + ".fasta", sep = ""), ">" + i, append = T);
-                writeFile(paste("slim_p2_" + ID + ".fasta", sep = ""), paste(g.nucleotides(format="char"), sep = ""), append = T);
-                j = j + 1;
-        }
+	//catn("Outputting fasta for p2...");
+	//j = 1;
+        //for (g in gs2){
+        //        writeFile(paste("slim_p2_" + ID + ".fasta", sep = ""), ">" + i, append = T);
+        //        writeFile(paste("slim_p2_" + ID + ".fasta", sep = ""), paste(g.nucleotides(format="char"), sep = ""), append = T);
+        //        j = j + 1;
+        //}
 
+	// Add summary statistics to log
+	//log = community.logFiles;
+        log = community.createLogFile(paste("slim_" + ID + ".stats", sep = ""));
+        log.addCustomColumn("ID", "asInteger(ID);");
+        log.addCustomColumn("FST_POPULATION", "calcFST(p1.genomes, p2.genomes);");
+        //log.addCustomColumn("FST_SAMPLE", "calcFST(gs1, gs2);");
+	log.logRow();
 }

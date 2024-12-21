@@ -1,3 +1,7 @@
+def get_simtype(wildcards):
+        simtype = parameters.loc[parameters["ID"] == wildcards.ID, "simtype"]
+        return simtype.iloc[0]
+
 def get_L(wildcards):
         L = parameters.loc[parameters["ID"] == wildcards.ID, "L"]
         return int(L.iloc[0])
@@ -10,10 +14,16 @@ def get_sequencer(wildcards):
         sequencer = parameters.loc[parameters["ID"] == wildcards.ID, "sequencer"]
         return sequencer.iloc[0]
 
-rule iss:
+rule iss_one_pop:
 	input:
 		"samples_{ID}.fasta"
+		#p1="samples_{ID}_p1.fasta",
+		#p2="samples_{ID}_p2.fasta"
 	output:
+		#temp("reads_{ID}_p1_R1.fastq"),
+		#temp("reads_{ID}_p1_R2.fastq"),
+		#temp("reads_{ID}_p2_R1.fastq"),
+		#temp("reads_{ID}_p2_R2.fastq")
 		temp("reads_{ID}_R1.fastq"),
 		temp("reads_{ID}_R2.fastq")
 	threads: 4

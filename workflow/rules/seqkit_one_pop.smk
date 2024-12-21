@@ -2,7 +2,11 @@ def get_L(wildcards):
         L = parameters.loc[parameters["ID"] == wildcards.ID, "L"]
         return int(L.iloc[0])
 
-rule seqkit:
+def get_num_genos(wildcards):
+        n = parameters.loc[parameters["ID"] == wildcards.ID, "n"]
+        return int(n.iloc[0])
+
+rule seqkit_one_pop:
 	input:
 		vcffilled= "samples_filled_{ID}.vcf.gz",
 		slimfasta = "slim_{ID}.fasta"
@@ -16,7 +20,8 @@ rule seqkit:
 		mem_mb_per_cpu=8000,
 		time=239
 	params:
-		L=get_L
+		L=get_L,
+		n=get_num_genos
 	conda:
 		"../envs/seqkit.yaml"
 	log: 

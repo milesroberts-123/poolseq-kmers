@@ -1,4 +1,4 @@
-rule varscan:
+rule varscan_one_pop:
 	input:
 		reffasta = "ref_{ID}.fasta",
 		trimbam = "trimmed_{ID}.bam"
