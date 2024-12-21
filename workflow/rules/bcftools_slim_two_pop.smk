@@ -17,7 +17,7 @@ rule bcftools_slim_two_pop:
 		compvcf = "slim_{ID}.vcf.gz",
 		vcfidx = "slim_{ID}.vcf.gz.tbi",
 	output:
-		samplevcf = temp("samples_{ID}.vcf.gz"),
+		#samplevcf = temp("samples_{ID}.vcf.gz"),
 		allelefreq_p1 = "slim_allele_freqs_{ID}_p1.txt",
 		allelefreq_p2 = "slim_allele_freqs_{ID}_p2.txt",
 		filledvcf = temp("samples_filled_{ID}_p1p2.vcf.gz")
@@ -34,10 +34,10 @@ rule bcftools_slim_two_pop:
 	shell:
 		"""
 		# remove reference
-		bcftools view --samples-file ^../config/ref.txt -Oz -o {output.samplevcf} {input.compvcf} &> {log}
+		# bcftools view --samples-file ^../config/ref.txt -Oz -o {output.samplevcf} {input.compvcf} &> {log}
 
 		# calculate allele frequencies
-		bcftools +fill-tags {output.samplevcf} -Oz -o {output.filledvcf} &> {log}
+		bcftools +fill-tags {input.compvcf} -Oz -o {output.filledvcf} &> {log}
 
 		# split allele frequencies by populations
 		bcftools query -s {params.samples} -f '%CHROM %POS %NS %AF %AC\n' -o {output.allelefreq_p1} {output.filledvcf} &> {log}
