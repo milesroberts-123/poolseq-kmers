@@ -31,20 +31,22 @@ rule poolsnp_one_pop:
 		#names = get_names,
 		wd = get_wd,
 		prefix = get_prefix
+	conda:
+		"../envs/poolsnp.yaml"
 	shell:
-	"""
-	samtools mpileup -f {input.reffasta} {input.trimbam} > {output.mpileup}
+		"""
+		samtools mpileup -f {input.reffasta} {input.trimbam} > {output.mpileup}
 
-	PoolSNP.sh   \
-	mpileup={params.wd}{output.mpileup} \
-	reference={params.wd}{input.reffasta} \
-	names={wildcards.ID} \
-	max-cov=0.98 \
-	min-cov=10 \
-	min-count=10 \
-	min-freq=0.01 \
-	miss-frac=0.2 \
-	badsites=1 \
-	allsites=0 \
-	output={params.prefix}
-	"""
+		PoolSNP.sh   \
+		mpileup={params.wd}{output.mpileup} \
+		reference={params.wd}{input.reffasta} \
+		names={wildcards.ID} \
+		max-cov=0.98 \
+		min-cov=10 \
+		min-count=10 \
+		min-freq=0.01 \
+		miss-frac=0.2 \
+		badsites=1 \
+		allsites=0 \
+		output={params.prefix}
+		"""
