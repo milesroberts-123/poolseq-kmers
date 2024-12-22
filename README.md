@@ -42,6 +42,16 @@ What about when the genome sequence is not repetitive? I could vary the shannon 
 
 Dang, smudgeplot is going through a big update right now, which is just my luck. 
 
+### 2024-12-21
+
+Trying to debug the workflow, but it's very complex with lots of paths. I'll just debug chunks of the workflow at a time
+
+A snippet for debugging:
+
+```
+snakemake --cluster "sbatch --time={resources.time} --cpus-per-task={threads} --mem-per-cpu={resources.mem_mb_per_cpu} --partition=josephsnodes --account=josephsnodes" --resources load=1 --jobs 950 --cores 950 --use-conda --rerun-incomplete --rerun-triggers mtime --scheduler greedy --keep-incomplete calls_2600_p1.tsv kmerpairs_2600_p1_coverages.tsv kmerpairs_2600_p1_sequences.tsv discoRes_ad_2600_p1.txt slim_allele_freqs_2600_p1.txt 2600_p1_poolsnp_output.vcf.gz calls_2600_p2.tsv kmerpairs_2600_p2_coverages.tsv kmerpairs_2600_p2_sequences.tsv discoRes_ad_2600_p2.txt slim_allele_freqs_2600_p2.txt 2600_p2_poolsnp_output.vcf.gz
+```
+
 ## to do
 
 - [x] add option to vary sequencing machine
