@@ -13,27 +13,32 @@ def get_samples(wildcards):
         return samples
 
 def get_wd(wildcards):
+	return os.getcwd() + "/"
+
+def get_prefix(wildcards):
 	return os.getcwd() + "/" + str(wildcards.ID) + "poolsnp_output" 
 
-rule poolsnp:
+rule poolsnp_one_pop:
 	input:
 		reffasta = "ref_{ID}.fasta",
 		trimbam = "trimmed_{ID}.bam"
 	output:
 		vcf = "{ID}_poolsnp_output.vcf.gz",
 		cov = "{ID}_poolsnp_output-cov-0.98.txt",
-		bs = "{ID}_poolsnp_output_BS.txt.gz"
+		bs = "{ID}_poolsnp_output_BS.txt.gz",
+		mpileup = temp("{ID}.mpileup")
 	params:
-		names = get_names
-		prefix = get_wd
+		#names = get_names,
+		wd = get_wd,
+		prefix = get_prefix
 	shell:
 	"""
 	samtools mpileup -f {input.reffasta} {input.trimbam} > {output.mpileup}
 
 	PoolSNP.sh   \
-	mpileup={output.mpileup} \
-	reference={input.reffasta} \
-	names={params.names} \
+	mpileup={params.wd}{output.mpileup} \
+	reference={params.wd}{input.reffasta} \
+	names={wildcards.ID} \
 	max-cov=0.98 \
 	min-cov=10 \
 	min-count=10 \
