@@ -8,7 +8,7 @@ rule discosnp_two_pop:
                 pread2_p2 = "trimmed_paired_R2_{ID}_p2.fastq",
                 uread1_p2 = "trimmed_unpaired_R1_{ID}_p2.fastq",
                 uread2_p2 = "trimmed_unpaired_R2_{ID}_p2.fastq",
-		ref = "ref_{ID}.fasta"
+		ref = "ref_{ID}_p1.fasta"
 	output:
 		tmpread_p1 = temp("tmp_read_set_{ID}_p1.fastq"),
 		fasta_p1 = temp("discoRes_{ID}_p1_k_31_c_3_D_100_P_3_b_0_coherent.fa"),

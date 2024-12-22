@@ -17,7 +17,6 @@ rule bcftools_slim_two_pop:
 		compvcf = "slim_{ID}.vcf.gz",
 		vcfidx = "slim_{ID}.vcf.gz.tbi",
 	output:
-		#samplevcf = temp("samples_{ID}.vcf.gz"),
 		allelefreq_p1 = "slim_allele_freqs_{ID}_p1.txt",
 		allelefreq_p2 = "slim_allele_freqs_{ID}_p2.txt",
 		filledvcf = temp("samples_filled_{ID}_p1p2.vcf.gz")
