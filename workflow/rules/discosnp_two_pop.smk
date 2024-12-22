@@ -29,7 +29,7 @@ rule discosnp_two_pop:
 		"logs/discosnp/{ID}.log"
 	params:
 		prefix_p1 = "discoRes_{ID}_p1",
-		prefix_p2 = "discoRes_{ID}_p1"
+		prefix_p2 = "discoRes_{ID}_p2"
 	shell:
 		"""
 		# combine reads into one set

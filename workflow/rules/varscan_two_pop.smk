@@ -16,7 +16,7 @@ rule varscan_two_pop:
 		"logs/varscan/{ID}.log"
 	shell:
 		"""
-		samtools mpileup -f {input.reffasta} {input.trimbam_p1} | varscan pileup2snp 1> {output.cp2} 2> {log}
+		samtools mpileup -f {input.reffasta} {input.trimbam_p1} | varscan pileup2snp 1> {output.cp1} 2> {log}
 
 		samtools mpileup -f {input.reffasta} {input.trimbam_p2} | varscan pileup2snp 1> {output.cp2} 2> {log}
 		"""
