@@ -11,9 +11,10 @@ rule discosnp_one_pop:
 		pac = "ref_{ID}.fasta.pac",
 		sa = "ref_{ID}.fasta.sa"
 	output:
-		tmpread = temp("tmp_read_set_{ID}.fastq"),
+		#tmpread = temp("tmp_read_set_{ID}.fastq"),
 		fasta = temp("discoRes_{ID}_k_31_c_3_D_100_P_3_b_0_coherent.fa"),
 		fof = temp("fof_{ID}.txt"),
+		fof_reads = temp("fof_reads_{ID}.txt"),
 		vcf = "discoRes_{ID}_k_31_c_3_D_100_P_3_b_0_coherent.vcf"
 	threads: 1
 	resources:
@@ -28,11 +29,9 @@ rule discosnp_one_pop:
 		prefix = "discoRes_{ID}"
 	shell:
 		"""
-		# combine reads into one set
-		cat {input.pread1} {input.pread2} {input.uread1} {input.uread2} > {output.tmpread}
-
 		# create file of files
-		echo "{output.tmpread}" > {output.fof}
+		echo "{output.fof_reads}" > {output.fof}
+		echo -e "{input.pread1}\n{input.pread2}\n{input.uread1}\n{input.uread2}" > {output.fof_reads}
 
 		# run discosnp, with results for mapping SNPs to reference
 		run_discoSnp++.sh -r {output.fof} -c 3 -G {input.ref} -p {params.prefix}

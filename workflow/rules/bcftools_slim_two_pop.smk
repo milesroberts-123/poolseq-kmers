@@ -41,8 +41,8 @@ rule bcftools_slim_two_pop:
 		bcftools view --samples-file ^../config/ref.txt -Oz -o {output.samplevcf_p1p2} {input.compvcf} &> {log}
 
 		# split by population
-		bcftools view -s {params.samples} -Oz -o {output.samplevcf_p1} {input.compvcf} &> {log}
-		bcftools view -s ^{params.samples} -Oz -o {output.samplevcf_p2} {input.compvcf} &> {log}
+		bcftools view -s {params.samples} -Oz -o {output.samplevcf_p1} {output.samplevcf_p1p2} &> {log}
+		bcftools view -s ^{params.samples} -Oz -o {output.samplevcf_p2} {output.samplevcf_p1p2} &> {log}
 
 		# calculate allele frequencies
 		bcftools +fill-tags {input.compvcf} -Oz -o {output.filledvcf_p1p2} &> {log}

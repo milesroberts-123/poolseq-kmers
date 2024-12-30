@@ -3,9 +3,7 @@ title: "R Notebook"
 output: html_notebook
 ---
 
-This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
-
-Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+# packages
 
 ```{r}
 rm(list = ls())
@@ -19,6 +17,8 @@ strReverse <- function(x) sapply(lapply(strsplit(x, NULL), rev), paste, collapse
 
 today = Sys.Date()
 ```
+
+# functions
 
 ```{r}
 # fucntion to calculate rates and accuracy
@@ -64,9 +64,19 @@ params = read.table("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/co
 
 results = NULL
 
+# get list of simulation ids
+simids = params$ID[(params$simtype == "onepop") | (params$simtype == "sweep")]
+
+two_pop_ids = expand.grid(params$ID[(params$simtype == "twopop")], c("p1", "p2"))
+
+two_pop_ids = paste(two_pop_ids$Var1, two_pop_ids$Var2, sep = "_")
+
+simids = c(two_pop_ids, simids)
+
 #for(i in dones){
-#for(i in params$ID){
-for(i in 923:1000){
+#for(i in params$ID[(params$simtype == "onepop") | (params$simtype == "sweep")]){
+#for(i in 923:1000){
+for(i in simids){
   print(paste("Processing simulation ", i, "...", sep = ""))
   
 # load pairs of k-mers

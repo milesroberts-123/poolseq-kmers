@@ -1,9 +1,13 @@
 library("dplyr") 
 
 replicates = 1
-sample_sizes = c(5, 10, 25, 50, 100)
-coverages = c(20, 50, 80, 100, 200)
-sequencers = c("miseq", "hiseq", "nextseq", "novaseq")
+#sample_sizes = c(5, 10, 25, 50, 100)
+#coverages = c(20, 50, 80, 100, 200)
+#sequencers = c("miseq", "hiseq", "nextseq", "novaseq")
+
+sample_sizes = c(5, 10)
+coverages = c(20, 50)
+sequencers = c("miseq", "hiseq")
 
 # create data frame of workflow parameters
 one_pop_params = expand.grid(
