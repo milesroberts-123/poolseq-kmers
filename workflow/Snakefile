@@ -26,17 +26,23 @@ rule all:
 		expand("discoRes_ad_{ID}_p2.txt", ID=two_pop_params.index.get_level_values("ID")),
 		expand("slim_allele_freqs_{ID}_p1.txt", ID=two_pop_params.index.get_level_values("ID")),
 		expand("slim_allele_freqs_{ID}_p2.txt", ID=two_pop_params.index.get_level_values("ID")),
-		expand("{ID}_p1_poolsnp_output.vcf.gz", ID=two_pop_params.index.get_level_values("ID")),
-		expand("{ID}_p2_poolsnp_output.vcf.gz", ID=two_pop_params.index.get_level_values("ID")),
+		expand("poolsnp_final_{ID}_p1.txt", ID=two_pop_params.index.get_level_values("ID")),
+		expand("poolsnp_final_{ID}_p2.txt", ID=two_pop_params.index.get_level_values("ID")),		
+		#expand("{ID}_p1_poolsnp_output.vcf.gz", ID=two_pop_params.index.get_level_values("ID")),
+		#expand("{ID}_p2_poolsnp_output.vcf.gz", ID=two_pop_params.index.get_level_values("ID")),
 		expand("calls_{ID}.tsv", ID=one_pop_params.index.get_level_values("ID")),
 		expand("kmerpairs_{ID}_coverages.tsv", ID=one_pop_params.index.get_level_values("ID")),
 		expand("kmerpairs_{ID}_sequences.tsv", ID=one_pop_params.index.get_level_values("ID")),
 		expand("discoRes_ad_{ID}.txt", ID=one_pop_params.index.get_level_values("ID")),
 		expand("slim_allele_freqs_{ID}.txt", ID=one_pop_params.index.get_level_values("ID")),
-		expand("{ID}_poolsnp_output.vcf.gz", ID=one_pop_params.index.get_level_values("ID")),
+		#expand("{ID}_poolsnp_output.vcf.gz", ID=one_pop_params.index.get_level_values("ID")),
+		expand("poolsnp_final_{ID}.txt", ID=one_pop_params.index.get_level_values("ID")),
+
 
 include: "rules/bcftools_discosnp_one_pop.smk"
 include: "rules/bcftools_discosnp_two_pop.smk"
+include: "rules/bcftools_poolsnp_one_pop.smk"
+include: "rules/bcftools_poolsnp_two_pop.smk"
 include: "rules/bcftools_slim_one_pop.smk"
 include: "rules/bcftools_slim_two_pop.smk"
 include: "rules/bwa_one_pop.smk"
