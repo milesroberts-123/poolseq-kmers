@@ -38,6 +38,9 @@ rule poolsnp_two_pop:
 		prefix = get_prefix
 	conda:
 		"../envs/poolsnp.yaml"
+	resources:
+		mem_mb_per_cpu=8000,
+		time=239
 	shell:
 		"""
 		samtools mpileup -f {input.reffasta} {input.trimbam_p1} > {output.mpileup_p1}
