@@ -15,8 +15,8 @@ def get_samples(wildcards):
 def get_wd(wildcards):
 	return os.getcwd() + "/"
 
-def get_prefix(wildcards):
-	return os.getcwd() + "/" + str(wildcards.ID) + "_poolsnp_output" 
+#def get_prefix(wildcards):
+#	return os.getcwd() + "/" + str(wildcards.ID) + "_poolsnp_output" 
 
 rule poolsnp_one_pop:
 	input:
@@ -30,7 +30,7 @@ rule poolsnp_one_pop:
 	params:
 		#names = get_names,
 		wd = get_wd,
-		prefix = get_prefix
+		#prefix = get_prefix
 	conda:
 		"../envs/poolsnp.yaml"
 	resources:
@@ -51,5 +51,5 @@ rule poolsnp_one_pop:
 		miss-frac=0.2 \
 		badsites=1 \
 		allsites=0 \
-		output={params.prefix}
+		output={params.wd}{wildcards.ID}_poolsnp_output
 		"""

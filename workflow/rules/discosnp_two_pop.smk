@@ -8,7 +8,12 @@ rule discosnp_two_pop:
                 pread2_p2 = "trimmed_paired_R2_{ID}_p2.fastq",
                 uread1_p2 = "trimmed_unpaired_R1_{ID}_p2.fastq",
                 uread2_p2 = "trimmed_unpaired_R2_{ID}_p2.fastq",
-		ref = "ref_{ID}_p1.fasta"
+		ref = "ref_{ID}_p1.fasta",
+		amb = "ref_{ID}_p1.fasta.amb",
+		ann = "ref_{ID}_p1.fasta.ann",
+		bwt = "ref_{ID}_p1.fasta.bwt",
+		pac = "ref_{ID}_p1.fasta.pac",
+		sa = "ref_{ID}_p1.fasta.sa"
 	output:
 		tmpread_p1 = "tmp_read_set_{ID}_p1.fastq",
 		fasta_p1 = temp("discoRes_{ID}_p1_k_31_c_3_D_100_P_3_b_0_coherent.fa"),
@@ -35,15 +40,16 @@ rule discosnp_two_pop:
 		# combine reads into one set
 		cat {input.pread1_p1} {input.pread2_p1} {input.uread1_p1} {input.uread2_p1} > {output.tmpread_p1}
 
-		cat {input.pread1_p2} {input.pread2_p2} {input.uread1_p2} {input.uread2_p2} > {output.tmpread_p2}
-
 		# create file of files
 		echo "{output.tmpread_p1}" > {output.fof_p1}
 
-		echo "{output.tmpread_p2}" > {output.fof_p2}
-
 		# run discosnp, with results for mapping SNPs to reference
 		run_discoSnp++.sh -r {output.fof_p1} -c 3 -G {input.ref} -p {params.prefix_p1}
+
+		# repeat for population 2
+		cat {input.pread1_p2} {input.pread2_p2} {input.uread1_p2} {input.uread2_p2} > {output.tmpread_p2}
+
+		echo "{output.tmpread_p2}" > {output.fof_p2}
 
 		run_discoSnp++.sh -r {output.fof_p2} -c 3 -G {input.ref} -p {params.prefix_p2}
 		"""

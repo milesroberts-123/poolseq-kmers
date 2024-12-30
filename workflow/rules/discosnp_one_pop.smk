@@ -4,7 +4,12 @@ rule discosnp_one_pop:
                 pread2 = "trimmed_paired_R2_{ID}.fastq",
                 uread1 = "trimmed_unpaired_R1_{ID}.fastq",
                 uread2 = "trimmed_unpaired_R2_{ID}.fastq",
-		ref = "ref_{ID}.fasta"
+		ref = "ref_{ID}.fasta",
+		amb = "ref_{ID}.fasta.amb",
+		ann = "ref_{ID}.fasta.ann",
+		bwt = "ref_{ID}.fasta.bwt",
+		pac = "ref_{ID}.fasta.pac",
+		sa = "ref_{ID}.fasta.sa"
 	output:
 		tmpread = temp("tmp_read_set_{ID}.fastq"),
 		fasta = temp("discoRes_{ID}_k_31_c_3_D_100_P_3_b_0_coherent.fa"),

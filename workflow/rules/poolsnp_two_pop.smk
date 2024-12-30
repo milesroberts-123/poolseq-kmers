@@ -15,8 +15,8 @@ def get_samples(wildcards):
 def get_wd(wildcards):
 	return os.getcwd() + "/"
 
-def get_prefix(wildcards):
-	return os.getcwd() + "/" + str(wildcards.ID) + "_poolsnp_output" 
+#def get_prefix(wildcards):
+#	return os.getcwd() + "/" + str(wildcards.ID) + "_poolsnp_output" 
 
 rule poolsnp_two_pop:
 	input:
@@ -35,7 +35,7 @@ rule poolsnp_two_pop:
 	params:
 		#names = get_names,
 		wd = get_wd,
-		prefix = get_prefix
+		#prefix = get_prefix
 	conda:
 		"../envs/poolsnp.yaml"
 	resources:
@@ -47,7 +47,7 @@ rule poolsnp_two_pop:
 
 		samtools mpileup -f {input.reffasta} {input.trimbam_p2} > {output.mpileup_p2}
 
-		PoolSNP.sh mpileup={params.wd}{output.mpileup_p1} reference={params.wd}{input.reffasta} names={wildcards.ID}_p1 max-cov=0.98 min-cov=10 min-count=10 min-freq=0.01 miss-frac=0.2 badsites=1 allsites=0 output={params.prefix}_p1
+		PoolSNP.sh mpileup={params.wd}{output.mpileup_p1} reference={params.wd}{input.reffasta} names={wildcards.ID}_p1 max-cov=0.98 min-cov=10 min-count=10 min-freq=0.01 miss-frac=0.2 badsites=1 allsites=0 output={params.wd}{wildcards.ID}_p1_poolsnp_output
 	
-        	PoolSNP.sh mpileup={params.wd}{output.mpileup_p2} reference={params.wd}{input.reffasta} names={wildcards.ID}_p2 max-cov=0.98 min-cov=10 min-count=10 min-freq=0.01 miss-frac=0.2 badsites=1 allsites=0 output={params.prefix}_p2
+        	PoolSNP.sh mpileup={params.wd}{output.mpileup_p2} reference={params.wd}{input.reffasta} names={wildcards.ID}_p2 max-cov=0.98 min-cov=10 min-count=10 min-freq=0.01 miss-frac=0.2 badsites=1 allsites=0 output={params.wd}{wildcards.ID}_p2_poolsnp_output
 		"""
