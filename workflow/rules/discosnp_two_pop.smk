@@ -10,13 +10,13 @@ rule discosnp_two_pop:
                 uread2_p2 = "trimmed_unpaired_R2_{ID}_p2.fastq",
 		ref = "ref_{ID}_p1.fasta"
 	output:
-		tmpread_p1 = temp("tmp_read_set_{ID}_p1.fastq"),
+		tmpread_p1 = "tmp_read_set_{ID}_p1.fastq",
 		fasta_p1 = temp("discoRes_{ID}_p1_k_31_c_3_D_100_P_3_b_0_coherent.fa"),
-		fof_p1 = temp("fof_{ID}_p1.txt"),
+		fof_p1 = "fof_{ID}_p1.txt",
 		vcf_p1 = "discoRes_{ID}_p1_k_31_c_3_D_100_P_3_b_0_coherent.vcf",
-		tmpread_p2 = temp("tmp_read_set_{ID}_p2.fastq"),
+		tmpread_p2 = "tmp_read_set_{ID}_p2.fastq",
 		fasta_p2 = temp("discoRes_{ID}_p2_k_31_c_3_D_100_P_3_b_0_coherent.fa"),
-		fof_p2 = temp("fof_{ID}_p2.txt"),
+		fof_p2 = "fof_{ID}_p2.txt",
 		vcf_p2 = "discoRes_{ID}_p2_k_31_c_3_D_100_P_3_b_0_coherent.vcf"
 	threads: 1
 	resources:
@@ -34,13 +34,16 @@ rule discosnp_two_pop:
 		"""
 		# combine reads into one set
 		cat {input.pread1_p1} {input.pread2_p1} {input.uread1_p1} {input.uread2_p1} > {output.tmpread_p1}
+
 		cat {input.pread1_p2} {input.pread2_p2} {input.uread1_p2} {input.uread2_p2} > {output.tmpread_p2}
 
 		# create file of files
 		echo "{output.tmpread_p1}" > {output.fof_p1}
+
 		echo "{output.tmpread_p2}" > {output.fof_p2}
 
 		# run discosnp, with results for mapping SNPs to reference
 		run_discoSnp++.sh -r {output.fof_p1} -c 3 -G {input.ref} -p {params.prefix_p1}
+
 		run_discoSnp++.sh -r {output.fof_p2} -c 3 -G {input.ref} -p {params.prefix_p2}
 		"""
