@@ -16,7 +16,7 @@ def get_wd(wildcards):
 	return os.getcwd() + "/"
 
 def get_prefix(wildcards):
-	return os.getcwd() + "/" + str(wildcards.ID) + "poolsnp_output" 
+	return os.getcwd() + "/" + str(wildcards.ID) + "_poolsnp_output" 
 
 rule poolsnp_one_pop:
 	input:
