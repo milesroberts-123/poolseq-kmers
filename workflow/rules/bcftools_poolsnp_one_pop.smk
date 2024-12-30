@@ -15,6 +15,12 @@ rule bcftools_poolsnp_one_pop:
 		"logs/bcftools_poolsnp/{ID}.log"
 	shell:
 		"""
+		# unpack gzip
+		gunzip {input.vcf}
+
+		# recompress with bgzip
+		bgzip $(basename {input.vcf} .gz)
+
 		# index vcf
 		tabix {input.vcf}
 

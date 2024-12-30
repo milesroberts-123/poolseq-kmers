@@ -17,6 +17,14 @@ rule bcftools_poolsnp_two_pop:
 		"logs/bcftools_poolsnp/{ID}.log"
 	shell:
 		"""
+		# unpack gzip
+		gunzip {input.vcf_p1}
+		gunzip {input.vcf_p2}
+
+		# recompress with bgzip
+		bgzip $(basename {input.vcf_p1} .gz)
+		bgzip $(basename {input.vcf_p2} .gz)
+
 		# index vcf
 		tabix {input.vcf_p1}
 		tabix {input.vcf_p2}
