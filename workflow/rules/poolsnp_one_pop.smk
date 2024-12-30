@@ -44,11 +44,11 @@ rule poolsnp_one_pop:
 		mpileup={params.wd}{output.mpileup} \
 		reference={params.wd}{input.reffasta} \
 		names={wildcards.ID} \
-		max-cov=0.98 \
-		min-cov=10 \
-		min-count=10 \
+		max-cov=0.9999 \
+		min-cov=8 \
+		min-count=2 \
 		min-freq=0.01 \
-		miss-frac=0.2 \
+		miss-frac=0 \
 		badsites=1 \
 		allsites=0 \
 		output={params.wd}{wildcards.ID}_poolsnp_output

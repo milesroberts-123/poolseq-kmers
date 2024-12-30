@@ -25,11 +25,11 @@ rule poolsnp_two_pop:
 		trimbam_p2 = "trimmed_{ID}_p2.bam"
 	output:
 		vcf_p1 = "{ID}_p1_poolsnp_output.vcf.gz",
-		cov_p1 = "{ID}_p1_poolsnp_output-cov-0.98.txt",
+		#cov_p1 = "{ID}_p1_poolsnp_output-cov-0.98.txt",
 		bs_p1 = "{ID}_p1_poolsnp_output_BS.txt.gz",
 		mpileup_p1 = temp("{ID}_p1.mpileup"),
 		vcf_p2 = "{ID}_p2_poolsnp_output.vcf.gz",
-		cov_p2 = "{ID}_p2_poolsnp_output-cov-0.98.txt",
+		#cov_p2 = "{ID}_p2_poolsnp_output-cov-0.98.txt",
 		bs_p2 = "{ID}_p2_poolsnp_output_BS.txt.gz",
 		mpileup_p2 = temp("{ID}_p2.mpileup")
 	params:
@@ -47,7 +47,7 @@ rule poolsnp_two_pop:
 
 		samtools mpileup -f {input.reffasta} {input.trimbam_p2} > {output.mpileup_p2}
 
-		PoolSNP.sh mpileup={params.wd}{output.mpileup_p1} reference={params.wd}{input.reffasta} names={wildcards.ID}_p1 max-cov=1 min-cov=8 min-count=2 min-freq=0.01 miss-frac=0 badsites=1 allsites=0 output={params.wd}{wildcards.ID}_p1_poolsnp_output
+		PoolSNP.sh mpileup={params.wd}{output.mpileup_p1} reference={params.wd}{input.reffasta} names={wildcards.ID}_p1 max-cov=0.9999 min-cov=8 min-count=2 min-freq=0.01 miss-frac=0 badsites=1 allsites=0 output={params.wd}{wildcards.ID}_p1_poolsnp_output
 	
-        	PoolSNP.sh mpileup={params.wd}{output.mpileup_p2} reference={params.wd}{input.reffasta} names={wildcards.ID}_p2 max-cov=1 min-cov=8 min-count=2 min-freq=0.01 miss-frac=0 badsites=1 allsites=0 output={params.wd}{wildcards.ID}_p2_poolsnp_output
+        	PoolSNP.sh mpileup={params.wd}{output.mpileup_p2} reference={params.wd}{input.reffasta} names={wildcards.ID}_p2 max-cov=0.9999 min-cov=8 min-count=2 min-freq=0.01 miss-frac=0 badsites=1 allsites=0 output={params.wd}{wildcards.ID}_p2_poolsnp_output
 		"""
