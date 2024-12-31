@@ -30,6 +30,9 @@ rule bcftools_poolsnp_two_pop:
 		tabix {input.vcf_p2}
 
 		# output allele depths
-		bcftools query -f '%CHROM %POS [ %AD] [ %DP]\n' {input.vcf_p1} | sed 's:,:\t:g' > {output.final_p1}
-		bcftools query -f '%CHROM %POS [ %AD] [ %DP]\n' {input.vcf_p2} | sed 's:,:\t:g' > {output.final_p2}
+		# include only biallelic snps
+		#bcftools query -f '%CHROM %POS [ %AD] [ %DP]\n' {input.vcf_p1} | sed 's:,:\t:g' > {output.final_p1}
+		#bcftools query -f '%CHROM %POS [ %AD] [ %DP]\n' {input.vcf_p2} | sed 's:,:\t:g' > {output.final_p2}
+		bcftools view -m2 -M2 -v snps {input.vcf_p1} | bcftools query -f '%CHROM %POS [ %AD] [ %DP]\n' | sed 's:,:\t:g' > {output.final_p1}
+		bcftools view -m2 -M2 -v snps {input.vcf_p2} | bcftools query -f '%CHROM %POS [ %AD] [ %DP]\n' | sed 's:,:\t:g' > {output.final_p2}
 		"""

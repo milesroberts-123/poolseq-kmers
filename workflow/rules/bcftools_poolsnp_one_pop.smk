@@ -25,5 +25,6 @@ rule bcftools_poolsnp_one_pop:
 		tabix {input.vcf}
 
 		# output allele depths
-		bcftools query -f '%CHROM %POS [ %AD] [ %DP]\n' {input.vcf} | sed 's:,:\t:g' > {output.final}
+		#bcftools query -f '%CHROM %POS [ %AD] [ %DP]\n' {input.vcf} | sed 's:,:\t:g' > {output.final}
+		bcftools view -m2 -M2 -v snps {input.vcf} | bcftools query -f '%CHROM %POS [ %AD] [ %DP]\n' | sed 's:,:\t:g' > {output.final}		
 		"""

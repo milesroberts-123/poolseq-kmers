@@ -106,7 +106,7 @@ kmer_pairs$kmer_maf = pmin(kmer_pairs$c1, kmer_pairs$c2)/(kmer_pairs$c1 + kmer_p
 #   theme_classic()
 
 # load in actual allele freqs from simulations
-true_af = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/slim_allele_freqs_", i, ".txt", sep = ""), col.names = c("chrom", "pos", "af", "ac"))
+true_af = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/slim_allele_freqs_", i, ".txt", sep = ""), col.names = c("chrom", "pos", "ns", "af", "ac"))
 
 true_af$ac = as.numeric(true_af$ac)
 
@@ -127,7 +127,13 @@ disco = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kme
 disco$disco_maf = pmin(disco$c1, disco$c2)/(disco$c1 + disco$c2)
 
 # get key for position to k-mers
-pos_kmer_key = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/center_kmer_pairs_", i, ".txt", sep = ""), fill = T, col.names = c("pos", "k1", "k2", "k3", "k4"))
+if(grepl("_p1|_p2", i)){
+  j = gsub("_p1|_p2", "_p1p2", i)
+} else {
+  j = i
+}
+
+pos_kmer_key = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/center_kmer_pairs_", j, ".txt", sep = ""), fill = T, col.names = c("pos", "k1", "k2", "k3", "k4"))
 
 pos_kmer_key$leftk = substr(pos_kmer_key$k1, 1, 15)
 pos_kmer_key$rightk = substr(pos_kmer_key$k1, 17, 31)
@@ -170,8 +176,16 @@ varscan$snp_maf_varscan = pmin(varscan$Reads1, varscan$Reads2)/(varscan$Reads1 +
 
 names(varscan)[2] = "pos"
 
+# load poolsnp calls
+poolsnp = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/poolsnp_final_", i, ".txt", sep = ""), col.names = c("chrom", "pos", "c1", "t"))
+
+poolsnp$snp_maf_poolsnp = pmin(poolsnp$c1/poolsnp$t, 1 - poolsnp$c1/poolsnp$t)
+
 # compare varscan and ground truth
 compare_maf_varscan = merge(true_af[,c("pos", "snp_maf")], varscan, by = "pos")
+
+# compare poolsnp and ground truth
+compare_maf_poolsnp = merge(true_af[,c("pos", "snp_maf")], poolsnp, by = "pos")
 
 # compare discosnp and ground truth
 compare_maf_disco = merge(true_af[,c("pos", "snp_maf")], disco, by = "pos")
@@ -186,7 +200,11 @@ disco_vs_truth_maf_cor = cor.test(compare_maf_disco$snp_maf, compare_maf_disco$d
 
 varscan_vs_truth_maf_cor = cor.test(compare_maf_varscan$snp_maf, compare_maf_varscan$snp_maf_varscan, method = "pearson")$estimate
 
+poolsnp_vs_truth_maf_cor = cor.test(compare_maf_poolsnp$snp_maf, compare_maf_poolsnp$snp_maf_poolsnp, method = "pearson")$estimate
+
 varscan_rates = calc_rates(true_af$pos, varscan$pos, 1:1e6)
+
+poolsnp_rates = calc_rates(true_af$pos, poolsnp$pos, 1:1e6)
 
 kmer_rates = calc_rates(true_af$pos, pos_kmer_pairs$pos, 1:1e6)
 
@@ -229,12 +247,24 @@ result = data.frame(
   varscan_tpr = varscan_rates[8],
   varscan_fpr = varscan_rates[9],
   varscan_tnr = varscan_rates[10],
-  varscan_fnr = varscan_rates[11]
+  varscan_fnr = varscan_rates[11],
+  poolsnp_vs_truth_maf_cor = poolsnp_vs_truth_maf_cor,
+  poolsnp_pos = poolsnp_rates[1],
+  poolsnp_neg = poolsnp_rates[2],
+  poolsnp_tp = poolsnp_rates[3],
+  poolsnp_fp = poolsnp_rates[4],
+  poolsnp_tn = poolsnp_rates[5],
+  poolsnp_fn = poolsnp_rates[6],
+  poolsnp_acc = poolsnp_rates[7],
+  poolsnp_tpr = poolsnp_rates[8],
+  poolsnp_fpr = poolsnp_rates[9],
+  poolsnp_tnr = poolsnp_rates[10],
+  poolsnp_fnr = poolsnp_rates[11]
 )
 
 results = rbind(results, result)
 
-rm(compare_maf_kmer, compare_maf_kmer_varscan, compare_maf_varscan, compare_maf_disco, disco, disco_rates, kmer_covs, kmer_pairs, pos_kmer_key, pos_kmer_pairs, pos_kmer_pairs_rc, true_af, varscan, kmer_rates, kmer_vs_truth_maf_cor, varscan_rates, varscan_vs_truth_maf_cor, disco_vs_truth_maf_cor)
+rm(compare_maf_kmer, compare_maf_kmer_varscan, compare_maf_varscan, compare_maf_poolsnp, poolsnp, poolsnp_rates, compare_maf_disco, disco, disco_rates, kmer_covs, kmer_pairs, pos_kmer_key, pos_kmer_pairs, pos_kmer_pairs_rc, true_af, varscan, kmer_rates, kmer_vs_truth_maf_cor, varscan_rates, varscan_vs_truth_maf_cor, disco_vs_truth_maf_cor)
 
 }
 
