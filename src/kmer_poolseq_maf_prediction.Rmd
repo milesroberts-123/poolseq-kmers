@@ -13,14 +13,15 @@ library(plyr)
 library(MASS)
 library(reshape)
 
-strReverse <- function(x) sapply(lapply(strsplit(x, NULL), rev), paste, collapse="")
-
 today = Sys.Date()
 ```
 
 # functions
 
 ```{r}
+# reverse a string
+strReverse <- function(x) sapply(lapply(strsplit(x, NULL), rev), paste, collapse="")
+
 # fucntion to calculate rates and accuracy
 calc_rates = function(truth, test, sample_space){
   
