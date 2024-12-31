@@ -24,7 +24,7 @@ rule poolsnp_one_pop:
 		trimbam = "trimmed_{ID}.bam"
 	output:
 		vcf = "{ID}_poolsnp_output.vcf.gz",
-		cov = "{ID}_poolsnp_output-cov-0.98.txt",
+		#cov = "{ID}_poolsnp_output-cov-0.98.txt",
 		bs = "{ID}_poolsnp_output_BS.txt.gz",
 		mpileup = temp("{ID}.mpileup")
 	params:
