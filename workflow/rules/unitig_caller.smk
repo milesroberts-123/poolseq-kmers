@@ -17,7 +17,7 @@ rule unitig_caller:
 	params:
 		rtab_prefix = "unitigs_{ID}"
 	shell:
-		"""
+		r"""
 		# create list of reads for unitig caller
 		echo $PWD/{input.pread1} >> {output.readfile}
 		echo $PWD/{input.pread2} >> {output.readfile}
