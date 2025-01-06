@@ -12,6 +12,7 @@ library(ggplot2)
 library(plyr)
 library(MASS)
 library(reshape)
+library(ggpubr)
 
 today = Sys.Date()
 ```
@@ -286,10 +287,132 @@ write.table(pares, paste("/mnt/ufs18/home-010/robe1195/Josephs_Lab_Projects/pool
 
 # selective sweeps
 ```{r}
+# Hypothesis: the average distance between SNPs is higher after selective sweep compared to neutral scenario
+allele_files = list.files(path = "/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow", pattern = "slim_allele_freqs_.*", full.names = T)
 
-unitig_files = list.files(path = "/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/", pattern = "unitig_alignments_.*")
+allele_files = allele_files[!grepl("_p.", allele_files)]
 
-unitigs = read.table("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/unitig_alignments_189.txt", col.names = c("qid", "sid", "pid", "alen", "mm", "go", "qs", "qe", "ss", "se", "ev", "bs"))
+allele_file_ids = as.numeric(gsub(".txt", "", gsub("slim_allele_freqs_", "", gsub("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/", "", allele_files))))
+
+allele_files = lapply(allele_files, read.table, col.names = c("chrom", "pos", "ns", "af", "ac"))
+
+mean_dist_bw_mut = function(x){
+  mean(diff(x$pos))
+}
+
+plotdata = data.frame(
+  ID = allele_file_ids,
+  mean_dist = unlist(lapply(allele_files, mean_dist_bw_mut))
+)
+
+plotdata = merge(params, plotdata, by = "ID")
+plotdata$n = as.factor(plotdata$n)
+plotdata$cov = as.factor(plotdata$cov)
+
+ggplot(plotdata, aes(x = n, y = mean_dist, color = simtype)) +
+  geom_boxplot() +
+  theme_classic() +
+  stat_compare_means(aes(group = simtype), label.sep = "\n")
+    
+# Hypothesis: after a selective sweep, the longest unitigs in a population graph are more likely to be near the sweep site, compared to neutral scenario
+unitig_files = list.files(path = "/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow", pattern = "unitig_alignments_.*", full.names = T)
+
+unitig_files_ids = as.numeric(gsub(".txt", "", gsub("unitig_alignments_", "", gsub("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/", "", unitig_files))))
+
+unitig_files = lapply(unitig_files, read.table, col.names = c("qid", "sid", "pid", "alen", "mm", "go", "qs", "qe", "ss", "se", "ev", "bs"))
+
+mean_len = function(x){
+  mean(x$alen)
+}
+
+plotdata = data.frame(
+  ID = unitig_files_ids,
+  avg_uni_len = unlist(lapply(unitig_files, mean_len))
+)
+
+
+plotdata = merge(params, plotdata, by = "ID")
+plotdata$n = as.factor(plotdata$n)
+plotdata$cov = as.factor(plotdata$cov)
+
+plotdata = plotdata[( ((plotdata$s == 0.5) & (plotdata$h == 1)) | (plotdata$s == 0) ),]
+
+ggplot(plotdata, aes(x = n, y = avg_uni_len, color = simtype, fill = cov)) +
+  geom_boxplot() +
+  facet_grid(sequencer ~ .) +
+  theme_classic()
+  #stat_compare_means(aes(group = simtype), label.sep = "\n")
+
+
+
+
+
+
+
+check_overlap = function(x, nhits, target, tol){
+  # sort by unitig length
+  x_sorted = x[order(-x$alen),]
+  
+  # get top n longest unitigs
+  x_top = x_sorted[1:nhits,]
+  
+  x_top$start = pmin(x_top$ss, x_top$se)
+  x_top$end = pmax(x_top$ss, x_top$se)
+  
+  targ_start = target - tol
+  targ_end = target + tol
+  
+  result = any( (targ_start < x_top$start) & (x_top$start < targ_end) ) | any( (targ_start < x_top$end) &  (x_top$end < targ_end) )
+  
+  return(result)
+}
+
+plotdata = data.frame(
+  ID = unitig_files_ids,
+  overlap = unlist(lapply(unitig_files, check_overlap, nhits = 10, target = 500e3, tol = 50e3))
+)
+
+plotdata = merge(params, plotdata, by = "ID")
+plotdata$n = as.factor(plotdata$n)
+plotdata$cov = as.factor(plotdata$cov)
+
+aggregate(overlap ~ s, data = plotdata, FUN = mean)
+
+ggplot(plotdata, aes(x = overlap, fill = simtype)) +
+  geom_bar(stat = "count", position="dodge") +
+  facet_grid(s ~ .) +
+  theme_classic()
+
+
+
+
+
+
+
+
+
+
+allele = read.table("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/slim_allele_freqs_277.txt", col.names = c("chrom", "pos", "ns", "af", "ac"))
+
+mean(diff(allele$pos))
+
+unitigs = read.table("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/unitig_alignments_277.txt", col.names = c("qid", "sid", "pid", "alen", "mm", "go", "qs", "qe", "ss", "se", "ev", "bs"))
+
+ggplot(unitigs, aes(x = alen)) +
+  geom_density()
+
+mean(unitigs$alen)
+
+allele = read.table("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/slim_allele_freqs_5558.txt", col.names = c("chrom", "pos", "ns", "af", "ac"))
+
+mean(diff(allele$pos))
+
+unitigs = read.table("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/unitig_alignments_5558.txt", col.names = c("qid", "sid", "pid", "alen", "mm", "go", "qs", "qe", "ss", "se", "ev", "bs"))
+
+ggplot(unitigs, aes(x = alen)) +
+  geom_density()
+
+mean(unitigs$alen)
 
 sam_pos = seq(from = 1000, to = 1e6, by = 1000)
 
