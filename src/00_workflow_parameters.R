@@ -1,8 +1,8 @@
 library("dplyr") 
 
 replicates = 1:3
-sample_sizes = c(5, 25, 50, 100)
-coverages = c(20, 50, 100, 200)
+sample_sizes = c(5, 10, 25, 50, 100)
+coverages = c(10, 25, 50, 100, 200)
 sequencers = c("miseq", "hiseq", "nextseq", "novaseq")
 
 #sample_sizes = c(5, 10)
@@ -28,8 +28,8 @@ two_pop_params = expand.grid(
   rep = replicates,
   N1 = c(1000),
   N2 = c(1000),
-  mg1 = c(0, 0.1, 0.2, 0.3),
-  mg2 = c(0, 0.1, 0.2, 0.3),
+  mg1 = c(0, 0.1, 0.2),
+  mg2 = c(0, 0.1, 0.2),
   n = sample_sizes,
   sigma = c(0),
   mu = c(1e-8),
@@ -46,7 +46,7 @@ sweep_params = expand.grid(
   N = c(1000),
   n = sample_sizes,
   h = c(0, 0.5, 1),
-  s = c(0.01, 0.1, 0.2),
+  s = c(0.1, 0.25, 0.5),
   sigma = c(0),
   mu = c(1e-8),
   R = c(1e-8),

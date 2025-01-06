@@ -283,6 +283,55 @@ pares = merge(params, results, by = "ID")
 
 write.table(pares, paste("/mnt/ufs18/home-010/robe1195/Josephs_Lab_Projects/poolseq-kmers/results/", today, "/performance_metrics.txt",sep = ""), sep = " ")
 ```
+
+# selective sweeps
+```{r}
+
+unitig_files = list.files(path = "/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/", pattern = "unitig_alignments_.*")
+
+unitigs = read.table("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/unitig_alignments_189.txt", col.names = c("qid", "sid", "pid", "alen", "mm", "go", "qs", "qe", "ss", "se", "ev", "bs"))
+
+sam_pos = seq(from = 1000, to = 1e6, by = 1000)
+
+results = NULL
+i = 0
+while(i <= 1e6){
+  result = mean(unitigs[((unitigs$ss <= i) & (i + 1000 <= unitigs$se)),"alen"])
+  results = rbind(results, data.frame(start = i, end = i + 1000, avglen = result))
+  i = i + 1000
+}
+
+ggplot(results, aes(x = (start + end)/2, y = avglen)) +
+  geom_point() +
+  geom_smooth(method = "loess") +
+  geom_vline(xintercept = 5e5) +
+  theme_classic()
+
+results = c()
+for(pos in sam_pos){
+  result = mean(unitigs[((unitigs$ss <= pos) & (pos <= unitigs$se)),"alen"])
+  results = c(results, result)
+}
+
+plotdata = data.frame(
+  pos = sam_pos,
+  avglen = results
+)
+
+ggplot(plotdata, aes(x = pos, y = avglen)) +
+  geom_point() +
+  geom_smooth(method = "loess") +
+  geom_vline(xintercept = 5e5) +
+  theme_classic()
+
+ggplot(unitigs, aes(x = log10(ss), y = alen)) +
+  geom_point() +
+  geom_smooth(method = "loess") +
+  geom_vline(xintercept = log10(5e5)) +
+  theme_classic()
+
+```
+
 # process two population metrics (Fst)
 ```{r}
 

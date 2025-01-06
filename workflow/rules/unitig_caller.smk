@@ -5,9 +5,9 @@ rule unitig_caller:
 		uread1 = "trimmed_unpaired_R1_{ID}.fastq",
 		uread2 = "trimmed_unpaired_R2_{ID}.fastq"
 	output:
-		unitigs_fasta = "unitigs_{ID}.fasta",
-		readfile = "reads_for_unitig-caller_{ID}.txt",
-		unitigs_rtab = "unitigs_{ID}.rtab"
+		unitigs_fasta = temp("unitigs_{ID}.fasta"),
+		readfile = temp("reads_for_unitig-caller_{ID}.txt"),
+		unitigs_rtab = temp("unitigs_{ID}.rtab")
 	conda:
 		"../envs/unitig-caller.yaml"
 	threads: 1
