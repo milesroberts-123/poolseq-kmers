@@ -1,6 +1,6 @@
 rule bedtools:
 	input:
-		fasta = "ref_full_{ID}.fasta",
+		fasta = "ref_{ID}.fasta",
 		bed = "../config/mask.bed"
 	output:
 		"ref_masked_{ID}.fasta"
