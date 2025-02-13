@@ -22,11 +22,17 @@ rule kmc_two_pop:
 	shell:
 		"""
 		# create directory
-		if [ -d "tmp_kmc_{wildcards.ID}" ]; then
-			rm -r tmp_kmc_{wildcards.ID}
+		if [ -d "tmp_kmc_{wildcards.ID}_p1" ]; then
+			rm -r tmp_kmc_{wildcards.ID}_p1
 		fi
 
-		mkdir tmp_kmc_{wildcards.ID}
+		if [ -d "tmp_kmc_{wildcards.ID}_p2" ]; then
+			rm -r tmp_kmc_{wildcards.ID}_p2
+		fi
+
+		mkdir tmp_kmc_{wildcards.ID}_p1
+
+		mkdir tmp_kmc_{wildcards.ID}_p2
 
 		# count k-mers
 		kmc -ci1 -k31 {input.pread1_p1} tmp_R1_{wildcards.ID}_p1 tmp_kmc_{wildcards.ID}_p1 &>> {log}

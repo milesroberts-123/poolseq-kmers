@@ -8,11 +8,11 @@ rule bwa_two_pop:
 	output:
 		bam_p1 = temp("trimmed_{ID}_p1.bam"),
 		bam_p2 = temp("trimmed_{ID}_p2.bam"),
-		amb = temp("ref_{ID}.fasta.amb"),
-		ann = temp("ref_{ID}.fasta.ann"),
-		bwt = temp("ref_{ID}.fasta.bwt"),
-		pac = temp("ref_{ID}.fasta.pac"),
-		sa = temp("ref_{ID}.fasta.sa")
+		amb = temp("ref_{ID}_p1.fasta.amb"),
+		ann = temp("ref_{ID}_p1.fasta.ann"),
+		bwt = temp("ref_{ID}_p1.fasta.bwt"),
+		pac = temp("ref_{ID}_p1.fasta.pac"),
+		sa = temp("ref_{ID}_p1.fasta.sa")
 	threads: 2
 	resources:
 		mem_mb_per_cpu=8000,
