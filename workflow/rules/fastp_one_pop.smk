@@ -6,7 +6,8 @@ rule fastp_one_pop:
 		pread1 = temp("trimmed_paired_R1_{ID}.fastq"),
 		pread2 = temp("trimmed_paired_R2_{ID}.fastq"),
 		uread1 = temp("trimmed_unpaired_R1_{ID}.fastq"),
-		uread2 = temp("trimmed_unpaired_R2_{ID}.fastq")
+		uread2 = temp("trimmed_unpaired_R2_{ID}.fastq"),
+		json = "{ID}.json"
 	threads: 1
 	resources:
 		mem_mb_per_cpu=8000,
@@ -16,4 +17,4 @@ rule fastp_one_pop:
 	log: 
 		"logs/fastp/{ID}.log"
 	shell:
-		"fastp -u 40 -q 30 -l 31 -i {input.read1} -I {input.read2} -o {output.pread1} -O {output.pread2} --unpaired1 {output.uread1} --unpaired2 {output.uread2} &> {log}"
+		"fastp -u 40 -q 30 -l 31 --dedup --correction --json {output.json} -i {input.read1} -I {input.read2} -o {output.pread1} -O {output.pread2} --unpaired1 {output.uread1} --unpaired2 {output.uread2} &> {log}"

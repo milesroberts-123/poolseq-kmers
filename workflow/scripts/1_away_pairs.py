@@ -1,9 +1,51 @@
 # I am using the algorithm published in smudgeplot
 # https://github.com/KamilSJaron/smudgeplot/blob/master/playground/more_away_pairs.py
+from Bio.Seq import Seq
+
+# parameters
+# i: input
+# o: output
+# c: k-mer count threshold
+# m: 2,3,4 whether to consider bi-allelic, tri-allelic, or tetra-allelic sites
 
 # define a hash function such that a k-mer and it's reverse complement return the same value
 # https://bioinformatics.stackexchange.com/questions/3486/how-to-write-a-hash-function-for-canonical-kmers
-def kmer_to_int:
+def kmer_hash(x):
+  # get reverse complement
+  x_rev = x.reverse_complement()
+  
+  # convert to strings
+  x_str = str(x)
+  x_rev_str = str(x_rev)
+  
+  # hash strings
+  for_hash = hash(x_str)
+  rev_hash = hash(x_rev_str)
+  
+  # return minimum hash
+  return(min(for_hash, rev_hash))
+  
+def main:
+  # read k-mer count file
+
+  # split k-mers into halves, except the center bp
+
+  # hash k-mer halves
+
+  # get list of all unique hash values
+
+  # loop over each unique hash value, group k-mers according to hash value
+  pairs = {}
+  for hash_value in hash_values:
+    kmerfile[kmerfile["hash"] == value]
+    
+  # calculate allele frequencies
+  
+  # for two populations, calculate Fst
+
+
+
+
 
 # split k-mer in half
 k_l = k//2
