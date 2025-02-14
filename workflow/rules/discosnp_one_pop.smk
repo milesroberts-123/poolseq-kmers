@@ -25,6 +25,8 @@ rule discosnp_one_pop:
 		"../envs/discosnp.yaml"
 	log: 
 		"logs/discosnp/{ID}.log"
+	benchmark:
+		"benchmarks/discosnp/{ID}.bench"
 	params:
 		prefix = "discoRes_{ID}"
 	shell:

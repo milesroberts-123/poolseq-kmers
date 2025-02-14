@@ -12,5 +12,7 @@ rule smudgeplot_one_pop:
 		"../envs/smudgeplot.yaml"
 	log: 
 		"logs/smudgeplot/{ID}.log"
+	benchmark:
+		"benchmarks/smudgeplot/{ID}.bench"
 	shell:
 		"smudgeplot.py hetkmers -o kmerpairs_{wildcards.ID} --middle {input} &> {log}"

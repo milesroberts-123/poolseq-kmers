@@ -36,6 +36,8 @@ rule poolsnp_one_pop:
 	resources:
 		mem_mb_per_cpu=8000,
 		time=239
+	benchmark:
+		"benchmarks/poolsnp/{ID}.bench"
 	shell:
 		"""
 		samtools mpileup -f {input.reffasta} {input.trimbam} > {output.mpileup}
