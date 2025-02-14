@@ -18,6 +18,8 @@ rule bwa_one_pop:
 		"../envs/bwa.yaml"
 	log: 
 		"logs/bwa_full/{ID}.log"
+	benchmark:
+		"benchmarks/bwa/{ID}.bench"
 	shell:
 		"""
 		# index reference

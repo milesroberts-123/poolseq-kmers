@@ -14,6 +14,8 @@ rule kmc_one_pop:
 		"../envs/kmc.yaml"
 	log: 
 		"logs/kmc/{ID}.log"
+	benchmark:
+		"benchmarks/kmc/{ID}.bench"
 	shell:
 		"""
 		# create directory
