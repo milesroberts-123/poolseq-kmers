@@ -26,6 +26,8 @@ library(ggpubr)
 
 library(fitdistrplus)
 
+library(rjson)
+
 today = Sys.Date()
 ```
 
@@ -73,6 +75,25 @@ calc_rates = function(truth, test, sample_space){
 #calc_rates(true_af$pos, varscan$pos, 1:1e6)
 
 #calc_rates(true_af$pos, compare_maf_kmer$pos, 1:1e6)
+
+# Posterior distribution of allele count i, given minor het-mer count X and total het-mer coverage Z
+# n = pool size
+# C = average k-mer coverage
+# alpha and beta = prior distribution
+posterior = function(x,z,n,C,alpha,beta){
+  i=1:(n-1)
+  p=i/n
+  lambdax = i*C
+  lambday = (n-i)*C
+  
+  likelihood_times_prior = (p^(x+alpha-1))*((1-p)^((z-x)+(beta-1)))/((exp(lambdax)-1)*(exp(lambday)-1))
+  
+  total_probability = sum(likelihood_times_prior)
+  
+  post = likelihood_times_prior/total_probability
+  
+  return(which.max(post)/n)
+}
 ```
 
 # simulate k-mer counts in pool-seq
@@ -613,12 +634,29 @@ two_pop_ids = paste(two_pop_ids$Var1, two_pop_ids$Var2, sep = "_")
 
 simids = c(two_pop_ids, simids)
 
+k = 31
+
+thresh = 4
+
 #for(i in dones){
 #for(i in params$ID[(params$simtype == "onepop") | (params$simtype == "sweep")]){
 #for(i in 923:1000){
 for(i in simids){
   print(paste("Processing simulation ", i, "...", sep = ""))
   
+# get sequencing coverage data
+json_data <- fromJSON(file=paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/", i, ".json", sep = ""))
+
+n = params[(params$ID == i), "n"] # pool size
+B = json_data$summary$after_filtering$total_bases # number of bases sequenced
+G = params[(params$ID == i), "L"] # genome size
+L = (json_data$summary$after_filtering$read1_mean_length + json_data$summary$after_filtering$read2_mean_length)*2 # read length, paired end data, multiply read length by 2
+
+C = B/(n*G) # base coverage per genome
+Ck = ((L-k+1)/L)*C # kmer coverage per genome
+nCk = n*Ck # total kmer coverage
+nC = n*C # total base coverage
+
 # load pairs of k-mers
 kmer_pairs = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/", "kmerpairs_", i, "_sequences.tsv", sep = ""), col.names = c("k1"))
 
@@ -641,19 +679,28 @@ kmer_pairs = cbind(kmer_pairs, kmer_covs)
 kmer_pairs$kmer_maf = pmin(kmer_pairs$c1, kmer_pairs$c2)/(kmer_pairs$c1 + kmer_pairs$c2)
 
 # filter kmers
-high = qnorm(0.9995, mean = nC, sd = sqrt(nC))
-low = qnorm(0.0005, mean = nC, sd = sqrt(nC))
+high_nc = qnorm(0.9995, mean = nC, sd = sqrt(nC))
+low_nc = qnorm(0.0005, mean = nC, sd = sqrt(nC))
+
+high_nck = qnorm(0.9995, mean = nCk, sd = sqrt(nCk))
+low_nck = qnorm(0.0005, mean = nCk, sd = sqrt(nCk))
 
 ggplot(kmer_covs, aes(x = c1 + c2)) +
   geom_density() +
-  geom_vline(xintercept = 2*thresh, lty = 3) + 
-  geom_vline(xintercept = low, lty = 2) +
-  geom_vline(xintercept = nC) +
-  geom_vline(xintercept = high, lty = 2)
+  geom_vline(xintercept = 2*thresh) +
+  geom_vline(xintercept = low_nc, lty = 2, color = "red") +
+  geom_vline(xintercept = nC, color = "red") +
+  geom_vline(xintercept = high_nc, lty = 2, color = "red") +
+  geom_vline(xintercept = low_nck, lty = 2, color = "black") +
+  geom_vline(xintercept = nCk, color = "black") +
+  geom_vline(xintercept = high_nck, lty = 2, color = "black")
 
-filter = (kmer_pairs$c1 + kmer_pairs$c2 > low) & (kmer_pairs$c1 + kmer_pairs$c2 < high) & (kmer_pairs$c1 >= thresh) & (kmer_pairs$c2 >= thresh)
+filter = (kmer_pairs$c1 + kmer_pairs$c2 > low_nc) & (kmer_pairs$c1 + kmer_pairs$c2 < high_nc) & (kmer_pairs$c1 >= thresh) & (kmer_pairs$c2 >= thresh)
 
 kmer_pairs = kmer_pairs[filter,]
+
+# use bayes theorem to estimate allele counts
+kmer_pairs$kmer_maf_bayes = mapply(posterior, x = kmer_pairs$c1, z = kmer_pairs$c1 + kmer_pairs$c2, n, C, 1, 1)
 
 # ggplot(kmer_pairs, aes(x = kmer_maf)) +
 #   geom_density() +
@@ -680,7 +727,7 @@ true_af$snp_maf = pmin(true_af$af, 1 - true_af$af)
 # load discosnp results, calculate maf
 disco = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/discoRes_ad_", i, ".txt", sep = ""), col.names = c("chrom", "pos", "c1", "c2"))
 
-disco = disco[(disco$c1 + disco$c2 > low) & (disco$c1 + disco$c2 < high) & (disco$c1 >= thresh) & (disco$c2 >= thresh),]
+disco = disco[(disco$c1 + disco$c2 > low_nc) & (disco$c1 + disco$c2 < high_nc) & (disco$c1 >= thresh) & (disco$c2 >= thresh),]
 
 disco$disco_maf = pmin(disco$c1, disco$c2)/(disco$c1 + disco$c2)
 
@@ -739,7 +786,7 @@ compare_maf_kmer = compare_maf_kmer[rowSums(is.na(compare_maf_kmer)) != ncol(com
 # include varscan calls
 varscan = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/calls_", i, ".tsv", sep = ""), header = T)
 
-varscan = varscan[(varscan$Reads1 >= thresh) & (varscan$Reads2 >= thresh) & (varscan$Reads1 + varscan$Reads2 > low) & (varscan$Reads1 + varscan$Reads2 < high),]
+varscan = varscan[(varscan$Reads1 >= thresh) & (varscan$Reads2 >= thresh) & (varscan$Reads1 + varscan$Reads2 > low_nc) & (varscan$Reads1 + varscan$Reads2 < high_nc),]
 
 varscan$snp_maf_varscan = pmin(varscan$Reads1, varscan$Reads2)/(varscan$Reads1 + varscan$Reads2)
 
@@ -748,7 +795,7 @@ names(varscan)[2] = "pos"
 # load poolsnp calls
 poolsnp = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/poolsnp_final_", i, ".txt", sep = ""), col.names = c("chrom", "pos", "c1", "t"), fill = T, na.strings = "")
 
-poolsnp = poolsnp[(poolsnp$c1 >= thresh) & (poolsnp$t > low) & (poolsnp$t < high),]
+poolsnp = poolsnp[(poolsnp$c1 >= thresh) & (poolsnp$t > low_nc) & (poolsnp$t < high_nc),]
 
 poolsnp$snp_maf_poolsnp = pmin(poolsnp$c1/poolsnp$t, 1 - poolsnp$c1/poolsnp$t)
 

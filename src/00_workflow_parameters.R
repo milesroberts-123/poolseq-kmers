@@ -10,7 +10,7 @@ sequencers = c("miseq", "hiseq", "nextseq", "novaseq")
 #sequencers = c("miseq", "hiseq")
 
 # create data frame of workflow parameters
-one_pop_params = expand.grid(
+params = expand.grid(
   rep = replicates,
   N = c(1000),
   n = sample_sizes,
@@ -20,7 +20,13 @@ one_pop_params = expand.grid(
   cov = coverages,
   L = c(1e6),
   sequencer = sequencers,
-  simtype = "onepop"
+  simtype = "onepop",
+  N1 = 0,
+  N2 = 0,
+  mg1 = 0,
+  mg2 = 0,
+  h = 0,
+  s = 0
 )
 
 # parameters for two population model
