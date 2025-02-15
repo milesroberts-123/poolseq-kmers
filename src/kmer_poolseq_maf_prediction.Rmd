@@ -636,7 +636,7 @@ simids = c(two_pop_ids, simids)
 
 k = 31
 
-thresh = 4
+thresh = 5
 
 #for(i in dones){
 #for(i in params$ID[(params$simtype == "onepop") | (params$simtype == "sweep")]){
@@ -664,6 +664,12 @@ kmer_covs = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq
 
 kmer_pairs = cbind(kmer_pairs, kmer_covs)
 
+#kmer_pairs = read.csv("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/my_hetmers_seqs.csv", col.names = c("k1", "k2"))
+
+#kmer_covs = read.csv("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/my_hetmers_counts.csv", col.names = c("c1", "c2"))
+
+#kmer_pairs = cbind(kmer_pairs, kmer_covs)
+
 # choose kmer count cutoff
 # all_counts = read.table("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/kmer_counts_1.txt", col.names = c("k1", "c1"))
 # 
@@ -679,11 +685,11 @@ kmer_pairs = cbind(kmer_pairs, kmer_covs)
 kmer_pairs$kmer_maf = pmin(kmer_pairs$c1, kmer_pairs$c2)/(kmer_pairs$c1 + kmer_pairs$c2)
 
 # filter kmers
-high_nc = qnorm(0.9995, mean = nC, sd = sqrt(nC))
-low_nc = qnorm(0.0005, mean = nC, sd = sqrt(nC))
+high_nc = qnorm(0.99995, mean = nC, sd = sqrt(nC))
+low_nc = qnorm(0.00005, mean = nC, sd = sqrt(nC))
 
-high_nck = qnorm(0.9995, mean = nCk, sd = sqrt(nCk))
-low_nck = qnorm(0.0005, mean = nCk, sd = sqrt(nCk))
+high_nck = qnorm(0.99995, mean = nCk, sd = sqrt(nCk))
+low_nck = qnorm(0.00005, mean = nCk, sd = sqrt(nCk))
 
 ggplot(kmer_covs, aes(x = c1 + c2)) +
   geom_density() +
@@ -695,9 +701,9 @@ ggplot(kmer_covs, aes(x = c1 + c2)) +
   geom_vline(xintercept = nCk, color = "black") +
   geom_vline(xintercept = high_nck, lty = 2, color = "black")
 
-filter = (kmer_pairs$c1 + kmer_pairs$c2 > low_nc) & (kmer_pairs$c1 + kmer_pairs$c2 < high_nc) & (kmer_pairs$c1 >= thresh) & (kmer_pairs$c2 >= thresh)
+#filter = (kmer_pairs$c1 + kmer_pairs$c2 > low_nck) & (kmer_pairs$c1 + kmer_pairs$c2 < high_nck) & (kmer_pairs$c1 >= thresh) & (kmer_pairs$c2 >= thresh)
 
-kmer_pairs = kmer_pairs[filter,]
+kmer_pairs = kmer_pairs[(kmer_pairs$c1 >= thresh) & (kmer_pairs$c2 >= thresh),]
 
 # use bayes theorem to estimate allele counts
 kmer_pairs$kmer_maf_bayes = mapply(posterior, x = kmer_pairs$c1, z = kmer_pairs$c1 + kmer_pairs$c2, n, C, 1, 1)
@@ -713,8 +719,6 @@ true_af$ac = as.numeric(true_af$ac)
 
 true_af = true_af[complete.cases(true_af),]
 
-true_af = true_af[(true_af$af < 1),]
-
 # allele frequency spectrum
 # ggplot(true_af, aes(x = ac)) +
 #   geom_histogram(binwidth = 1) +
@@ -724,10 +728,12 @@ true_af = true_af[(true_af$af < 1),]
 true_af$af = as.numeric(true_af$af)
 true_af$snp_maf = pmin(true_af$af, 1 - true_af$af)
 
+true_af = true_af[(true_af$af < 1) & (true_af$af > 0),]
+
 # load discosnp results, calculate maf
 disco = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/discoRes_ad_", i, ".txt", sep = ""), col.names = c("chrom", "pos", "c1", "c2"))
 
-disco = disco[(disco$c1 + disco$c2 > low_nc) & (disco$c1 + disco$c2 < high_nc) & (disco$c1 >= thresh) & (disco$c2 >= thresh),]
+disco = disco[(disco$c1 >= thresh) & (disco$c2 >= thresh),]
 
 disco$disco_maf = pmin(disco$c1, disco$c2)/(disco$c1 + disco$c2)
 
@@ -786,7 +792,7 @@ compare_maf_kmer = compare_maf_kmer[rowSums(is.na(compare_maf_kmer)) != ncol(com
 # include varscan calls
 varscan = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/calls_", i, ".tsv", sep = ""), header = T)
 
-varscan = varscan[(varscan$Reads1 >= thresh) & (varscan$Reads2 >= thresh) & (varscan$Reads1 + varscan$Reads2 > low_nc) & (varscan$Reads1 + varscan$Reads2 < high_nc),]
+varscan = varscan[(varscan$Reads1 >= thresh) & (varscan$Reads2 >= thresh),]
 
 varscan$snp_maf_varscan = pmin(varscan$Reads1, varscan$Reads2)/(varscan$Reads1 + varscan$Reads2)
 
@@ -795,18 +801,18 @@ names(varscan)[2] = "pos"
 # load poolsnp calls
 poolsnp = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/poolsnp_final_", i, ".txt", sep = ""), col.names = c("chrom", "pos", "c1", "t"), fill = T, na.strings = "")
 
-poolsnp = poolsnp[(poolsnp$c1 >= thresh) & (poolsnp$t > low_nc) & (poolsnp$t < high_nc),]
+poolsnp = poolsnp[(poolsnp$c1 >= thresh),]
 
 poolsnp$snp_maf_poolsnp = pmin(poolsnp$c1/poolsnp$t, 1 - poolsnp$c1/poolsnp$t)
 
 # compare varscan and ground truth
-compare_maf_varscan = merge(true_af[,c("pos", "snp_maf")], varscan, by = "pos")
+compare_maf_varscan = merge(true_af[,c("pos", "snp_maf")], varscan, by = "pos", all.x = T, all.y = T)
 
 # compare poolsnp and ground truth
-compare_maf_poolsnp = merge(true_af[,c("pos", "snp_maf")], poolsnp, by = "pos")
+compare_maf_poolsnp = merge(true_af[,c("pos", "snp_maf")], poolsnp, by = "pos", all.x = T, all.y = T)
 
 # compare discosnp and ground truth
-compare_maf_disco = merge(true_af[,c("pos", "snp_maf")], disco, by = "pos")
+compare_maf_disco = merge(true_af[,c("pos", "snp_maf")], disco, by = "pos", all.x = T, all.y = T)
 
 # compare k-mer and varscan
 compare_maf_kmer_varscan = merge(compare_maf_kmer, varscan, by = "pos")
@@ -895,6 +901,24 @@ rm(compare_maf_kmer, compare_maf_kmer_varscan, compare_maf_varscan, compare_maf_
 pares = merge(params, results, by = "ID")
 
 write.table(pares, paste("/mnt/ufs18/home-010/robe1195/Josephs_Lab_Projects/poolseq-kmers/results/", today, "/performance_metrics.txt",sep = ""), sep = " ")
+```
+# site frequency spectrum
+```{r}
+# site-frequency spectrum
+all_sfs = merge(compare_maf_kmer[,c("pos", "snp_maf", "kmer_maf")], varscan[,c("pos", "snp_maf_varscan")], by = "pos", all.x = T, all.y = T)
+
+all_sfs = merge(all_sfs, poolsnp[,c("pos", "snp_maf_poolsnp")], by = "pos", all.x = T, all.y = T)
+
+all_sfs = merge(all_sfs, disco[,c("pos", "disco_maf")], by = "pos", all.x = T, all.y = T)
+
+plotdata = melt(all_sfs, id = "pos")
+
+ggplot(plotdata[(plotdata$value >= 0.025),], aes(x = value, fill = variable)) +
+  geom_density(alpha = 0.5) +
+  theme_classic() +
+  labs(x = "Minor allele frequency", y = "density")
+
+ggsave(paste("/mnt/home/robe1195/Josephs_Lab_Projects/poolseq-kmers/results/", today,  "/","kmer_vs_snp_sfs.png", sep = ""), height= 7, width = 8)
 ```
 
 # check if theoretical distributions fit kmer counts
@@ -1316,14 +1340,7 @@ ggplot(compare_maf_kmer, aes(x = kmer_maf, y = (c1+c2)/81.670932)) +
 
 ggsave(paste("/mnt/home/robe1195/Josephs_Lab_Projects/poolseq-kmers/results/", today,  "/","smudgeplot.png", sep = ""), height= 7, width = 8)
 
-# site-frequency spectrum
-plotdata = melt(as.data.table(compare_maf_kmer[,c("pos", "snp_maf", "kmer_maf", "snp_maf_varscan")]), id = "pos")
 
-ggplot(plotdata, aes(x = value, fill = variable)) +
-  geom_density(alpha = 0.5) +
-  theme_classic()
-
-ggsave(paste("/mnt/home/robe1195/Josephs_Lab_Projects/poolseq-kmers/results/", today,  "/","kmer_vs_snp_sfs.png", sep = ""), height= 7, width = 8)
 
 # folded sfs
 kmer_pairs = kmer_pairs[(kmer_pairs$c1 >=4 & kmer_pairs$c2 >= 4),]

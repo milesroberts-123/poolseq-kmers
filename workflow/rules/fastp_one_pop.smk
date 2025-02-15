@@ -11,7 +11,9 @@ rule fastp_one_pop:
 		pread2 = temp("trimmed_paired_R2_{ID}.fastq"),
 		uread1 = temp("trimmed_unpaired_R1_{ID}.fastq"),
 		uread2 = temp("trimmed_unpaired_R2_{ID}.fastq"),
-		json = "{ID}.json"
+		jsonR1R2 = "{ID}_R1R2.json",
+		jsonU1 = "{ID}_U1.json",
+		jsonU2 = "{ID}_U2.json"
 	threads: 1
 	resources:
 		mem_mb_per_cpu=8000,
@@ -23,10 +25,10 @@ rule fastp_one_pop:
 	shell:
 		"""
 		# remove duplicates, do read correction, drop low quality reads
-		fastp -u 40 -q 25 --dedup --correction --json {output.json} -i {input.read1} -I {input.read2} -o {output.dpread1} -O {output.dpread2} --unpaired1 {output.duread1} --unpaired2 {output.duread2} &> {log}
+		fastp -u 40 -q 25 --dedup --correction -i {input.read1} -I {input.read2} -o {output.dpread1} -O {output.dpread2} --unpaired1 {output.duread1} --unpaired2 {output.duread2} &> {log}
 
 		# trim low quality bases
-		fastp -Q -l 31 --cut_tail --cut_tail_window_size 1 --cut_tail_mean_quality 30 -i {output.dpread1} -I {output.dpread2} -o {output.pread1} -O {output.pread2}
-		fastp -Q -l 31 --cut_tail --cut_tail_window_size 1 --cut_tail_mean_quality 30 -i {output.duread1} -o {output.uread1}
-		fastp -Q -l 31 --cut_tail --cut_tail_window_size 1 --cut_tail_mean_quality 30 -i {output.duread2} -o {output.uread2}
+		fastp -Q -l 31 --cut_tail --cut_tail_window_size 1 --cut_tail_mean_quality 30 --json {output.jsonR1R2} -i {output.dpread1} -I {output.dpread2} -o {output.pread1} -O {output.pread2} &> {log}
+		fastp -Q -l 31 --cut_tail --cut_tail_window_size 1 --cut_tail_mean_quality 30 --json {output.jsonU1} -i {output.duread1} -o {output.uread1} &> {log}
+		fastp -Q -l 31 --cut_tail --cut_tail_window_size 1 --cut_tail_mean_quality 30 --json {output.jsonU2} -i {output.duread2} -o {output.uread2} &> {log}
 		"""
