@@ -38,6 +38,8 @@ rule all:
 		#expand("{ID}_poolsnp_output.vcf.gz", ID=one_pop_params.index.get_level_values("ID")),
 		expand("poolsnp_final_{ID}.txt", ID=one_pop_params.index.get_level_values("ID")),
 		expand("unitig_alignments_{ID}.txt", ID=one_pop_params.index.get_level_values("ID")),
+		expand("hetmers_{ID}_counts.csv", ID=one_pop_params.index.get_level_values("ID")),
+		expand("hetmers_{ID}_seqs.csv", ID=one_pop_params.index.get_level_values("ID")),
 
 
 
@@ -56,6 +58,7 @@ include: "rules/discosnp_one_pop.smk"
 include: "rules/discosnp_two_pop.smk"
 include: "rules/fastp_one_pop.smk"
 include: "rules/fastp_two_pop.smk"
+include: "rules/hetmers_one_pop.smk"
 include: "rules/iss_one_pop.smk"
 include: "rules/iss_two_pop.smk"
 include: "rules/kmc_one_pop.smk"
