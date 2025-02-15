@@ -1,6 +1,62 @@
 # I am using the algorithm published in smudgeplot
 # https://github.com/KamilSJaron/smudgeplot/blob/master/playground/more_away_pairs.py
-from Bio.Seq import Seq
+#from Bio.Seq import Seq
+import pandas as pd
+import numpy as np
+import hashlib
+
+# i: input file
+# o: output prefix
+# a: number of alleles, either 1,2,3,4
+# 
+
+counts = pd.read_csv("kmer_counts_67_2.txt", sep="\t", names = ["seq", "count"])
+seqs = counts['seq'].values
+counts = counts['count'].values
+
+no_center_ks = [s[:15]+s[-15:] for s in seqs]
+
+# ger reverse complement
+complement = {'A': 'T', 'C': 'G', 'G': 'C', 'T': 'A'}
+no_center_ks_rev = ["".join(complement.get(base, base) for base in reversed(x)) for x in no_center_ks]
+
+#no_center_ks_hash = [hash(x) for x in no_center_ks]
+#no_center_ks_rev_hash = [hash(x) for x in no_center_ks_rev]
+
+no_center_ks_hash = [int(hashlib.sha256(x.encode('utf-8')).hexdigest(), 16) for x in no_center_ks]
+no_center_ks_rev_hash = [int(hashlib.sha256(x.encode('utf-8')).hexdigest(), 16) for x in no_center_ks_rev]
+
+min_hashs = [min(x,y) for x,y in zip(no_center_ks_hash,no_center_ks_rev_hash)]
+
+# unique_min_hashs = list(set(min_hashs))
+
+# group kmers based on hash
+d = {}
+for i, num in enumerate(min_hashs):
+    if num in d:
+        d[num].append(i)
+    else:
+        d[num] = [i]
+
+# Filter to keep only the numbers with more than one occurrence
+ans = {key: value for key, value in d.items() if len(value) == 2}
+
+#
+hetmers = [seqs[value] for key, value in ans.items()]
+hetmer_counts = [counts[value] for key, value in ans.items()]
+
+np.savetxt("my_hetmers_seqs.csv", hetmers, delimiter = ",", fmt='%s')
+np.savetxt("my_hetmers_counts.csv", hetmer_counts, delimiter = ",")
+
+
+
+
+
+no_center_ks_rev = [Seq(x).reverse_complement() for x in no_center_ks]
+
+print seq.reverse_complement()
+
+[hash(x) for x in no_center_ks]
 
 # parameters
 # i: input
