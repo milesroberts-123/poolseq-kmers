@@ -15,4 +15,4 @@ rule hetmers_one_pop:
 	benchmark:
 		"benchmarks/hetmers/{ID}.bench"
 	shell:
-		"python hetmers.py -i {input} -a 2 -m 5 -o hetmers_{wildcards.ID} &> {log}"
+		"python scripts/hetmers.py -i {input} -a 2 -m 5 -o hetmers_{wildcards.ID} &> {log}"

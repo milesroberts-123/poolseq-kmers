@@ -36,5 +36,5 @@ rule discosnp_one_pop:
 		echo -e "{input.pread1}\n{input.pread2}\n{input.uread1}\n{input.uread2}" > {output.fof_reads}
 
 		# run discosnp, with results for mapping SNPs to reference
-		run_discoSnp++.sh -r {output.fof} -c 3 -G {input.ref} -p {params.prefix}
+		run_discoSnp++.sh -r {output.fof} -c 5 -G {input.ref} -p {params.prefix}
 		"""

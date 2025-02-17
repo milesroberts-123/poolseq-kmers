@@ -43,10 +43,10 @@ rule discosnp_two_pop:
 		echo -e "{input.pread1_p1}\n{input.pread2_p1}\n{input.uread1_p1}\n{input.uread2_p1}" > {output.fof_p1}
 
 		# run discosnp, with results for mapping SNPs to reference
-		run_discoSnp++.sh -r {output.fof} -c 3 -G {input.ref} -p {params.prefix_p1}
+		run_discoSnp++.sh -r {output.fof} -c 5 -G {input.ref} -p {params.prefix_p1}
 
 		# repeat for population 2
 		echo "{output.fof_p2}" > {output.fof}
 		echo -e "{input.pread1_p2}\n{input.pread2_p2}\n{input.uread1_p2}\n{input.uread2_p2}" > {output.fof_p2}
-		run_discoSnp++.sh -r {output.fof} -c 3 -G {input.ref} -p {params.prefix_p2}
+		run_discoSnp++.sh -r {output.fof} -c 5 -G {input.ref} -p {params.prefix_p2}
 		"""

@@ -645,30 +645,35 @@ for(i in simids){
   print(paste("Processing simulation ", i, "...", sep = ""))
   
 # get sequencing coverage data
-json_data <- fromJSON(file=paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/", i, ".json", sep = ""))
+json_data_R1R2 <- fromJSON(file=paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/", i, "_R1R2.json", sep = ""))
+json_data_U1 <- fromJSON(file=paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/", i, "_U1.json", sep = ""))
+json_data_U2 <- fromJSON(file=paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/", i, "_U2.json", sep = ""))
 
 n = params[(params$ID == i), "n"] # pool size
-B = json_data$summary$after_filtering$total_bases # number of bases sequenced
-G = params[(params$ID == i), "L"] # genome size
-L = (json_data$summary$after_filtering$read1_mean_length + json_data$summary$after_filtering$read2_mean_length)*2 # read length, paired end data, multiply read length by 2
 
-C = B/(n*G) # base coverage per genome
+B = json_data_R1R2$summary$after_filtering$total_bases + json_data_U1$summary$after_filtering$total_bases + json_data_U2$summary$after_filtering$total_bases # number of bases sequenced
+
+G = params[(params$ID == i), "L"] # genome size
+
+L = (json_data_R1R2$summary$after_filtering$read1_mean_length*json_data_R1R2$summary$after_filtering$total_reads/2 + json_data_R1R2$summary$after_filtering$read2_mean_length*json_data_R1R2$summary$after_filtering$total_reads/2 + json_data_U1$summary$after_filtering$read1_mean_length*json_data_U1$summary$after_filtering$total_reads + json_data_U2$summary$after_filtering$read1_mean_length*json_data_U2$summary$after_filtering$total_reads)/(json_data_R1R2$summary$after_filtering$total_reads + json_data_U1$summary$after_filtering$total_reads + json_data_U2$summary$after_filtering$total_reads) # read length, paired end data, multiply read length by 2
+
+C = B/(2*n*G) # base coverage per genome
 Ck = ((L-k+1)/L)*C # kmer coverage per genome
 nCk = n*Ck # total kmer coverage
 nC = n*C # total base coverage
 
 # load pairs of k-mers
-kmer_pairs = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/", "kmerpairs_", i, "_sequences.tsv", sep = ""), col.names = c("k1"))
+#kmer_pairs = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/", "kmerpairs_", i, "_sequences.tsv", sep = ""), col.names = c("k1"))
 
-kmer_covs = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/kmerpairs_", i, "_coverages.tsv", sep = ""), col.names = c("c1", "c2"))
-
-kmer_pairs = cbind(kmer_pairs, kmer_covs)
-
-#kmer_pairs = read.csv("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/my_hetmers_seqs.csv", col.names = c("k1", "k2"))
-
-#kmer_covs = read.csv("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/my_hetmers_counts.csv", col.names = c("c1", "c2"))
+#kmer_covs = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/kmerpairs_", i, "_coverages.tsv", sep = ""), col.names = c("c1", "c2"))
 
 #kmer_pairs = cbind(kmer_pairs, kmer_covs)
+
+kmer_pairs = read.csv(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/hetmers_", i, "_seqs.csv", sep = ""), col.names = c("k1", "k2"))
+
+kmer_covs = read.csv(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/hetmers_", i, "_counts.csv", sep = ""), col.names = c("c1", "c2"))
+
+kmer_pairs = cbind(kmer_pairs, kmer_covs)
 
 # choose kmer count cutoff
 # all_counts = read.table("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/kmer_counts_1.txt", col.names = c("k1", "c1"))
@@ -703,7 +708,7 @@ ggplot(kmer_covs, aes(x = c1 + c2)) +
 
 #filter = (kmer_pairs$c1 + kmer_pairs$c2 > low_nck) & (kmer_pairs$c1 + kmer_pairs$c2 < high_nck) & (kmer_pairs$c1 >= thresh) & (kmer_pairs$c2 >= thresh)
 
-kmer_pairs = kmer_pairs[(kmer_pairs$c1 >= thresh) & (kmer_pairs$c2 >= thresh),]
+#kmer_pairs = kmer_pairs[(kmer_pairs$c1 >= thresh) & (kmer_pairs$c2 >= thresh),]
 
 # use bayes theorem to estimate allele counts
 kmer_pairs$kmer_maf_bayes = mapply(posterior, x = kmer_pairs$c1, z = kmer_pairs$c1 + kmer_pairs$c2, n, C, 1, 1)
@@ -913,7 +918,7 @@ all_sfs = merge(all_sfs, disco[,c("pos", "disco_maf")], by = "pos", all.x = T, a
 
 plotdata = melt(all_sfs, id = "pos")
 
-ggplot(plotdata[(plotdata$value >= 0.025),], aes(x = value, fill = variable)) +
+ggplot(plotdata, aes(x = value, fill = variable)) +
   geom_density(alpha = 0.5) +
   theme_classic() +
   labs(x = "Minor allele frequency", y = "density")

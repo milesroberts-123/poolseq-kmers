@@ -14,13 +14,15 @@ import datetime
 @click.option("-o", "--output-prefix", default="hetmers", help="Prefix for output files")
 def main(input, alleles, minimum, output_prefix):
   """
-  Script similar to smudgeplot hetkmers, except we keep the hetmer sequences
+  Script similar to smudgeplot hetkmers, except we retain the hetmer sequences.
+  
+  To compare two populations, specify -i twice.
   """
 
-  print(datetime.datetime.now(), ": Loading k-count file...")
+  print(datetime.datetime.now(), ": Loading k-mer count file " + input + "...")
   counts = pd.read_csv(input, sep="\t", names = ["seq", "count"])
 
-  print(datetime.datetime.now(), ": Filtering low-frequency k-mers...")
+  print(datetime.datetime.now(), ": Filtering k-mers with count less than " + minimum + "...")
   filtered_counts = counts[counts['count'] >= minimum]
   del counts
 
@@ -31,7 +33,7 @@ def main(input, alleles, minimum, output_prefix):
 
   # determine k based on length of first string
   k = len(seqs[1])
-  print(datetime.datetime.now(), ": K is " + str(k))
+  print(datetime.datetime.now(), ": k is " + str(k))
 
   print(datetime.datetime.now(), ": Extracting all but middle base...")
   k_half = k//2
@@ -73,7 +75,10 @@ def main(input, alleles, minimum, output_prefix):
   print(datetime.datetime.now(), ": Extracting counts and sequences...")
   hetmers = [seqs[value] for key, value in ans.items()]
   hetmer_counts = [counts[value] for key, value in ans.items()]
-
+  del seqs
+  del counts
+  del ans
+  
   # save results
   print(datetime.datetime.now(), ": Saving results...")
   np.savetxt(output_prefix + "_seqs.csv", hetmers, delimiter = ",", fmt='%s')

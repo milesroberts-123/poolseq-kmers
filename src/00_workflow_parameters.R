@@ -1,8 +1,8 @@
 library("dplyr") 
 
-replicates = 1:5
-sample_sizes = c(40, 50, 75, 100, 125)
-coverages = c(50, 100, 200, 250, 300)
+replicates = 1:3
+sample_sizes = c(25, 50, 75, 100, 125, 150)
+coverages = c(50, 100, 150, 200, 250, 300)
 sequencers = c("miseq", "hiseq", "nextseq", "novaseq")
 
 #sample_sizes = c(5, 10)
@@ -18,7 +18,7 @@ params = expand.grid(
   mu = c(1e-8),
   R = c(1e-8),
   cov = coverages,
-  L = c(1e6),
+  L = c(1.5e6),
   sequencer = sequencers,
   simtype = "onepop",
   N1 = 0,

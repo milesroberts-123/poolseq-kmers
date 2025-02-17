@@ -37,7 +37,7 @@ rule all:
 		expand("slim_allele_freqs_{ID}.txt", ID=one_pop_params.index.get_level_values("ID")),
 		#expand("{ID}_poolsnp_output.vcf.gz", ID=one_pop_params.index.get_level_values("ID")),
 		expand("poolsnp_final_{ID}.txt", ID=one_pop_params.index.get_level_values("ID")),
-		expand("unitig_alignments_{ID}.txt", ID=one_pop_params.index.get_level_values("ID")),
+		#expand("unitig_alignments_{ID}.txt", ID=one_pop_params.index.get_level_values("ID")),
 		expand("hetmers_{ID}_counts.csv", ID=one_pop_params.index.get_level_values("ID")),
 		expand("hetmers_{ID}_seqs.csv", ID=one_pop_params.index.get_level_values("ID")),
 
