@@ -7,20 +7,13 @@ import hashlib
 import click
 import datetime
 
-@click.command(context_settings={'show_default': True})
-@click.option("-i", "--input", default=None, help="Path to input k-mer count table (KMC or Jellyfish)", multiple=False)
-@click.option("-a", "--alleles", default=[2], help="Number of alleles", multiple=True)
-@click.option("-m", "--minimum", default=5, help="Minimum required k-mer count", multiple=False)
-@click.option("-o", "--output-prefix", default="hetmers", help="Prefix for output files")
-def main(input, alleles, minimum, output_prefix):
+# function to get hetmers
+def get_hetmers(input, type, alleles, minimum, output_prefix):
   """
   Script similar to smudgeplot hetkmers, except we retain the hetmer sequences.
-  
-  To compare two populations, specify -i twice.
   """
-
   print(datetime.datetime.now(), ": Loading k-mer count file " + input + "...")
-  counts = pd.read_csv(input, sep="\t", names = ["seq", "count"])
+  counts = pd.read_csv(input, sep="\t", names = ["seq", "count"], header = None)
 
   print(datetime.datetime.now(), ": Filtering k-mers with count less than " + minimum + "...")
   filtered_counts = counts[counts['count'] >= minimum]
@@ -78,13 +71,64 @@ def main(input, alleles, minimum, output_prefix):
   del seqs
   del counts
   del ans
-  
+
   # save results
   print(datetime.datetime.now(), ": Saving results...")
   np.savetxt(output_prefix + "_seqs.csv", hetmers, delimiter = ",", fmt='%s')
   np.savetxt(output_prefix + "_counts.csv", hetmer_counts, delimiter = ",")
 
   print(datetime.datetime.now(), ": Done! :D")
+
+# function to work with one hetmer table
+def get_allele_freqs(hetmer_table, output_prefix):
+  print(datetime.datetime.now(), ": Loading hetmer counts from " + hetmer_table + "_counts.csv" +  "...")
+  counts = pd.read_csv(hetmer_table + "_counts.csv", header=None)
+
+  print(datetime.datetime.now(), ": Calculating frequencies...")
+  a = counts.iloc[:,0].to_numpy()
+  A = counts.iloc[:,1].to_numpy()
+  freqs = a/(a+A)
+
+  print(datetime.datetime.now(), ": Getting minor allele frequencies...")
+  freqs = [min(x, 1-x) for x in freqs]
+
+  # if only allele frequencies are desired, stop here
+  print(datetime.datetime.now(), ": Saving results...")
+  np.savetxt(output_prefix + "_freqs.csv", freqs, delimiter = ",", fmt='%s')
+
+  # if its desired to estimate allele state by bayes theorem, go another step further
+
+# functions to compare two hetmer tables
+
+# Main function that collects everything together
+@click.command(context_settings={'show_default': True})
+#@click.option("-i", "--input", default=None, help="Path to input k-mer count table (KMC or Jellyfish)", multiple=False)
+#@click.option("-t", "--type", default='kmer', type=click.Choice(['kmer', 'hetmer'], case_sensitive=False, help="Input type (het-mer count table or k-mer count table)", multiple=False)
+@click.option('-k', '--kmer_table', help="Path to input k-mer count table (KMC or Jellyfish)")
+@click.option('-t', '--hetmer_table', type=str, help="Prefix to hetmer tables (hetmers.py)")
+@click.option('-y', '--analysis', type=click.Choice(['fst', 'freq'], case_sensitive=False), default = None, help="Type of analysis to do on hetmer table")
+@click.option("-a", "--alleles", default=[2], help="Number of alleles", multiple=True)
+@click.option("-m", "--minimum", default=5, help="Minimum required k-mer count", multiple=False)
+@click.option("-o", "--output-prefix", help="Prefix for output files", required = True)
+def main(kmer_table, hetmer_table, analysis, alleles, minimum, output_prefix):
+  """
+  Functions to find heterozygous pairs of k-mers (i.e. hetmers) in k-mer count tables and do some simple population genetics analyses.
+  """
+  # Make sure that only one analysis is being specified
+  if (kmer_table is None and hetmer_table is None) or (kmer_table is not None and hetmer_table is not None):
+    raise click.UsageError(f"Either 'kmer_table' or 'hetmer_table' must be specified, but not both.")
+
+  if (hetmer_table is not None) and (analysis is None):
+    raise click.UsageError(f"If 'hetmer_table' is specified, then 'analysis' must also be specified")
+
+  if kmer_table is not None:
+    get_hetmers(kmer_table, type, alleles, minimum, output_prefix)
+
+  if hetmer_table is not None and (analysis == 'freq'):
+    get_allele_freqs(hetmer_table, output_prefix)
+
+  if hetmer_table is not None and (analysis == 'fst'):
+    print("Working on it!")
 
 if __name__ == '__main__':
     main()
