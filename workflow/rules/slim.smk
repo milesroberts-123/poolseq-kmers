@@ -50,6 +50,10 @@ def get_L(wildcards):
         L = parameters.loc[parameters["ID"] == wildcards.ID, "L"]
         return int(L.iloc[0])
 
+def get_tau(wildcards):
+        tau = parameters.loc[parameters["ID"] == wildcards.ID, "tau"]
+        return int(tau.iloc[0])
+
 rule slim:
 	input:
 		"../config/parameters.tsv"
@@ -71,7 +75,8 @@ rule slim:
 		s=get_s,
 		mu=get_mu,
 		R=get_R,
-		L=get_L
+		L=get_L,
+		tau=get_tau
 	threads: 1
 	resources:
 		mem_mb_per_cpu=8000,
@@ -85,7 +90,7 @@ rule slim:
 		fi
 
 		if [ "{params.simtype}" == "twopop" ]; then
-			slim -d ID={wildcards.ID} -d sigma={params.sigma} -d N1={params.N1} -d N2={params.N2} -d mg1={params.mg1} -d mg2={params.mg2} -d mu={params.mu} -d R={params.R} -d n={params.n} -d L={params.L} scripts/two_pop.slim &> {log}
+			slim -d ID={wildcards.ID} -d sigma={params.sigma} -d N1={params.N1} -d N2={params.N2} -d mg1={params.mg1} -d mg2={params.mg2} -d mu={params.mu} -d R={params.R} -d n={params.n} -d tau={params.tau} -d L={params.L} scripts/two_pop.slim &> {log}
 		fi
 
 		if [ "{params.simtype}" == "sweep" ]; then

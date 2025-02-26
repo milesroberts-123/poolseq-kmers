@@ -31,6 +31,7 @@ rule poolsnp_one_pop:
 		#names = get_names,
 		wd = get_wd,
 		#prefix = get_prefix
+		mincount = config["mincount"]
 	conda:
 		"../envs/poolsnp.yaml"
 	resources:
@@ -47,8 +48,8 @@ rule poolsnp_one_pop:
 		reference={params.wd}{input.reffasta} \
 		names={wildcards.ID} \
 		max-cov=0.9999 \
-		min-cov=8 \
-		min-count=2 \
+		min-cov={params.mincount} \
+		min-count={params.mincount} \
 		min-freq=0.01 \
 		miss-frac=0 \
 		badsites=1 \

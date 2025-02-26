@@ -9,11 +9,11 @@ initialize() {
 
 1 early() {
 	// add subpopulations
-	catn("Creating subpopulations...");
-	sim.addSubpop("p1", asInteger(N1));
-	sim.addSubpop("p2", asInteger(N2));
-	p1.setMigrationRates(p2, mg1);
-	p2.setMigrationRates(p1, mg2);
+	catn("Creating ancestral population...");
+	sim.addSubpop("p1", asInteger(N1 + N2));
+	//sim.addSubpop("p2", asInteger(N2));
+	//p1.setMigrationRates(p2, mg1);
+	//p2.setMigrationRates(p1, mg2);
 
 	// Configure log file
 	//log = community.createLogFile(paste("slim_" + ID + ".log", sep = ""));
@@ -23,6 +23,7 @@ initialize() {
 
 	// reschedule simulation end
 	community.rescheduleScriptBlock(s1, start=10*asInteger(N1 + N2), end=10*asInteger(N1 + N2));
+	community.rescheduleScriptBlock(s2, start=10*asInteger(N1 + N2) + tau, end=10*asInteger(N1 + N2) + tau);
 }
 
 early(){
@@ -31,7 +32,16 @@ early(){
 	}
 }
 
-s1 10000000 late() {
+// split ancestral population and set-up migration rates
+s1 10000000 early() {
+	catn("Splitting into subpopulations...");
+	sim.addSubpopSplit("p2", asInteger(N2), p1); 
+	p1.setMigrationRates(p2, mg1);
+	p2.setMigrationRates(p1, mg2);
+}
+
+// some generations after divergence, sample populations
+s2 10000000 late() {
 	// random sample of individuals, grab an extra individual to use as a refernce
 	catn("Randomly sampling population...");
 	sp1 = p1.sampleIndividuals(asInteger(n) + 1);

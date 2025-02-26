@@ -14,5 +14,7 @@ rule hetmers_one_pop:
 		"logs/hetmers/{ID}.log"
 	benchmark:
 		"benchmarks/hetmers/{ID}.bench"
+	params:
+		mincount = config["mincount"]
 	shell:
-		"python scripts/hetmers.py -i {input} -a 2 -m 5 -o hetmers_{wildcards.ID} &> {log}"
+		"python scripts/hetmers.py -i {input} -a 2 -m {params.mincount} -o hetmers_{wildcards.ID} &> {log}"
