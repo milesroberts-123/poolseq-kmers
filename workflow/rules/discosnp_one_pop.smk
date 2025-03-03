@@ -18,7 +18,7 @@ rule discosnp_one_pop:
 		vcf = expand("discoRes_{ID}_k_31_c_{param}_D_100_P_3_b_0_coherent.vcf", param = config["mincount"])
 	threads: 1
 	resources:
-		mem_mb_per_cpu=8000,
+		mem_mb_per_cpu=16000,
 		time=239,
 		load = 1
 	conda:
