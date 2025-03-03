@@ -12,10 +12,10 @@ rule discosnp_one_pop:
 		sa = "ref_{ID}.fasta.sa"
 	output:
 		#tmpread = temp("tmp_read_set_{ID}.fastq"),
-		fasta = temp("discoRes_{ID}_k_31_c_3_D_100_P_3_b_0_coherent.fa"),
+		fasta = temp(expand("discoRes_{ID}_k_31_c_{param}_D_100_P_3_b_0_coherent.fa", param = config["mincount"])),
 		fof = temp("fof_{ID}.txt"),
 		fof_reads = temp("fof_reads_{ID}.txt"),
-		vcf = "discoRes_{ID}_k_31_c_3_D_100_P_3_b_0_coherent.vcf"
+		vcf = expand("discoRes_{ID}_k_31_c_{param}_D_100_P_3_b_0_coherent.vcf", param = config["mincount"])
 	threads: 1
 	resources:
 		mem_mb_per_cpu=8000,

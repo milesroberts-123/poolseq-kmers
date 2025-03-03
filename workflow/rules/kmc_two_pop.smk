@@ -59,7 +59,7 @@ rule kmc_two_pop:
 		# dump all k-mers to text file
 		kmc_tools transform union_R1_R2_u1_u2_{wildcards.ID}_p1 dump {output.p1} &>> {log}
 		
-		kmc_tools transform union_R1_R2_u1_u2_{wildcards.ID}_p1 dump {output.p2} &>> {log}
+		kmc_tools transform union_R1_R2_u1_u2_{wildcards.ID}_p2 dump {output.p2} &>> {log}
 
 		# delete tmp directory
 		rm -r tmp_*_{wildcards.ID}_* union_*_{wildcards.ID}_*.kmc_*

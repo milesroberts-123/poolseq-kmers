@@ -16,14 +16,14 @@ rule discosnp_two_pop:
 		sa = "ref_{ID}_p1.fasta.sa"
 	output:
 		#tmpread_p1 = "tmp_read_set_{ID}_p1.fastq",
-		fasta_p1 = temp("discoRes_{ID}_p1_k_31_c_3_D_100_P_3_b_0_coherent.fa"),
+		fasta_p1 = temp(expand("discoRes_{ID}_p1_k_31_c_{param}_D_100_P_3_b_0_coherent.fa", param = config["mincount"])),
 		fof = "fof_{ID}.txt",
 		fof_p1 = "fof_{ID}_p1.txt",
-		vcf_p1 = "discoRes_{ID}_p1_k_31_c_3_D_100_P_3_b_0_coherent.vcf",
+		vcf_p1 = expand("discoRes_{ID}_p1_k_31_c_{param}_D_100_P_3_b_0_coherent.vcf", param = config["mincount"]),
 		#tmpread_p2 = "tmp_read_set_{ID}_p2.fastq",
-		fasta_p2 = temp("discoRes_{ID}_p2_k_31_c_3_D_100_P_3_b_0_coherent.fa"),
+		fasta_p2 = temp(expand("discoRes_{ID}_p2_k_31_c_{param}_D_100_P_3_b_0_coherent.fa", param = config["mincount"])),
 		fof_p2 = "fof_{ID}_p2.txt",
-		vcf_p2 = "discoRes_{ID}_p2_k_31_c_3_D_100_P_3_b_0_coherent.vcf"
+		vcf_p2 = expand("discoRes_{ID}_p2_k_31_c_{param}_D_100_P_3_b_0_coherent.vcf", param = config["mincount"])
 	threads: 1
 	resources:
 		mem_mb_per_cpu=8000,

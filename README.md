@@ -64,7 +64,7 @@ snakemake --cluster "sbatch --time={resources.time} --cpus-per-task={threads} --
 
 - [x] add software to call unitigs then align them back to reference genome 
 
-- [ ] compare snp and genome-wide diversity estimates to ground truth
+- [x] compare snp and genome-wide diversity estimates to ground truth
 
 - [ ] compare snp and genome-wide fst estimates to ground truth
 
