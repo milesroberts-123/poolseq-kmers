@@ -1,9 +1,11 @@
 rule bedtools:
 	input:
 		fasta = "ref_{ID}.fasta",
+		genome="../config/ref.genome"
 		bed = "../config/mask.bed"
 	output:
-		"ref_masked_{ID}.fasta"
+		masked_ref = "ref_masked_{ID}.fasta",
+		shuf_bed = temp("shuf_{ID}.bed")
 	threads: 1
 	resources:
 		mem_mb_per_cpu=8000,
@@ -14,5 +16,9 @@ rule bedtools:
 		"logs/bedtools/{ID}.log"
 	shell:
 		"""
-		bedtools maskfasta -fi {input.fasta} -bed {input.bed} -fo {output}
+		# randomly place masks along genome
+		bedtools shuffle -noOverlapping -i {input.bed} -g {input.genome} > {output.shuf_bed}
+
+		# mask reference genome
+		bedtools maskfasta -fi {input.fasta} -bed {output.shuf_bed} -fo {output}
 		"""

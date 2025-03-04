@@ -66,9 +66,13 @@ snakemake --cluster "sbatch --time={resources.time} --cpus-per-task={threads} --
 
 - [x] compare snp and genome-wide diversity estimates to ground truth
 
-- [ ] compare snp and genome-wide fst estimates to ground truth
+- [x] compare snp and genome-wide fst estimates to ground truth
 
-- [ ] simulate reference bias by masking portions of reference genome (how much to mask, which individuals to mask)
+- [x] simulate reference bias by masking portions of reference genome (how much to mask, which individuals to mask)
+
+- [ ] write hetmers binary to calculate fst
+
+- [ ] add hetmers binary to workflow
 
 - [ ] update to smudgeplot >0.3.0, once we're able to get k-mer sequences again
 

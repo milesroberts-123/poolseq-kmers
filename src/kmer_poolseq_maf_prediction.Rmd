@@ -97,10 +97,11 @@ posterior = function(x,z,n,C,alpha,beta){
 }
 ```
 
-# simulate k-mer counts in pool-seq
+# Simulations
+
+## k-mer counts in pool-seq
+
 ```{r}
-
-
 
 sterlings_approximation = function(n){
   sqrt(2*pi*n)*((n/exp(1))^n)
@@ -630,7 +631,8 @@ op_res$par
 hist(rnbinom(10000, mu = op_res$par["mu"], size = op_res$par["size"]))
 abline(v = 15)
 ```
-# simulate fst on kmers
+
+## hetmer fst
 ```{r}
 
 trials = 1e5
@@ -710,7 +712,7 @@ pgrid[which.max(L_1)]
 pgrid[which.max(L_2)]
 ```
 
-# Minimum coverage for minor allele frequency
+## Minimum coverage for minor allele frequency
 
 How high does coverage need to be for 95 % of hetmers at a given minor allele frequency to have a kmer count above some threshold?
 
@@ -1139,10 +1141,12 @@ plotdata = merge(params, plotdata, by = "ID")
 plotdata$n = as.factor(plotdata$n)
 plotdata$cov = as.factor(plotdata$cov)
 
+plotdata$simtype[(plotdata$simtype == "onepop")] = "neutral"
+
 ggplot(plotdata, aes(x = n, y = mean_dist, color = simtype)) +
   geom_boxplot() +
   theme_classic() +
-  stat_compare_means(aes(group = simtype), label.sep = "\n")
+  labs(x = "Pool size", y = "Distance between adjacent SNPs (bp)", color = "Simulation\ntype", title = "Ground truth")
     
 # Hypothesis: after a selective sweep, the longest unitigs in a population graph are more likely to be near the sweep site, compared to neutral scenario
 unitig_files = list.files(path = "/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow", pattern = "unitig_alignments_.*", full.names = T)
@@ -1155,27 +1159,67 @@ max_len = function(x){
   max(x$alen)
 }
 
-plotdata = data.frame(
+ss_max_len = function(x){
+  x$ss[which.max(x$alen)]
+}
+
+se_max_len = function(x){
+  x$se[which.max(x$alen)]
+}
+
+plotdata_unitigs = data.frame(
   ID = unitig_files_ids,
-  max_len = unlist(lapply(unitig_files, max_len))
+  max_len = unlist(lapply(unitig_files, max_len)),
+  ss = unlist(lapply(unitig_files, ss_max_len)),
+  se = unlist(lapply(unitig_files, se_max_len))
 )
 
-plotdata = merge(params, plotdata, by = "ID")
+plotdata_unitigs = merge(params, plotdata_unitigs, by = "ID")
 
-mod = lm(log10(max_len) ~ n + cov + sequencer + s + h, data = plotdata)
+mod = lm(log10(max_len) ~ n + cov + sequencer + s + h, data = plotdata_unitigs)
 summary(mod)
 plot(mod)
 
-plotdata$n = as.factor(plotdata$n)
-plotdata$cov = as.factor(plotdata$cov)
+plotdata_unitigs$n = as.factor(plotdata_unitigs$n)
+plotdata_unitigs$cov = as.factor(plotdata_unitigs$cov)
+
+plotdata_unitigs$simtype[(plotdata_unitigs$simtype == "onepop")] = "neutral"
 
 #plotdata = plotdata[( ((plotdata$s == 0.5) & (plotdata$h == 1)) | (plotdata$s == 0) ),]
 
-ggplot(plotdata, aes(x = n, y = max_len, color = simtype, fill = cov)) +
+ggplot(plotdata_unitigs, aes(x = n, y = max_len, color = simtype, fill = cov)) +
   geom_boxplot() +
-  facet_grid(sequencer ~ .) +
-  theme_classic()
+  #facet_grid(sequencer ~ .) +
+  theme_classic() +
+  labs(x = "Pool size", y = "Maximum unitig length (bp)", color = "Simulation\ntype", fill = "Coverage")
   #stat_compare_means(aes(group = simtype), label.sep = "\n")
+
+# see if long unitigs appear toward the sweep region
+plotdata_unitigs$sc = (plotdata_unitigs$ss + plotdata_unitigs$se)/2
+
+ggplot(plotdata_unitigs, aes(x = sc, color = simtype)) +
+  geom_density() +
+  theme_classic() +
+  facet_grid(cov ~ .) +
+  geom_vline(xintercept = 1.5e6/2, lty = 2, lwd = 1.5) +
+  labs(x = "Center of longest mapped unitig", color = "Simulation\ntype")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1322,7 +1366,6 @@ fst = function(n1, c1, f1, n2, c2, f2, type){
   
 }
 
-
 for(i in simids){
   # load in actual allele freqs from simulations
   true_af_p1 = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/slim_allele_freqs_", i, "_p1.txt", sep = ""), col.names = c("chrom", "pos", "ns", "af", "ac"))
@@ -1347,11 +1390,92 @@ for(i in simids){
   
   true_af = merge(true_af_p1[,c("pos", "ns", "ac", "af")], true_af_p2[,c("pos", "ns", "ac", "af")], by = "pos")
   
-  fst_values = fst(true_af$ns.x, true_af$ac.x, true_af$af.x, true_af$ns.y, true_af$ac.y, true_af$af.y, "population")
+  fst_values = fst(2*true_af$ns.x, true_af$ac.x, true_af$af.x, 2*true_af$ns.y, true_af$ac.y, true_af$af.y, "population")
   
   #fst(true_af$ns.x, true_af$ac.x, true_af$af.x, true_af$ns.y, true_af$ac.y, true_af$af.y, "sample")
   
   true_af = cbind(true_af, fst_values)
+  
+  # load pairs of k-mers
+  kmer_pairs_p1 = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/", "kmerpairs_", i, "_p1_sequences.tsv", sep = ""), col.names = c("k1"))
+
+  kmer_covs_p1 = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/kmerpairs_", i, "_p1_coverages.tsv", sep = ""), col.names = c("c1", "c2"))
+
+  kmer_pairs_p1 = cbind(kmer_pairs_p1, kmer_covs_p1)
+
+  kmer_pairs_p2 = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/", "kmerpairs_", i, "_p2_sequences.tsv", sep = ""), col.names = c("k1"))
+
+  kmer_covs_p2 = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/kmerpairs_", i, "_p2_coverages.tsv", sep = ""), col.names = c("c1", "c2"))
+
+  kmer_pairs_p2 = cbind(kmer_pairs_p2, kmer_covs_p2)
+
+  # calculate minor allele frequency
+  kmer_pairs_p1$kmer_maf = pmin(kmer_pairs_p1$c1, kmer_pairs_p1$c2)/(kmer_pairs_p1$c1 + kmer_pairs_p1$c2)
+  
+  kmer_pairs_p2$kmer_maf = pmin(kmer_pairs_p2$c1, kmer_pairs_p2$c2)/(kmer_pairs_p2$c1 + kmer_pairs_p2$c2)
+  
+  kmer_pairs_p1p2 = merge(kmer_pairs_p1, kmer_pairs_p2, by = "k1")
+  
+  # map kmers to snps
+  pos_kmer_key = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/center_kmer_pairs_", i, "_p1p2.txt", sep = ""), fill = T, col.names = c("pos", "k1", "k2", "k3", "k4"))
+
+  pos_kmer_key$leftk = substr(pos_kmer_key$k1, 1, 15)
+  pos_kmer_key$rightk = substr(pos_kmer_key$k1, 17, 31)
+
+  # compare snp and k-mer mafs
+  kmer_pairs_p1p2$leftk = substr(kmer_pairs_p1p2$k1, 1, 15)
+  kmer_pairs_p1p2$rightk = substr(kmer_pairs_p1p2$k1, 17, 31)
+
+  pos_kmer_pairs = merge(pos_kmer_key, kmer_pairs_p1p2, by = c("leftk", "rightk"))
+
+  # get snps that pair with reverse complements
+  pos_kmer_key$leftk_rc = chartr("ATGC","TACG",pos_kmer_key$leftk)
+  pos_kmer_key$rightk_rc = chartr("ATGC","TACG",pos_kmer_key$rightk)
+
+  pos_kmer_key$leftk_rc = strReverse(pos_kmer_key$leftk_rc)
+  pos_kmer_key$rightk_rc = strReverse(pos_kmer_key$rightk_rc)
+
+  pos_kmer_pairs_rc = merge(pos_kmer_key, kmer_pairs_p1p2, by.x = c("leftk_rc", "rightk_rc"), by.y = c("rightk", "leftk"))
+
+  pos_kmer_pairs_rc = subset(pos_kmer_pairs_rc, select=-c(leftk,rightk))
+
+  # merge reverse complement and regular sets
+  names(pos_kmer_pairs_rc)[1:2] = c("leftk", "rightk")
+
+  pos_kmer_pairs = rbind(pos_kmer_pairs, pos_kmer_pairs_rc)
+
+  any(duplicated(pos_kmer_pairs$pos))
+
+  # do some filtering
+  # remove low coverage k-mer pairs
+  # remove tri-allelic k-mers
+  #pos_kmer_pairs = pos_kmer_pairs[(pos_kmer_pairs$c1 >=4 & pos_kmer_pairs$c2 >= 4),]
+  pos_kmer_pairs = pos_kmer_pairs[( (pos_kmer_pairs$k3 == "") | is.na(pos_kmer_pairs$k3)),]
+  
+  # calculate fst for kmers
+  kmer_fst_values = fst(2*75, pos_kmer_pairs$c1.x, pos_kmer_pairs$kmer_maf.x, 2*75, pos_kmer_pairs$c1.y, pos_kmer_pairs$kmer_maf.y, "population")
+
+  pos_kmer_pairs = cbind(pos_kmer_pairs, kmer_fst_values)
+  
+  # add in SNP fst values
+  snp_vs_kmer_fst = merge(true_af[,c("pos", "nei", "hudson")], pos_kmer_pairs, by = "pos")
+  
+  ggplot(snp_vs_kmer_fst, aes(x = nei.x, y = nei.y)) +
+    geom_point() +
+    theme_classic()
+  
+  ggplot(snp_vs_kmer_fst, aes(x = hudson.x, y = hudson.y)) +
+    geom_point() +
+    theme_classic()
+  
+  mean(snp_vs_kmer_fst$nei.x)
+  mean(snp_vs_kmer_fst$nei.y)
+  
+  mean(snp_vs_kmer_fst$hudson.x)
+  mean(snp_vs_kmer_fst$hudson.y)
+  
+  mean(true_af$hudson)
+  mean(kmer_pairs_p1p2$hudson[(kmer_pairs_p1p2$hudson > 0)])
 }
 
 ```
@@ -1406,8 +1530,8 @@ workflow_summary = function(x, lev_col, resource_col){
       lev_col = lev,
       bwa_varscan = bwa+varscan,
       bwa_poolsnp = bwa+poolsnp,
-      kmc_smudeplot = kmc+smudgeplot,
-      discosnp
+      kmc_smudgeplot = kmc+smudgeplot,
+      discosnp = discosnp
     )
     
     results = rbind(results, result)
@@ -1418,12 +1542,16 @@ workflow_summary = function(x, lev_col, resource_col){
 }
 
 bench_summary_time_by_flow = workflow_summary(bench_summary_time, "cov", "s")
-
 bench_summary_time_by_flow = melt(bench_summary_time_by_flow, id = "lev_col")
+
+bench_summary_memory_by_flow = workflow_summary(bench_summary_memory, "cov", "max_rss")
+bench_summary_memory_by_flow = melt(bench_summary_memory_by_flow, id = "lev_col")
 
 # calculate average times
 bench_summary_time_by_flow$value = bench_summary_time_by_flow$value/length(unique(bench_params$ID))
-  
+
+bench_summary_memory_by_flow$value = bench_summary_memory_by_flow$value/length(unique(bench_params$ID))
+
 #
 my_colors = scico(4, palette = "hawaii")
 names(my_colors) = unique(bench_summary_time_by_flow$lev_col)
@@ -1434,8 +1562,17 @@ ggplot(bench_summary_time_by_flow, aes(x = variable, y = value, fill = as.factor
   scale_fill_manual(values = my_colors) +
   labs(x = "workflow", y = "Average time (s)", fill = "coverage")
 
+# ggplot(bench_summary_memory_by_flow, aes(x = variable, y = value, fill = as.factor(lev_col))) +
+#   geom_bar(stat = "identity", position = "dodge") +
+#   labs(x = "workflow", y = "Average Maximum Resident Set Size (MB)", fill = "coverage") +
+#   theme_classic() +
+#   scale_fill_manual(values = my_colors) 
+
 ggplot(bench_summary_memory, aes(x = tool, y = max_rss, fill = as.factor(cov))) +
-  geom_bar(stat = "identity", position = "dodge")
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(x = "workflow", y = "Average Maximum Resident Set Size (MiB)", fill = "coverage") +
+  theme_classic() +
+  scale_fill_manual(values = my_colors) 
   
 ```
 
