@@ -70,9 +70,13 @@ snakemake --cluster "sbatch --time={resources.time} --cpus-per-task={threads} --
 
 - [x] simulate reference bias by masking portions of reference genome (how much to mask, which individuals to mask)
 
-- [ ] write hetmers binary to calculate fst
+- [x] add hetmers binary to workflow
 
-- [ ] add hetmers binary to workflow
+- [ ] generalize bayes theorem to work with minimum kmer counts > 1
+
+- [ ] generalize bayes theorem to negative binomial distribution
+
+- [ ] write hetmers binary to calculate fst
 
 - [ ] update to smudgeplot >0.3.0, once we're able to get k-mer sequences again
 

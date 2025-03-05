@@ -20,5 +20,5 @@ rule bedtools:
 		bedtools shuffle -noOverlapping -i {input.bed} -g {input.genome} > {output.shuf_bed}
 
 		# mask reference genome
-		bedtools maskfasta -fi {input.fasta} -bed {output.shuf_bed} -fo {output}
+		bedtools maskfasta -fi {input.fasta} -bed {output.shuf_bed} -fo {output.masked_ref}
 		"""
