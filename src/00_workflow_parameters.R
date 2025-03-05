@@ -79,7 +79,7 @@ params[is.na(params)] = 0
 write.table(params, "../config/parameters.tsv", sep = "\t", quote = F, row.names = F)
 
 # generate deletions in reference genome
-deletions = rgeom(50000, 0.1)
+deletions = rgeom(120000, 0.2)
 
 deletions = deletions[(deletions > 0)]
 

@@ -1,10 +1,10 @@
-rule bcftools_poolsnp_one_pop:
+rule bcftools_poolsnp_masked:
 	input:
-		ref = "ref_{ID}.fasta",
-		vcf = "{ID}_poolsnp_output.vcf.gz",
+		ref = "ref_masked_{ID}.fasta",
+		vcf = "{ID}_masked_poolsnp_output.vcf.gz",
 	output:
-		tbi = temp("{ID}_poolsnp_output.vcf.gz.tbi"),
-		final = "poolsnp_final_{ID}.txt"
+		tbi = temp("{ID}_masked_poolsnp_output.vcf.gz.tbi"),
+		final = "poolsnp_final_masked_{ID}.txt"
 	threads: 1
 	resources:
 		mem_mb_per_cpu=8000,
@@ -12,7 +12,7 @@ rule bcftools_poolsnp_one_pop:
 	conda:
 		"../envs/bcftools.yaml"
 	log:
-		"logs/bcftools_poolsnp/{ID}.log"
+		"logs/bcftools_poolsnp_masked/{ID}.log"
 	shell:
 		"""
 		# unpack gzip

@@ -18,7 +18,7 @@ def get_wd(wildcards):
 #def get_prefix(wildcards):
 #	return os.getcwd() + "/" + str(wildcards.ID) + "_poolsnp_output" 
 
-rule poolsnp_one_pop:
+rule poolsnp_masked:
 	input:
 		reffasta = "ref_masked_{ID}.fasta",
 		trimbam = "trimmed_masked_{ID}.bam"

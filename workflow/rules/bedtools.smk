@@ -1,7 +1,7 @@
 rule bedtools:
 	input:
 		fasta = "ref_{ID}.fasta",
-		genome="../config/ref.genome"
+		genome="../config/ref.genome",
 		bed = "../config/mask.bed"
 	output:
 		masked_ref = "ref_masked_{ID}.fasta",

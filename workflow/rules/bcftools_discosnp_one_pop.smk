@@ -33,5 +33,5 @@ rule bcftools_discosnp_one_pop:
 		tabix {output.bgzip}
 
 		# output allele depths
-		bcftools query -f '%CHROM %POS [ %AD]\n' {output.bgzip} | sed 's:,:\t:g' > {output.final}
+		bcftools query -f '%CHROM %POS %REF %ALT [ %AD]\n' {output.bgzip} | sed 's:,:\t:g' > {output.final}
 		"""

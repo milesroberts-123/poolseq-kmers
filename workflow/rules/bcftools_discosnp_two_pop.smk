@@ -43,6 +43,6 @@ rule bcftools_discosnp_two_pop:
 		tabix {output.bgzip_p2}
 
 		# output allele depths
-		bcftools query -f '%CHROM %POS [ %AD]\n' {output.bgzip_p1} | sed 's:,:\t:g' > {output.final_p1}
-		bcftools query -f '%CHROM %POS [ %AD]\n' {output.bgzip_p2} | sed 's:,:\t:g' > {output.final_p2}
+		bcftools query -f '%CHROM %POS %REF %ALT [ %AD]\n' {output.bgzip_p1} | sed 's:,:\t:g' > {output.final_p1}
+		bcftools query -f '%CHROM %POS %REF %ALT [ %AD]\n' {output.bgzip_p2} | sed 's:,:\t:g' > {output.final_p2}
 		"""
