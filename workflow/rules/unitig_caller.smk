@@ -14,6 +14,8 @@ rule unitig_caller:
 		time=239
 	params:
 		rtab_prefix = "unitigs_{ID}"
+	benchmark:
+		"./benchmarks/unitig_caller/{ID}.bench"
 	shell:
 		r"""
 		# turn k-mer counts into fasta

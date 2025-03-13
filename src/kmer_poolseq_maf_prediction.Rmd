@@ -95,6 +95,41 @@ posterior = function(x,z,n,C,alpha,beta){
   #return(which.max(post)/n)
   return(post)
 }
+
+# calculate posterior where the minor k-mer count is variable
+truncation_constant = function(c, lambda){
+    x = 0:(c-1)
+    # truncation constants
+    result = 1.0 - sum( (exp(-lambda)*(lambda^x))/factorial(x) )
+    return(result)
+}
+
+posterior_min_kmer_count = function(x,z,n,C,c,alpha,beta){
+  i=c:(n-c)
+  #print(i)
+  p=i/n
+  #print(p)
+  lambdax = i*C
+  #print(lambdax)
+  lambday = (n-i)*C
+  #print(lambday)
+  
+  Tx = unlist(lapply(lambdax, FUN = truncation_constant, c = c))
+  #print(Tx)
+  Ty = unlist(lapply(lambday, FUN = truncation_constant, c = c))
+  #print(Ty)
+  
+  likelihood_times_prior = (p^(x + alpha - 1))*(1-p)^((z-x) + (beta - 1)) / (Tx*Ty)
+  
+  total_probability = sum(likelihood_times_prior)
+  
+  post = likelihood_times_prior/total_probability
+  
+  return(which.max(post) + c - 1)
+  #return(list(which.max(post) + c - 1, post))
+}
+
+#posterior_min_kmer_count(5, 200, 200, 1, 5, 1, 1)
 ```
 
 # Simulations
@@ -152,7 +187,7 @@ trials = 1e4
 i = 30
 j = 11
 n = 100
-L = 150
+L = 300
 k = 31
 N = 1.6e9
 G = 1e9
@@ -846,7 +881,7 @@ kmer_pairs$kmer_maf = pmin(kmer_pairs$c1, kmer_pairs$c2)/(kmer_pairs$c1 + kmer_p
 #   theme_classic()
 
 # load in actual allele freqs from simulations
-true_af = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/slim_allele_freqs_", i, ".txt", sep = ""), col.names = c("chrom", "pos", "ns", "af", "ac"))
+true_af = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/slim_allele_freqs_", i, ".txt", sep = ""), col.names = c("chrom", "pos", "ref", "alt", "ns", "af", "ac"))
 
 true_af$ac = as.numeric(true_af$ac)
 
@@ -864,7 +899,7 @@ true_af$snp_maf = pmin(true_af$af, 1 - true_af$af)
 true_af = true_af[(true_af$af < 1) & (true_af$af > 0),]
 
 # load discosnp results, calculate maf
-disco = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/discoRes_ad_", i, ".txt", sep = ""), col.names = c("chrom", "pos", "c1", "c2"))
+disco = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/discoRes_ad_", i, ".txt", sep = ""), col.names = c("chrom", "pos", "ref", "alt", "c1", "c2"))
 
 disco = disco[(disco$c1 >= thresh) & (disco$c2 >= thresh),]
 
@@ -917,10 +952,15 @@ any(duplicated(pos_kmer_pairs$pos))
 #pos_kmer_pairs = pos_kmer_pairs[(pos_kmer_pairs$c1 >=4 & pos_kmer_pairs$c2 >= 4),]
 pos_kmer_pairs = pos_kmer_pairs[( (pos_kmer_pairs$k3 == "") | is.na(pos_kmer_pairs$k3)),]
 
-compare_maf_kmer = merge(true_af[,c("pos", "snp_maf")], pos_kmer_pairs, by = "pos", all.x = T, all.y = T)
+compare_maf_kmer = merge(true_af[,c("pos", "snp_maf", "ac")], pos_kmer_pairs, by = "pos", all.x = T, all.y = T)
 
 # remove all na rows
 compare_maf_kmer = compare_maf_kmer[rowSums(is.na(compare_maf_kmer)) != ncol(compare_maf_kmer), ]
+
+# compare minor allele counts
+compare_maf_kmer_no_na = compare_maf_kmer[!is.na(compare_maf_kmer$c1),]
+
+compare_maf_kmer_no_na$kmer_mac = unlist(mapply(posterior_min_kmer_count, x = compare_maf_kmer_no_na$c1, z = compare_maf_kmer_no_na$c1 + compare_maf_kmer_no_na$c2, MoreArgs = list(n = 100, C = 2*0.9, c = 5, alpha = 1, beta = 1)))
 
 # include varscan calls
 varscan = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/calls_", i, ".tsv", sep = ""), header = T)

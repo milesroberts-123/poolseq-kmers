@@ -1,11 +1,11 @@
 library("dplyr") 
 
-replicates = 1
+replicates = 1:2
 #sample_sizes = c(25, 50, 75, 100, 125, 150)
 #coverages = c(50, 100, 150, 200, 250, 300)
 #sequencers = c("miseq", "hiseq", "nextseq", "novaseq")
 
-sample_sizes = c(50, 75, 100, 125)
+sample_sizes = c(25, 50, 75, 100)
 coverages = c(50, 100, 150, 200)
 sequencers = c("miseq", "hiseq", "nextseq", "novaseq")
 
@@ -38,7 +38,7 @@ two_pop_params = expand.grid(
   N2 = c(1000),
   mg1 = c(0),
   mg2 = c(0),
-  tau = c(2000),
+  tau = c(1000),
   n = sample_sizes,
   sigma = c(0),
   mu = c(1e-8),
@@ -55,7 +55,7 @@ sweep_params = expand.grid(
   N = c(1000),
   n = sample_sizes,
   h = 0.5,
-  s = 0.5,
+  s = c(0.005, 0.01, 0.1),
   sigma = c(0),
   mu = c(1e-8),
   R = c(1e-8),
@@ -79,17 +79,17 @@ params[is.na(params)] = 0
 write.table(params, "../config/parameters.tsv", sep = "\t", quote = F, row.names = F)
 
 # generate deletions in reference genome
-deletions = rgeom(120000, 0.2)
-
-deletions = deletions[(deletions > 0)]
-
-ends = cumsum(deletions)
-starts = c(0, head(ends,-1))
-
-mybed = data.frame(
- chrom = 1,
- starts = starts,
- ends = ends
-)
-
-write.table(mybed, "../config/mask.bed", sep = "\t", quote = F, row.names = F, col.names = F)
+#deletions = rgeom(120000, 0.2)
+#
+#deletions = deletions[(deletions > 0)]
+#
+#ends = cumsum(deletions)
+#starts = c(0, head(ends,-1))
+#
+#mybed = data.frame(
+# chrom = 1,
+# starts = starts,
+# ends = ends
+#)
+#
+#write.table(mybed, "../config/mask.bed", sep = "\t", quote = F, row.names = F, col.names = F)
