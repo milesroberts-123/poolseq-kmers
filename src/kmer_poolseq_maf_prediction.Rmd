@@ -972,7 +972,7 @@ varscan$snp_maf_varscan = pmin(varscan$Reads1, varscan$Reads2)/(varscan$Reads1 +
 names(varscan)[2] = "pos"
 
 # load poolsnp calls
-poolsnp = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/poolsnp_final_", i, ".txt", sep = ""), col.names = c("chrom", "pos", "c1", "t"), fill = T, na.strings = "")
+poolsnp = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/poolsnp_final_", i, ".txt", sep = ""), col.names = c("chrom", "pos", "ref", "alt", "c1", "t"), fill = T, na.strings = "")
 
 poolsnp = poolsnp[(poolsnp$c1 >= thresh),]
 
@@ -1083,6 +1083,12 @@ write.table(pares, paste("/mnt/ufs18/home-010/robe1195/Josephs_Lab_Projects/pool
 
 # site frequency spectrum
 ```{r}
+#
+ggplot(pares, aes(x = as.factor(cov), y = kmer_vs_truth_maf_cor)) +
+  geom_boxplot() +
+  theme_classic()
+
+
 # site-frequency spectrum
 all_sfs = merge(compare_maf_kmer[,c("pos", "snp_maf", "kmer_maf")], varscan[,c("pos", "snp_maf_varscan")], by = "pos", all.x = T, all.y = T)
 
@@ -1166,7 +1172,7 @@ allele_files = allele_files[!grepl("_p.", allele_files)]
 
 allele_file_ids = as.numeric(gsub(".txt", "", gsub("slim_allele_freqs_", "", gsub("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/", "", allele_files))))
 
-allele_files = lapply(allele_files, read.table, col.names = c("chrom", "pos", "ns", "af", "ac"))
+allele_files = lapply(allele_files, read.table, col.names = c("chrom", "pos", "ref", "alt", "ns", "af", "ac"))
 
 mean_dist_bw_mut = function(x){
   mean(diff(x$pos))
@@ -1180,13 +1186,14 @@ plotdata = data.frame(
 plotdata = merge(params, plotdata, by = "ID")
 plotdata$n = as.factor(plotdata$n)
 plotdata$cov = as.factor(plotdata$cov)
+plotdata$s = as.factor(plotdata$s)
 
-plotdata$simtype[(plotdata$simtype == "onepop")] = "neutral"
+#plotdata$simtype[(plotdata$simtype == "onepop")] = "neutral"
 
-ggplot(plotdata, aes(x = n, y = mean_dist, color = simtype)) +
+ggplot(plotdata, aes(x = n, y = mean_dist, color = s)) +
   geom_boxplot() +
   theme_classic() +
-  labs(x = "Pool size", y = "Distance between adjacent SNPs (bp)", color = "Simulation\ntype", title = "Ground truth")
+  labs(x = "Pool size", y = "Avg. distance between SNPs (bp)", color = "Selection", title = "Ground truth")
     
 # Hypothesis: after a selective sweep, the longest unitigs in a population graph are more likely to be near the sweep site, compared to neutral scenario
 unitig_files = list.files(path = "/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow", pattern = "unitig_alignments_.*", full.names = T)
@@ -1216,14 +1223,15 @@ plotdata_unitigs = data.frame(
 
 plotdata_unitigs = merge(params, plotdata_unitigs, by = "ID")
 
-mod = lm(log10(max_len) ~ n + cov + sequencer + s + h, data = plotdata_unitigs)
-summary(mod)
-plot(mod)
+#mod = lm(log10(max_len) ~ n + cov + sequencer + s + h, data = plotdata_unitigs)
+#summary(mod)
+#plot(mod)
 
 plotdata_unitigs$n = as.factor(plotdata_unitigs$n)
 plotdata_unitigs$cov = as.factor(plotdata_unitigs$cov)
+plotdata_unitigs$s = as.factor(plotdata_unitigs$s)
 
-plotdata_unitigs$simtype[(plotdata_unitigs$simtype == "onepop")] = "neutral"
+#plotdata_unitigs$simtype[(plotdata_unitigs$simtype == "onepop")] = "neutral"
 
 #plotdata = plotdata[( ((plotdata$s == 0.5) & (plotdata$h == 1)) | (plotdata$s == 0) ),]
 
@@ -1237,15 +1245,25 @@ ggplot(plotdata_unitigs, aes(x = n, y = max_len, color = simtype, fill = cov)) +
 # see if long unitigs appear toward the sweep region
 plotdata_unitigs$sc = (plotdata_unitigs$ss + plotdata_unitigs$se)/2
 
-ggplot(plotdata_unitigs, aes(x = sc, color = simtype)) +
+ggplot(plotdata_unitigs, aes(x = sc, color = s)) +
+  geom_density() +
+  theme_classic() +
+  geom_vline(xintercept = 2e6/2, lty = 2, lwd = 1.5) +
+  labs(x = "Center of longest mapped unitig", color = "Simulation\ntype")
+
+ggplot(plotdata_unitigs, aes(x = sc, color = s)) +
   geom_density() +
   theme_classic() +
   facet_grid(cov ~ .) +
-  geom_vline(xintercept = 1.5e6/2, lty = 2, lwd = 1.5) +
+  geom_vline(xintercept = 2e6/2, lty = 2, lwd = 1.5) +
   labs(x = "Center of longest mapped unitig", color = "Simulation\ntype")
 
-
-
+ggplot(plotdata_unitigs, aes(x = sc, color = s)) +
+  geom_density() +
+  theme_classic() +
+  facet_grid(n ~ .) +
+  geom_vline(xintercept = 2e6/2, lty = 2, lwd = 1.5) +
+  labs(x = "Center of longest mapped unitig", color = "Simulation\ntype")
 
 
 
@@ -1524,6 +1542,8 @@ for(i in simids){
 ```{r}
 bench_file_names = list.files(path = "/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/benchmarks", recursive = T, full.names = T)
 
+bench_file_names = bench_file_names[!grepl("masked", bench_file_names)] # remove benchmarks from masked experiments for now
+
 bench_files = lapply(bench_file_names, read.table, header = T, sep = "\t")
 
 bench_files = do.call("rbind", bench_files)
@@ -1537,11 +1557,6 @@ bench_files$ID = as.numeric(gsub(".*/|.bench", "", gsub("/mnt/scratch/robe1195/J
 
 # merge with workflow parameters
 bench_params = merge(params[(params$simtype == "onepop"),c("ID", "cov", "n")], bench_files, by = "ID")
-
-#
-bench_params$workflow = NA
-
-bench_params$workflow[]
 
 #
 bench_summary_time = aggregate(s ~ tool + cov, data = bench_params, FUN = "sum")
@@ -1563,6 +1578,8 @@ workflow_summary = function(x, lev_col, resource_col){
     kmc = x[(x$tool == "kmc") & (x[,lev_col] == lev),resource_col]
     
     smudgeplot = x[(x$tool == "smudgeplot") & (x[,lev_col] == lev),resource_col]
+    
+    hetmers = x[(x$tool == "hetmers") & (x[,lev_col] == lev),resource_col]
 
     discosnp = x[(x$tool == "discosnp") & (x[,lev_col] == lev),resource_col]
     
@@ -1571,6 +1588,7 @@ workflow_summary = function(x, lev_col, resource_col){
       bwa_varscan = bwa+varscan,
       bwa_poolsnp = bwa+poolsnp,
       kmc_smudgeplot = kmc+smudgeplot,
+      kmc_hetmers=kmc+hetmers,
       discosnp = discosnp
     )
     

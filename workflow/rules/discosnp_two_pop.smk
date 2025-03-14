@@ -41,13 +41,46 @@ rule discosnp_two_pop:
 		"""
 		# create file of files
 		echo "{output.fof_p1}" > {output.fof} 
-		echo -e "{input.pread1_p1}\n{input.pread2_p1}\n{input.uread1_p1}\n{input.uread2_p1}" > {output.fof_p1}
+
+		# check each file for being empty, use only non-empty files
+		if [ -s {input.pread1_p1} ]; then
+			echo {input.pread1_p1} >> {output.fof_p1}
+		fi
+
+		if [ -s {input.pread2_p1} ]; then
+			echo {input.pread2_p1} >> {output.fof_p1}
+		fi
+
+		if [ -s {input.uread1_p1} ]; then
+			echo {input.uread1_p1} >> {output.fof_p1}
+		fi
+
+		if [ -s {input.uread2_p1} ]; then
+			echo {input.uread2_p1} >> {output.fof_p1}
+		fi
 
 		# run discosnp, with results for mapping SNPs to reference
 		run_discoSnp++.sh -r {output.fof} -c {params.mincount} -G {input.ref} -p {params.prefix_p1}
 
 		# repeat for population 2
 		echo "{output.fof_p2}" > {output.fof}
-		echo -e "{input.pread1_p2}\n{input.pread2_p2}\n{input.uread1_p2}\n{input.uread2_p2}" > {output.fof_p2}
+
+		# check each file for being empty, use only non-empty files
+		if [ -s {input.pread1_p2} ]; then
+			echo {input.pread1_p2} >> {output.fof_p2}
+		fi
+
+		if [ -s {input.pread2_p2} ]; then
+			echo {input.pread2_p2} >> {output.fof_p2}
+		fi
+
+		if [ -s {input.uread1_p2} ]; then
+			echo {input.uread1_p2} >> {output.fof_p2}
+		fi
+
+		if [ -s {input.uread2_p2} ]; then
+			echo {input.uread2_p2} >> {output.fof_p2}
+		fi
+
 		run_discoSnp++.sh -r {output.fof} -c {params.mincount} -G {input.ref} -p {params.prefix_p2}
 		"""

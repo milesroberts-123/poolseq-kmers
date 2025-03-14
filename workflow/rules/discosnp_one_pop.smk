@@ -34,7 +34,23 @@ rule discosnp_one_pop:
 		"""
 		# create file of files
 		echo "{output.fof_reads}" > {output.fof}
-		echo -e "{input.pread1}\n{input.pread2}\n{input.uread1}\n{input.uread2}" > {output.fof_reads}
+
+		# check each file for being empty, use only non-empty files
+		if [ -s {input.pread1} ]; then
+			echo {input.pread1} >> {output.fof_reads}
+		fi
+
+		if [ -s {input.pread2} ]; then
+			echo {input.pread2} >> {output.fof_reads}
+		fi
+
+		if [ -s {input.uread1} ]; then
+			echo {input.uread1} >> {output.fof_reads}
+		fi
+
+		if [ -s {input.uread2} ]; then
+			echo {input.uread2} >> {output.fof_reads}
+		fi
 
 		# run discosnp, with results for mapping SNPs to reference
 		run_discoSnp++.sh -r {output.fof} -c {params.mincount} -G {input.ref} -p {params.prefix}
