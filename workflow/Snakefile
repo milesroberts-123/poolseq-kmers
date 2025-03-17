@@ -31,6 +31,9 @@ rule all:
 		expand("slim_allele_freqs_{ID}_p2.txt", ID=two_pop_params.index.get_level_values("ID")),
 		expand("poolsnp_final_{ID}_p1.txt", ID=two_pop_params.index.get_level_values("ID")),
 		expand("poolsnp_final_{ID}_p2.txt", ID=two_pop_params.index.get_level_values("ID")),		
+		expand("hetmers_{ID}_p1_counts.csv", ID=two_pop_params.index.get_level_values("ID")),
+		expand("hetmers_{ID}_p2_counts.csv", ID=two_pop_params.index.get_level_values("ID")),
+		expand("dissimilarity_{ID}.txt", ID=two_pop_params.index.get_level_values("ID")),
 		#expand("{ID}_p1_poolsnp_output.vcf.gz", ID=two_pop_params.index.get_level_values("ID")),
 		#expand("{ID}_p2_poolsnp_output.vcf.gz", ID=two_pop_params.index.get_level_values("ID")),
 		expand("calls_{ID}.tsv", ID=one_pop_params.index.get_level_values("ID")),
@@ -62,9 +65,11 @@ include: "rules/bwa_two_pop.smk"
 include: "rules/compress.smk"
 include: "rules/discosnp_one_pop.smk"
 include: "rules/discosnp_two_pop.smk"
+include: "rules/dissimilarity.smk"
 include: "rules/fastp_one_pop.smk"
 include: "rules/fastp_two_pop.smk"
 include: "rules/hetmers_one_pop.smk"
+include: "rules/hetmers_two_pop.smk"
 include: "rules/iss_one_pop.smk"
 include: "rules/iss_two_pop.smk"
 include: "rules/kmc_one_pop.smk"

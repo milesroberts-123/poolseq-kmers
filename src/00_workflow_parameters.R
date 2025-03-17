@@ -13,7 +13,8 @@ chrom_length = 2e6
 
 # create data frame of workflow parameters
 one_pop_params = expand.grid(
-  rep = replicates,
+  rep = 1,
+  #rep = replicates,
   N = c(1000),
   n = sample_sizes,
   sigma = c(0),
@@ -38,7 +39,7 @@ two_pop_params = expand.grid(
   N2 = c(1000),
   mg1 = c(0),
   mg2 = c(0),
-  tau = c(1000),
+  tau = c(500, 1000, 2000),
   n = sample_sizes,
   sigma = c(0),
   mu = c(1e-8),
@@ -51,11 +52,13 @@ two_pop_params = expand.grid(
 
 # selective sweep parameters
 sweep_params = expand.grid(
-  rep = replicates,
+  rep = 1,
+  #rep = replicates,
   N = c(1000),
   n = sample_sizes,
   h = 0.5,
-  s = c(0.005, 0.01, 0.1),
+  #s = c(0.005, 0.01, 0.1),
+  s = 0.1,
   sigma = c(0),
   mu = c(1e-8),
   R = c(1e-8),
