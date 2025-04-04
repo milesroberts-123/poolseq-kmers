@@ -18,15 +18,15 @@ def get_wd(wildcards):
 #def get_prefix(wildcards):
 #	return os.getcwd() + "/" + str(wildcards.ID) + "_poolsnp_output" 
 
-rule poolsnp_one_pop:
+rule poolsnp_masked:
 	input:
-		reffasta = "ref_{ID}.fasta",
-		trimbam = "trimmed_{ID}.bam"
+		reffasta = "ref_masked_{ID}.fasta",
+		trimbam = "trimmed_masked_{ID}.bam"
 	output:
-		vcf = "{ID}_poolsnp_output.vcf.gz",
+		vcf = "{ID}_masked_poolsnp_output.vcf.gz",
 		#cov = "{ID}_poolsnp_output-cov-0.98.txt",
-		bs = "{ID}_poolsnp_output_BS.txt.gz",
-		mpileup = temp("{ID}.mpileup")
+		bs = "{ID}_masked_poolsnp_output_BS.txt.gz",
+		mpileup = temp("{ID}_masked.mpileup")
 	params:
 		#names = get_names,
 		wd = get_wd,
@@ -38,7 +38,7 @@ rule poolsnp_one_pop:
 		mem_mb_per_cpu=8000,
 		time=239
 	benchmark:
-		"benchmarks/poolsnp/{ID}.bench"
+		"benchmarks/poolsnp_masked/{ID}.bench"
 	shell:
 		"""
 		samtools mpileup -f {input.reffasta} {input.trimbam} > {output.mpileup}
@@ -54,5 +54,5 @@ rule poolsnp_one_pop:
 		miss-frac=0 \
 		badsites=1 \
 		allsites=0 \
-		output={params.wd}{wildcards.ID}_poolsnp_output
+		output={params.wd}{wildcards.ID}_masked_poolsnp_output
 		"""

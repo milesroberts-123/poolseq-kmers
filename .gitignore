@@ -3,4 +3,6 @@
 **/results
 **.txt
 **.tsv
+**.bed
+**.csv
 !config/ref

@@ -12,13 +12,13 @@ rule discosnp_one_pop:
 		sa = "ref_{ID}.fasta.sa"
 	output:
 		#tmpread = temp("tmp_read_set_{ID}.fastq"),
-		fasta = temp("discoRes_{ID}_k_31_c_3_D_100_P_3_b_0_coherent.fa"),
+		fasta = temp("discoRes_{ID}_k_31_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_coherent.fa"),
 		fof = temp("fof_{ID}.txt"),
 		fof_reads = temp("fof_reads_{ID}.txt"),
-		vcf = "discoRes_{ID}_k_31_c_3_D_100_P_3_b_0_coherent.vcf"
+		vcf = "discoRes_{ID}_k_31_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_coherent.vcf"
 	threads: 1
 	resources:
-		mem_mb_per_cpu=8000,
+		mem_mb_per_cpu=16000,
 		time=239,
 		load = 1
 	conda:
@@ -28,13 +28,30 @@ rule discosnp_one_pop:
 	benchmark:
 		"benchmarks/discosnp/{ID}.bench"
 	params:
-		prefix = "discoRes_{ID}"
+		prefix = "discoRes_{ID}",
+		mincount = config["mincount"]
 	shell:
 		"""
 		# create file of files
 		echo "{output.fof_reads}" > {output.fof}
-		echo -e "{input.pread1}\n{input.pread2}\n{input.uread1}\n{input.uread2}" > {output.fof_reads}
+
+		# check each file for being empty, use only non-empty files
+		if [ -s {input.pread1} ]; then
+			echo {input.pread1} >> {output.fof_reads}
+		fi
+
+		if [ -s {input.pread2} ]; then
+			echo {input.pread2} >> {output.fof_reads}
+		fi
+
+		if [ -s {input.uread1} ]; then
+			echo {input.uread1} >> {output.fof_reads}
+		fi
+
+		if [ -s {input.uread2} ]; then
+			echo {input.uread2} >> {output.fof_reads}
+		fi
 
 		# run discosnp, with results for mapping SNPs to reference
-		run_discoSnp++.sh -r {output.fof} -c 3 -G {input.ref} -p {params.prefix}
+		run_discoSnp++.sh -r {output.fof} -c {params.mincount} -G {input.ref} -p {params.prefix}
 		"""

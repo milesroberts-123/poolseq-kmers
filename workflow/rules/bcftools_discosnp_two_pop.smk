@@ -1,8 +1,8 @@
 rule bcftools_discosnp_two_pop:
 	input:
 		ref = "ref_{ID}_p1.fasta",
-		vcf_p1 = "discoRes_{ID}_p1_k_31_c_3_D_100_P_3_b_0_coherent.vcf",
-		vcf_p2 = "discoRes_{ID}_p2_k_31_c_3_D_100_P_3_b_0_coherent.vcf",
+		vcf_p1 = "discoRes_{ID}_p1_k_31_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_coherent.vcf",
+		vcf_p2 = "discoRes_{ID}_p2_k_31_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_coherent.vcf",
 	output:
 		fai = temp("ref_{ID}_p1.fasta.fai"),
 		header_p1 = temp("discoRes_header_{ID}_p1.vcf"),
@@ -43,6 +43,6 @@ rule bcftools_discosnp_two_pop:
 		tabix {output.bgzip_p2}
 
 		# output allele depths
-		bcftools query -f '%CHROM %POS [ %AD]\n' {output.bgzip_p1} | sed 's:,:\t:g' > {output.final_p1}
-		bcftools query -f '%CHROM %POS [ %AD]\n' {output.bgzip_p2} | sed 's:,:\t:g' > {output.final_p2}
+		bcftools query -f '%CHROM %POS %REF %ALT [ %AD]\n' {output.bgzip_p1} | sed 's:,:\t:g' > {output.final_p1}
+		bcftools query -f '%CHROM %POS %REF %ALT [ %AD]\n' {output.bgzip_p2} | sed 's:,:\t:g' > {output.final_p2}
 		"""

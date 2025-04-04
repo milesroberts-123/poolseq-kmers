@@ -50,6 +50,6 @@ rule bcftools_slim_two_pop:
 		bcftools +fill-tags {output.samplevcf_p2} -Oz -o {output.filledvcf_p2} &> {log}
 
 		# split allele frequencies by populations
-		bcftools query -f '%CHROM %POS %NS %AF %AC\n' -o {output.allelefreq_p1} {output.filledvcf_p1} &> {log}
-		bcftools query -f '%CHROM %POS %NS %AF %AC\n' -o {output.allelefreq_p2} {output.filledvcf_p2} &> {log}
+		bcftools query -f '%CHROM %POS %REF %ALT %NS %AF %AC\n' -o {output.allelefreq_p1} {output.filledvcf_p1} &> {log}
+		bcftools query -f '%CHROM %POS %REF %ALT %NS %AF %AC\n' -o {output.allelefreq_p2} {output.filledvcf_p2} &> {log}
 		"""

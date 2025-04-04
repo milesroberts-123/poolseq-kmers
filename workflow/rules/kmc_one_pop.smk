@@ -16,6 +16,8 @@ rule kmc_one_pop:
 		"logs/kmc/{ID}.log"
 	benchmark:
 		"benchmarks/kmc/{ID}.bench"
+	params:
+		mincount = config["mincount"]
 	shell:
 		"""
 		# create directory
@@ -26,10 +28,10 @@ rule kmc_one_pop:
 		mkdir tmp_kmc_{wildcards.ID}
 
 		# count k-mers
-		kmc -ci1 -k31 {input.pread1} tmp_R1_{wildcards.ID} tmp_kmc_{wildcards.ID} &>> {log}
-		kmc -ci1 -k31 {input.pread2} tmp_R2_{wildcards.ID} tmp_kmc_{wildcards.ID} &>> {log}
-		kmc -ci1 -k31 {input.uread1} tmp_u_R1_{wildcards.ID} tmp_kmc_{wildcards.ID} &>> {log}
-		kmc -ci1 -k31 {input.uread2} tmp_u_R2_{wildcards.ID} tmp_kmc_{wildcards.ID} &>> {log}
+		kmc -ci{params.mincount} -k31 {input.pread1} tmp_R1_{wildcards.ID} tmp_kmc_{wildcards.ID} &>> {log}
+		kmc -ci{params.mincount} -k31 {input.pread2} tmp_R2_{wildcards.ID} tmp_kmc_{wildcards.ID} &>> {log}
+		kmc -ci{params.mincount} -k31 {input.uread1} tmp_u_R1_{wildcards.ID} tmp_kmc_{wildcards.ID} &>> {log}
+		kmc -ci{params.mincount} -k31 {input.uread2} tmp_u_R2_{wildcards.ID} tmp_kmc_{wildcards.ID} &>> {log}
 
 		# combine k-mer counts into one database
 		kmc_tools simple tmp_R1_{wildcards.ID} tmp_R2_{wildcards.ID} union union_R1_R2_{wildcards.ID} &>> {log}

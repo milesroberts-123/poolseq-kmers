@@ -19,6 +19,8 @@ rule kmc_two_pop:
 		"../envs/kmc.yaml"
 	log: 
 		"logs/kmc/{ID}.log"
+	params:
+		mincount = config["mincount"]
 	shell:
 		"""
 		# create directory
@@ -35,15 +37,15 @@ rule kmc_two_pop:
 		mkdir tmp_kmc_{wildcards.ID}_p2
 
 		# count k-mers
-		kmc -ci1 -k31 {input.pread1_p1} tmp_R1_{wildcards.ID}_p1 tmp_kmc_{wildcards.ID}_p1 &>> {log}
-		kmc -ci1 -k31 {input.pread2_p1} tmp_R2_{wildcards.ID}_p1 tmp_kmc_{wildcards.ID}_p1 &>> {log}
-		kmc -ci1 -k31 {input.uread1_p1} tmp_u_R1_{wildcards.ID}_p1 tmp_kmc_{wildcards.ID}_p1 &>> {log}
-		kmc -ci1 -k31 {input.uread2_p1} tmp_u_R2_{wildcards.ID}_p1 tmp_kmc_{wildcards.ID}_p1 &>> {log}
+		kmc -ci{params.mincount} -k31 {input.pread1_p1} tmp_R1_{wildcards.ID}_p1 tmp_kmc_{wildcards.ID}_p1 &>> {log}
+		kmc -ci{params.mincount} -k31 {input.pread2_p1} tmp_R2_{wildcards.ID}_p1 tmp_kmc_{wildcards.ID}_p1 &>> {log}
+		kmc -ci{params.mincount} -k31 {input.uread1_p1} tmp_u_R1_{wildcards.ID}_p1 tmp_kmc_{wildcards.ID}_p1 &>> {log}
+		kmc -ci{params.mincount} -k31 {input.uread2_p1} tmp_u_R2_{wildcards.ID}_p1 tmp_kmc_{wildcards.ID}_p1 &>> {log}
 
-		kmc -ci1 -k31 {input.pread1_p2} tmp_R1_{wildcards.ID}_p2 tmp_kmc_{wildcards.ID}_p2 &>> {log}
-		kmc -ci1 -k31 {input.pread2_p2} tmp_R2_{wildcards.ID}_p2 tmp_kmc_{wildcards.ID}_p2 &>> {log}
-		kmc -ci1 -k31 {input.uread1_p2} tmp_u_R1_{wildcards.ID}_p2 tmp_kmc_{wildcards.ID}_p2 &>> {log}
-		kmc -ci1 -k31 {input.uread2_p2} tmp_u_R2_{wildcards.ID}_p2 tmp_kmc_{wildcards.ID}_p2 &>> {log}
+		kmc -ci{params.mincount} -k31 {input.pread1_p2} tmp_R1_{wildcards.ID}_p2 tmp_kmc_{wildcards.ID}_p2 &>> {log}
+		kmc -ci{params.mincount} -k31 {input.pread2_p2} tmp_R2_{wildcards.ID}_p2 tmp_kmc_{wildcards.ID}_p2 &>> {log}
+		kmc -ci{params.mincount} -k31 {input.uread1_p2} tmp_u_R1_{wildcards.ID}_p2 tmp_kmc_{wildcards.ID}_p2 &>> {log}
+		kmc -ci{params.mincount} -k31 {input.uread2_p2} tmp_u_R2_{wildcards.ID}_p2 tmp_kmc_{wildcards.ID}_p2 &>> {log}
 
 		# combine k-mer counts into one database
 		kmc_tools simple tmp_R1_{wildcards.ID}_p1 tmp_R2_{wildcards.ID}_p1 union union_R1_R2_{wildcards.ID}_p1 &>> {log}
@@ -57,7 +59,7 @@ rule kmc_two_pop:
 		# dump all k-mers to text file
 		kmc_tools transform union_R1_R2_u1_u2_{wildcards.ID}_p1 dump {output.p1} &>> {log}
 		
-		kmc_tools transform union_R1_R2_u1_u2_{wildcards.ID}_p1 dump {output.p2} &>> {log}
+		kmc_tools transform union_R1_R2_u1_u2_{wildcards.ID}_p2 dump {output.p2} &>> {log}
 
 		# delete tmp directory
 		rm -r tmp_*_{wildcards.ID}_* union_*_{wildcards.ID}_*.kmc_*

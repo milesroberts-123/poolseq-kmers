@@ -2,6 +2,9 @@
 import pandas as pd
 import os
 
+# configuration
+configfile: "../config/config.yaml"
+
 # load samples
 parameters = pd.read_table("../config/parameters.tsv", sep="\t", dtype={"ID": str}).set_index(["ID"], drop=False)
 
@@ -28,41 +31,50 @@ rule all:
 		expand("slim_allele_freqs_{ID}_p2.txt", ID=two_pop_params.index.get_level_values("ID")),
 		expand("poolsnp_final_{ID}_p1.txt", ID=two_pop_params.index.get_level_values("ID")),
 		expand("poolsnp_final_{ID}_p2.txt", ID=two_pop_params.index.get_level_values("ID")),		
+		expand("hetmers_{ID}_p1_counts.csv", ID=two_pop_params.index.get_level_values("ID")),
+		expand("hetmers_{ID}_p2_counts.csv", ID=two_pop_params.index.get_level_values("ID")),
+		expand("dissimilarity_{ID}.txt", ID=two_pop_params.index.get_level_values("ID")),
 		#expand("{ID}_p1_poolsnp_output.vcf.gz", ID=two_pop_params.index.get_level_values("ID")),
 		#expand("{ID}_p2_poolsnp_output.vcf.gz", ID=two_pop_params.index.get_level_values("ID")),
 		expand("calls_{ID}.tsv", ID=one_pop_params.index.get_level_values("ID")),
+		#expand("calls_masked_{ID}.tsv", ID=one_pop_params.index.get_level_values("ID")),
 		expand("kmerpairs_{ID}_coverages.tsv", ID=one_pop_params.index.get_level_values("ID")),
 		expand("kmerpairs_{ID}_sequences.tsv", ID=one_pop_params.index.get_level_values("ID")),
 		expand("discoRes_ad_{ID}.txt", ID=one_pop_params.index.get_level_values("ID")),
 		expand("slim_allele_freqs_{ID}.txt", ID=one_pop_params.index.get_level_values("ID")),
 		#expand("{ID}_poolsnp_output.vcf.gz", ID=one_pop_params.index.get_level_values("ID")),
 		expand("poolsnp_final_{ID}.txt", ID=one_pop_params.index.get_level_values("ID")),
+		#expand("poolsnp_final_masked_{ID}.txt", ID=one_pop_params.index.get_level_values("ID")),
 		expand("unitig_alignments_{ID}.txt", ID=one_pop_params.index.get_level_values("ID")),
 		expand("hetmers_{ID}_counts.csv", ID=one_pop_params.index.get_level_values("ID")),
 		expand("hetmers_{ID}_seqs.csv", ID=one_pop_params.index.get_level_values("ID")),
 
-
-
 include: "rules/bcftools_discosnp_one_pop.smk"
 include: "rules/bcftools_discosnp_two_pop.smk"
+include: "rules/bcftools_poolsnp_masked.smk"
 include: "rules/bcftools_poolsnp_one_pop.smk"
 include: "rules/bcftools_poolsnp_two_pop.smk"
 include: "rules/bcftools_slim_one_pop.smk"
 include: "rules/bcftools_slim_two_pop.smk"
+include: "rules/bedtools.smk"
 include: "rules/blast.smk"
+include: "rules/bwa_masked.smk"
 include: "rules/bwa_one_pop.smk"
 include: "rules/bwa_two_pop.smk"
 #include: "rules/bwa.smk"
 include: "rules/compress.smk"
 include: "rules/discosnp_one_pop.smk"
 include: "rules/discosnp_two_pop.smk"
+include: "rules/dissimilarity.smk"
 include: "rules/fastp_one_pop.smk"
 include: "rules/fastp_two_pop.smk"
 include: "rules/hetmers_one_pop.smk"
+include: "rules/hetmers_two_pop.smk"
 include: "rules/iss_one_pop.smk"
 include: "rules/iss_two_pop.smk"
 include: "rules/kmc_one_pop.smk"
 include: "rules/kmc_two_pop.smk"
+include: "rules/poolsnp_masked.smk"
 include: "rules/poolsnp_one_pop.smk"
 include: "rules/poolsnp_two_pop.smk"
 include: "rules/seqkit_one_pop.smk"
@@ -72,5 +84,6 @@ include: "rules/slim.smk"
 include: "rules/smudgeplot_one_pop.smk"
 include: "rules/smudgeplot_two_pop.smk"
 include: "rules/unitig_caller.smk"
+include: "rules/varscan_masked.smk"
 include: "rules/varscan_one_pop.smk"
 include: "rules/varscan_two_pop.smk"
