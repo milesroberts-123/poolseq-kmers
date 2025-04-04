@@ -37,17 +37,17 @@ rule all:
 		#expand("{ID}_p1_poolsnp_output.vcf.gz", ID=two_pop_params.index.get_level_values("ID")),
 		#expand("{ID}_p2_poolsnp_output.vcf.gz", ID=two_pop_params.index.get_level_values("ID")),
 		expand("calls_{ID}.tsv", ID=one_pop_params.index.get_level_values("ID")),
-		expand("calls_masked_{ID}.tsv", ID=one_pop_params.index.get_level_values("ID")),
+		#expand("calls_masked_{ID}.tsv", ID=one_pop_params.index.get_level_values("ID")),
 		expand("kmerpairs_{ID}_coverages.tsv", ID=one_pop_params.index.get_level_values("ID")),
 		expand("kmerpairs_{ID}_sequences.tsv", ID=one_pop_params.index.get_level_values("ID")),
 		expand("discoRes_ad_{ID}.txt", ID=one_pop_params.index.get_level_values("ID")),
 		expand("slim_allele_freqs_{ID}.txt", ID=one_pop_params.index.get_level_values("ID")),
 		#expand("{ID}_poolsnp_output.vcf.gz", ID=one_pop_params.index.get_level_values("ID")),
 		expand("poolsnp_final_{ID}.txt", ID=one_pop_params.index.get_level_values("ID")),
-		expand("poolsnp_final_masked_{ID}.txt", ID=one_pop_params.index.get_level_values("ID")),
+		#expand("poolsnp_final_masked_{ID}.txt", ID=one_pop_params.index.get_level_values("ID")),
 		expand("unitig_alignments_{ID}.txt", ID=one_pop_params.index.get_level_values("ID")),
 		expand("hetmers_{ID}_counts.csv", ID=one_pop_params.index.get_level_values("ID")),
-		#expand("hetmers_{ID}_seqs.csv", ID=one_pop_params.index.get_level_values("ID")),
+		expand("hetmers_{ID}_seqs.csv", ID=one_pop_params.index.get_level_values("ID")),
 
 include: "rules/bcftools_discosnp_one_pop.smk"
 include: "rules/bcftools_discosnp_two_pop.smk"

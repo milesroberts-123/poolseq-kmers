@@ -28,12 +28,19 @@ library(fitdistrplus)
 
 library(rjson)
 
+library(scico)
+
 today = Sys.Date()
 ```
 
 # functions
 
 ```{r}
+# expected number of segregating sites
+ES = function(N, mu, L, n){
+  4*N*mu*L*sum( 1/(1:(n-1)) )
+}
+
 # reverse a string
 strReverse <- function(x) sapply(lapply(strsplit(x, NULL), rev), paste, collapse="")
 
@@ -667,7 +674,38 @@ hist(rnbinom(10000, mu = op_res$par["mu"], size = op_res$par["size"]))
 abline(v = 15)
 ```
 
+## kmer fst
+
+```{r}
+i1 = 10
+i2 = 70
+n1 = 70
+n2 = 70
+NL1 = 2e8
+NL2 = 1e8
+G = 1e6
+
+num = ( (i1/n1)*(NL1/G) + (i2/n2)*(NL2/G) )/2
+
+denom = ((i1+i2)/(n1+n2))*((NL1+NL2)/G)
+
+i1/n1
+
+i2/n2
+
+(i1+i2)/(n1+n2)
+
+num
+
+denom
+
+1 - num/denom
+
+
+```
+
 ## hetmer fst
+
 ```{r}
 
 trials = 1e5
@@ -1124,6 +1162,39 @@ ggplot(plotdata_af_cor, aes(x = as.factor(cov), color = variable, y = value)) +
 # compare diversity estimates
 #melt(pares[,c("ID", "cov", "n", "true_div", "kmer_div", "disco_div", "varscan_div", "poolsnp_div")], id = c("ID", "cov", "n"))
 
+# percent error on diversity
+percent_error = function(truth, measurement){
+  (measurement - truth)/truth * 100
+}
+
+pares$pe_div_kmer = percent_error(pares$true_div, pares$kmer_div)
+
+pares$pe_div_hetmer = percent_error(pares$true_div, pares$hetmer_div)
+
+pares$pe_div_disco = percent_error(pares$true_div, pares$disco_div)
+
+pares$pe_div_varscan = percent_error(pares$true_div, pares$varscan_div)
+
+pares$pe_div_poolsnp = percent_error(pares$true_div, pares$poolsnp_div)
+
+plotdata_div = melt(pares[,c("ID", "cov", "n", "pe_div_kmer", "pe_div_hetmer", "pe_div_disco", "pe_div_varscan", "pe_div_poolsnp")], id = c("ID", "cov", "n"))
+
+plotdata_div$variable = gsub("pe_div", "", plotdata_div$variable)
+
+ggplot(plotdata_div, aes(x = as.factor(cov), y = value, color = as.factor(variable))) +
+  geom_boxplot() +
+  theme_classic()
+
+
+
+
+
+
+
+
+
+
+
 ggplot(pares, aes(x = log10(true_div), y = log10(kmer_div), color = as.factor(cov))) +
   geom_point() +
   geom_abline(slope = 1, intercept = 0) +
@@ -1238,9 +1309,25 @@ mean_dist_bw_mut = function(x){
   mean(diff(x$pos))
 }
 
+max_dist_bw_mut = function(x){
+  max(diff(x$pos))
+}
+
+# length of invariant site run at sweep site
+dist_at_sweep_site = function(x, L){
+  # find where distance to sweep site switches from positive to negative
+  top_idx = which(diff(sign(x$pos - L/2)) != 0)
+  
+  # calculate difference between two positions
+  x$pos[(top_idx + 1)] - x$pos[(top_idx)]
+}
+
 plotdata = data.frame(
   ID = allele_file_ids,
-  mean_dist = unlist(lapply(allele_files, mean_dist_bw_mut))
+  mean_dist = unlist(lapply(allele_files, mean_dist_bw_mut)),
+  max_dist = unlist(lapply(allele_files, max_dist_bw_mut)),
+  sweep_site_dist = unlist(lapply(allele_files, dist_at_sweep_site, L = 2e6)),
+  S = unlist(lapply(allele_files, nrow))
 )
 
 plotdata = merge(params, plotdata, by = "ID")
@@ -1248,13 +1335,33 @@ plotdata$n = as.factor(plotdata$n)
 plotdata$cov = as.factor(plotdata$cov)
 plotdata$s = as.factor(plotdata$s)
 
+# expected mean unitig length
+plotdata$Ubar = plotdata$L/plotdata$S
+
+# parameter for geometric distribution
+plotdata$p = 1/plotdata$Ubar
+
+# 95 percentile for geometric distribution
+plotdata$geom_prob = pgeom(plotdata$max_dist, plotdata$p, lower.tail = F, log.p = T)
+
 #plotdata$simtype[(plotdata$simtype == "onepop")] = "neutral"
 
 ggplot(plotdata, aes(x = n, y = mean_dist, color = s)) +
   geom_boxplot() +
   theme_classic() +
   labs(x = "Pool size", y = "Avg. distance between SNPs (bp)", color = "Selection", title = "Ground truth")
+
+ggplot(plotdata, aes(x = n, y = max_dist, color = s)) +
+  geom_boxplot() +
+  theme_classic() +
+  labs(x = "Pool size", y = "Max distance between SNPs (bp)", color = "Selection", title = "Ground truth")
     
+ggplot(plotdata, aes(x = n, y = sweep_site_dist/mean_dist, color = s)) +
+  geom_boxplot() +
+  theme_classic() +
+  geom_hline(yintercept = 1) +
+  labs(x = "Pool size", y = "Distance between snps at sweep/mean distance", color = "Selection", title = "Ground truth")
+
 # Hypothesis: after a selective sweep, the longest unitigs in a population graph are more likely to be near the sweep site, compared to neutral scenario
 unitig_files = list.files(path = "/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow", pattern = "unitig_alignments_.*", full.names = T)
 
@@ -1484,7 +1591,14 @@ fst = function(n1, c1, f1, n2, c2, f2, type){
   
 }
 
-for(i in simids){
+G = 2e6
+
+k = 31
+
+thresh = 5
+
+#for(i in simids[1:5]){
+for(i in 137:160){
   # load in actual allele freqs from simulations
   true_af_p1 = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/slim_allele_freqs_", i, "_p1.txt", sep = ""), col.names = c("chrom", "pos", "ref", "alt", "ns", "af", "ac"))
   
@@ -1515,24 +1629,28 @@ for(i in simids){
   true_af = cbind(true_af, fst_values)
   
   # load pairs of k-mers
-  kmer_pairs_p1 = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/hetmers_", i, "_p1_seqs.tsv", sep = ""), col.names = c("k1", "k2"))
+  kmer_pairs_p1 = read.csv(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/hetmers_", i, "_p1_seqs.csv", sep = ""), col.names = c("k1", "k2"))
 
-  kmer_covs_p1 = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/hetmers_", i, "_p1_coverages.tsv", sep = ""), col.names = c("c1", "c2"))
+  kmer_covs_p1 = read.csv(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/hetmers_", i, "_p1_counts.csv", sep = ""), col.names = c("c1", "c2"))
+  
+  kmer_hashes_p1 = read.csv(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/hetmers_", i, "_p1_hashes.csv", sep = ""), col.names = c("h"))
 
-  kmer_pairs_p1 = cbind(kmer_pairs_p1, kmer_covs_p1)
+  kmer_pairs_p1 = cbind(kmer_pairs_p1, kmer_covs_p1, kmer_hashes_p1)
 
-  kmer_pairs_p2 = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/", "kmerpairs_", i, "_p2_sequences.tsv", sep = ""), col.names = c("k1"))
+  kmer_pairs_p2 = read.csv(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/hetmers_", i, "_p2_seqs.csv", sep = ""), col.names = c("k1", "k2"))
 
-  kmer_covs_p2 = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/kmerpairs_", i, "_p2_coverages.tsv", sep = ""), col.names = c("c1", "c2"))
+  kmer_covs_p2 = read.csv(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/hetmers_", i, "_p2_counts.csv", sep = ""), col.names = c("c1", "c2"))
 
-  kmer_pairs_p2 = cbind(kmer_pairs_p2, kmer_covs_p2)
+  kmer_hashes_p2 = read.csv(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/hetmers_", i, "_p2_hashes.csv", sep = ""), col.names = c("h"))
+
+  kmer_pairs_p2 = cbind(kmer_pairs_p2, kmer_covs_p2, kmer_hashes_p2)
 
   # calculate minor allele frequency
-  kmer_pairs_p1$kmer_maf = pmin(kmer_pairs_p1$c1, kmer_pairs_p1$c2)/(kmer_pairs_p1$c1 + kmer_pairs_p1$c2)
+  kmer_pairs_p1$kmer_af = kmer_pairs_p1$c1/(kmer_pairs_p1$c1 + kmer_pairs_p1$c2)
   
-  kmer_pairs_p2$kmer_maf = pmin(kmer_pairs_p2$c1, kmer_pairs_p2$c2)/(kmer_pairs_p2$c1 + kmer_pairs_p2$c2)
+  kmer_pairs_p2$kmer_af = kmer_pairs_p2$c1/(kmer_pairs_p2$c1 + kmer_pairs_p2$c2)
   
-  kmer_pairs_p1p2 = merge(kmer_pairs_p1, kmer_pairs_p2, by = "k1")
+  kmer_pairs_p1p2 = merge(kmer_pairs_p1, kmer_pairs_p2, by = "h")
   
   # map kmers to snps
   pos_kmer_key = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/center_kmer_pairs_", i, "_p1p2.txt", sep = ""), fill = T, col.names = c("pos", "k1", "k2", "k3", "k4"))
@@ -1541,8 +1659,8 @@ for(i in simids){
   pos_kmer_key$rightk = substr(pos_kmer_key$k1, 17, 31)
 
   # compare snp and k-mer mafs
-  kmer_pairs_p1p2$leftk = substr(kmer_pairs_p1p2$k1, 1, 15)
-  kmer_pairs_p1p2$rightk = substr(kmer_pairs_p1p2$k1, 17, 31)
+  kmer_pairs_p1p2$leftk = substr(kmer_pairs_p1p2$k1.x, 1, 15)
+  kmer_pairs_p1p2$rightk = substr(kmer_pairs_p1p2$k1.x, 17, 31)
 
   pos_kmer_pairs = merge(pos_kmer_key, kmer_pairs_p1p2, by = c("leftk", "rightk"))
 
@@ -1568,30 +1686,60 @@ for(i in simids){
   #pos_kmer_pairs = pos_kmer_pairs[(pos_kmer_pairs$c1 >=4 & pos_kmer_pairs$c2 >= 4),]
   pos_kmer_pairs = pos_kmer_pairs[( (pos_kmer_pairs$k3 == "") | is.na(pos_kmer_pairs$k3)),]
   
-  # calculate fst for kmers
-  kmer_fst_values = fst(2*75, pos_kmer_pairs$c1.x, pos_kmer_pairs$kmer_maf.x, 2*75, pos_kmer_pairs$c1.y, pos_kmer_pairs$kmer_maf.y, "population")
+  # calculate bayesian allele counts
+  sample_size = params[params$ID == i,"n"]
+  
+  coverage = params[params$ID == i,"cov"]
+  
+  sequencer = params[params$ID == i,"sequencer"]
+  
+  if(sequencer %in% c("miseq","nextseq")){
+    L = 300
+  }
+  
+  if(sequencer == "novaseq"){
+    L = 150
+  }
+  
+  if(sequencer == "hiseq"){
+    L = 125
+  }
+  
+  mean_kmer_coverage_per_genome = ((L-k+1)/L)*(coverage/sample_size)
+  
+  kmer_bayes_ac_p1 = mapply(posterior_min_kmer_count, pos_kmer_pairs$c1.x, (pos_kmer_pairs$c1.x + pos_kmer_pairs$c1.y), MoreArgs = list(n = sample_size, C = mean_kmer_coverage_per_genome, c = thresh, alpha = 1, beta = 1))
+  
+  kmer_bayes_ac_p2 = mapply(posterior_min_kmer_count, pos_kmer_pairs$c1.y, (pos_kmer_pairs$c1.y + pos_kmer_pairs$c1.y), MoreArgs = list(n = sample_size, C = mean_kmer_coverage_per_genome, c = thresh, alpha = 1, beta = 1))
+  
+  # calculate fst for kmers using empirical frequencies
+  kmer_fst_values = fst(2*sample_size, pos_kmer_pairs$c1.x, pos_kmer_pairs$kmer_af.x, 2*sample_size, pos_kmer_pairs$c1.y, pos_kmer_pairs$kmer_af.y, "sample")
 
-  pos_kmer_pairs = cbind(pos_kmer_pairs, kmer_fst_values)
+  pos_kmer_pairs = cbind(pos_kmer_pairs, kmer_fst_values, kmer_bayes_ac_p1, kmer_bayes_ac_p2)
   
   # add in SNP fst values
-  snp_vs_kmer_fst = merge(true_af[,c("pos", "nei", "hudson")], pos_kmer_pairs, by = "pos")
+  snp_vs_kmer_fst = merge(true_af[,c("pos", "nei", "hudson")], pos_kmer_pairs[,c("pos", "nei", "hudson")], by = "pos")
   
-  ggplot(snp_vs_kmer_fst, aes(x = nei.x, y = nei.y)) +
+  print(ggplot(snp_vs_kmer_fst, aes(x = nei.x, y = nei.y)) +
     geom_point() +
-    theme_classic()
+    geom_abline(slope = 1, intercept = 0) +
+    theme_classic() +
+    labs(x = "true SNP Nei Fst", y = "Nei hetmer Fst", title = i))
   
-  ggplot(snp_vs_kmer_fst, aes(x = hudson.x, y = hudson.y)) +
+  print(ggplot(snp_vs_kmer_fst, aes(x = hudson.x, y = hudson.y)) +
     geom_point() +
-    theme_classic()
+    theme_classic() +
+    geom_abline(slope = 1, intercept = 0) +
+    labs(x = "true SNP Hudson Fst", y = "Hudson hetmer Fst", title = i))
   
-  mean(snp_vs_kmer_fst$nei.x)
-  mean(snp_vs_kmer_fst$nei.y)
+  # mean(snp_vs_kmer_fst$nei.x)
+  # mean(snp_vs_kmer_fst$nei.y)
+  # 
+  # mean(snp_vs_kmer_fst$hudson.x)
+  # mean(snp_vs_kmer_fst$hudson.y)
+  # 
+  # mean(true_af$hudson)
+  # mean(kmer_pairs_p1p2$hudson[(kmer_pairs_p1p2$hudson > 0)])
   
-  mean(snp_vs_kmer_fst$hudson.x)
-  mean(snp_vs_kmer_fst$hudson.y)
-  
-  mean(true_af$hudson)
-  mean(kmer_pairs_p1p2$hudson[(kmer_pairs_p1p2$hudson > 0)])
 }
 
 ```
@@ -1763,9 +1911,9 @@ tnr_vs_coverage_plot = ggplot(tnr_plot_data, aes(x = cov, y = value, color = var
   labs(x = "Total coverage", y = "Specificity (true negative rate)", color = "Method", title = "All instruments")
 
 # plot tpr and fnr together
-ggarrange(tpr_vs_coverage_plot, tnr_vs_coverage_plot, fpr_vs_coverage_plot, fnr_vs_coverage_plot, common.legend = T, font.label = list(size = 16), labels = c("A", "B", "C", "D"), nrow = 2, ncol = 2)
+ggarrange(tpr_vs_coverage_plot, tnr_vs_coverage_plot, fpr_vs_coverage_plot, fnr_vs_coverage_plot, common.legend = T, font.label = list(size = 16), labels = c("A", "B", "C", "D"), nrow = 1, ncol = 4)
 
-ggsave(paste("../results/", today, "/coverage_vs_tpr_tnr_fpr_fnr.png", sep = ""), unit = "in", width = 8, height = 8)
+ggsave(paste("../results/", today, "/coverage_vs_tpr_tnr_fpr_fnr.png", sep = ""), unit = "in", width = 8, height = 8, dpi = 350)
 
 
 

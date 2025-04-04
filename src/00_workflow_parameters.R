@@ -1,25 +1,29 @@
 library("dplyr") 
 
 replicates = 1:2
-#sample_sizes = c(25, 50, 75, 100, 125, 150)
-#coverages = c(50, 100, 150, 200, 250, 300)
-#sequencers = c("miseq", "hiseq", "nextseq", "novaseq")
-
-sample_sizes = c(25, 50, 75, 100)
-coverages = c(50, 100, 150, 200)
+sample_sizes = c(25, 50, 75, 100, 125)
+coverages = c(50, 100, 150, 200, 250)
 sequencers = c("miseq", "hiseq", "nextseq", "novaseq")
+
+population_sizes = c(1000, 2000, 5000)
+mutation_rates = c(5e-9, 1e-8, 2e-8)
+recombination_rates = c(5e-9, 1e-8, 2e-8)
+
+#sample_sizes = c(25, 50, 75, 100)
+#coverages = c(50, 100, 150, 200)
+#sequencers = c("miseq", "hiseq", "nextseq", "novaseq")
 
 chrom_length = 2e6
 
 # create data frame of workflow parameters
 one_pop_params = expand.grid(
-  rep = 1,
+  rep = replicates,
   #rep = replicates,
-  N = c(1000),
+  N = population_sizes,
   n = sample_sizes,
   sigma = c(0),
-  mu = c(1e-8),
-  R = c(1e-8),
+  mu = mutation_rates,
+  R = recombination_rates,
   cov = coverages,
   L = chrom_length,
   sequencer = sequencers,
@@ -35,38 +39,44 @@ one_pop_params = expand.grid(
 # parameters for two population model
 two_pop_params = expand.grid(
   rep = replicates,
-  N1 = c(1000),
-  N2 = c(1000),
+  N1 = population_sizes,
+  N2 = population_sizes,
   mg1 = c(0),
   mg2 = c(0),
-  tau = c(500, 1000, 2000),
+  tau = c(0.5, 1, 2),
   n = sample_sizes,
   sigma = c(0),
-  mu = c(1e-8),
-  R = c(1e-8),
+  mu = mutation_rates,
+  R = recombination_rates,
   cov = coverages,
   L = chrom_length,
   sequencer = sequencers,
   simtype = "twopop"
 )
 
+# convert tau in units of N generations to generations
+two_pop_params$tau = two_pop_params$tau*(two_pop_params$N1 + two_pop_params$N2)
+
 # selective sweep parameters
 sweep_params = expand.grid(
-  rep = 1,
+  rep = replicates,
   #rep = replicates,
-  N = c(1000),
+  N = population_sizes,
   n = sample_sizes,
-  h = 0.5,
-  #s = c(0.005, 0.01, 0.1),
-  s = 0.1,
+  h = c(0, 0.5, 1),
+  Nes = c(2, 5, 10, 20, 50, 100),
+  #s = 0.1,
   sigma = c(0),
-  mu = c(1e-8),
-  R = c(1e-8),
+  mu = mutation_rates,
+  R = recombination_rates,
   cov = coverages,
   L = chrom_length,
   sequencer = sequencers,
   simtype = "sweep"
 )
+
+# selection coefficient
+sweep_params$s = sweep_params$Nes/sweep_params$N
 
 # combine all parameters into one table
 params = bind_rows(one_pop_params, two_pop_params, sweep_params)

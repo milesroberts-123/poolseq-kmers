@@ -14,5 +14,5 @@ rule dissimilarity:
 		"../envs/R.yaml"
 	shell:
 		"""
-		./scripts/dissimilarity.R {input.p1} {input.p2} {output} {threads} &> {log}
+		Rscript scripts/dissimilarity.R {input.p1} {input.p2} {output} &> {log}
                 """
