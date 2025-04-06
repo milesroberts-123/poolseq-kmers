@@ -1,13 +1,13 @@
 library("dplyr") 
 
-replicates = 1:2
-sample_sizes = c(25, 50, 75, 100, 125)
-coverages = c(50, 100, 150, 200, 250)
+replicates = 1
+sample_sizes = c(25, 50, 75, 100)
+coverages = c(50, 100, 150, 200)
 sequencers = c("miseq", "hiseq", "nextseq", "novaseq")
 
-population_sizes = c(1000, 2000, 5000)
-mutation_rates = c(5e-9, 1e-8, 2e-8)
-recombination_rates = c(5e-9, 1e-8, 2e-8)
+population_sizes = c(1000, 2000)
+mutation_rates = c(1e-8, 2e-8)
+recombination_rates = c(1e-8, 2e-8)
 
 #sample_sizes = c(25, 50, 75, 100)
 #coverages = c(50, 100, 150, 200)
@@ -63,8 +63,9 @@ sweep_params = expand.grid(
   #rep = replicates,
   N = population_sizes,
   n = sample_sizes,
-  h = c(0, 0.5, 1),
-  Nes = c(2, 5, 10, 20, 50, 100),
+  #h = c(0, 0.5, 1)
+  h = c(0.5),
+  Nes = c(10, 25, 50, 100),
   #s = 0.1,
   sigma = c(0),
   mu = mutation_rates,
@@ -79,8 +80,9 @@ sweep_params = expand.grid(
 sweep_params$s = sweep_params$Nes/sweep_params$N
 
 # combine all parameters into one table
-params = bind_rows(one_pop_params, two_pop_params, sweep_params)
+#params = bind_rows(one_pop_params, two_pop_params, sweep_params)
 #params = bind_rows(one_pop_params, two_pop_params)
+params = bind_rows(one_pop_params, sweep_params)
 
 # add simulation id
 params$ID = 1:nrow(params)

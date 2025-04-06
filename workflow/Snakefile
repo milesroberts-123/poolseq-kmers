@@ -33,7 +33,7 @@ rule all:
 		expand("poolsnp_final_{ID}_p2.txt", ID=two_pop_params.index.get_level_values("ID")),		
 		expand("hetmers_{ID}_p1_counts.csv", ID=two_pop_params.index.get_level_values("ID")),
 		expand("hetmers_{ID}_p2_counts.csv", ID=two_pop_params.index.get_level_values("ID")),
-		expand("dissimilarity_{ID}.txt", ID=two_pop_params.index.get_level_values("ID")),
+		#expand("dissimilarity_{ID}.txt", ID=two_pop_params.index.get_level_values("ID")),
 		#expand("{ID}_p1_poolsnp_output.vcf.gz", ID=two_pop_params.index.get_level_values("ID")),
 		#expand("{ID}_p2_poolsnp_output.vcf.gz", ID=two_pop_params.index.get_level_values("ID")),
 		expand("calls_{ID}.tsv", ID=one_pop_params.index.get_level_values("ID")),
