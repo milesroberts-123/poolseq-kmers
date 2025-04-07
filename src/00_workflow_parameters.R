@@ -33,7 +33,8 @@ one_pop_params = expand.grid(
   mg1 = 0,
   mg2 = 0,
   h = 0,
-  s = 0
+  s = 0,
+  tau = 0
 )
 
 # parameters for two population model

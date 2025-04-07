@@ -18,5 +18,5 @@ rule hetmers_one_pop:
 		mincount = config["mincount"]
 	shell:
 		"""
-		./scripts/hetmers --inputs {input} --outputs hetmers_{wildcards.ID} --analyses hetmers --coverages 1 --pools 1 --alphas 1 --betas 1 --minimums {params.mincount} &> {log}
+		./scripts/hetmers --inputs {input} --outputs hetmers_{wildcards.ID} --coverages 1 --pools 1 --alphas 1 --betas 1 --minimums {params.mincount} &> {log}
                 """

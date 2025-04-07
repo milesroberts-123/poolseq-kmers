@@ -23,7 +23,7 @@ rule hetmers_two_pop:
 		mincount = config["mincount"]
 	shell:
 		"""
-		./scripts/hetmers --inputs {input.p1} --outputs hetmers_{wildcards.ID}_p1 --analyses hetmers --coverages 1 --pools 1 --alphas 1 --betas 1 --minimums {params.mincount} &> {log}
+		./scripts/hetmers --inputs {input.p1} --outputs hetmers_{wildcards.ID}_p1 --coverages 1 --pools 1 --alphas 1 --betas 1 --minimums {params.mincount} &> {log}
 
-		./scripts/hetmers --inputs {input.p2} --outputs hetmers_{wildcards.ID}_p2 --analyses hetmers --coverages 1 --pools 1 --alphas 1 --betas 1 --minimums {params.mincount} &> {log}
+		./scripts/hetmers --inputs {input.p2} --outputs hetmers_{wildcards.ID}_p2 --coverages 1 --pools 1 --alphas 1 --betas 1 --minimums {params.mincount} &> {log}
                 """
