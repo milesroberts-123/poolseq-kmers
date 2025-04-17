@@ -46,9 +46,9 @@ def get_R(wildcards):
         R = parameters.loc[parameters["ID"] == wildcards.ID, "R"]
         return float(R.iloc[0])
 
-def get_L(wildcards):
-        L = parameters.loc[parameters["ID"] == wildcards.ID, "L"]
-        return int(L.iloc[0])
+#def get_L(wildcards):
+#        L = parameters.loc[parameters["ID"] == wildcards.ID, "L"]
+#        return int(L.iloc[0])
 
 def get_tau(wildcards):
         tau = parameters.loc[parameters["ID"] == wildcards.ID, "tau"]
@@ -75,7 +75,7 @@ rule slim:
 		s=get_s,
 		mu=get_mu,
 		R=get_R,
-		L=get_L,
+		#L=get_L,
 		tau=get_tau
 	threads: 1
 	resources:
@@ -86,7 +86,7 @@ rule slim:
 	shell:
 		"""
 		if [ "{params.simtype}" == "onepop" ]; then
-			slim -d ID={wildcards.ID} -d sigma={params.sigma} -d N={params.N} -d mu={params.mu} -d R={params.R} -d n={params.n} -d L={params.L} scripts/neutral.slim &> {log}
+			slim -d ID={wildcards.ID} -d sigma={params.sigma} -d N={params.N} -d mu={params.mu} -d R={params.R} -d n={params.n} scripts/neutral.slim &> {log}
 		fi
 
 		if [ "{params.simtype}" == "twopop" ]; then
