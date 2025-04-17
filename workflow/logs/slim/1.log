@@ -1,0 +1,12 @@
+// Initial random seed:
+24851042647885
+
+// RunInitializeCallbacks():
+initializeSLiMOptions(nucleotideBased = T);
+initializeAncestralNucleotides("TTCACACTCCAATCTCGTGT...");
+ERROR (EidosSymbolTable::DefineConstantForSymbol): identifier 'L' is already defined.
+
+Error on script line 4, character 1:
+
+   defineConstant("L", initializeAncestralNucleotides(paste("ancestral_seq_" + ID + ".fasta", sep = "")));
+   ^^^^^^^^^^^^^^
