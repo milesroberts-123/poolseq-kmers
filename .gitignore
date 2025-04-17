@@ -5,4 +5,7 @@
 **.tsv
 **.bed
 **.csv
+**.log
+**.fasta
+**.vcf
 !config/ref
