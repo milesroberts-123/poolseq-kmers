@@ -28,6 +28,11 @@ one_pop_params = expand.grid(
   L = chrom_length,
   sequencer = sequencers,
   simtype = "onepop",
+  shape = 2.5,
+  pA = 0.25,
+  pC = 0.25,
+  pG = 0.25,
+  pT = 0.25,
   N1 = 0,
   N2 = 0,
   mg1 = 0,
@@ -52,6 +57,11 @@ two_pop_params = expand.grid(
   cov = coverages,
   L = chrom_length,
   sequencer = sequencers,
+  shape = 2.5,
+  pA = 0.25,
+  pC = 0.25,
+  pG = 0.25,
+  pT = 0.25,
   simtype = "twopop"
 )
 
@@ -74,6 +84,11 @@ sweep_params = expand.grid(
   cov = coverages,
   L = chrom_length,
   sequencer = sequencers,
+  shape = 2.5,
+  pA = 0.25,
+  pC = 0.25,
+  pG = 0.25,
+  pT = 0.25,
   simtype = "sweep"
 )
 

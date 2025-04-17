@@ -920,7 +920,9 @@ hetmers_seqs = read.csv(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolse
 
 hetmers_counts = read.csv(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/hetmers_", i, "_counts.csv", sep = ""), col.names = c("c1", "c2"))
 
-hetmers = cbind(hetmers_seqs, hetmers_counts)
+hetmers_bayes = read.csv(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/hetmers_", i, "_bayes_states.csv", sep = ""), col.names = c("b1", "b2"))
+
+hetmers = cbind(hetmers_seqs, hetmers_counts, hetmers_bayes)
 
 hetmers$hetmer_maf = pmin(hetmers$c1, hetmers$c2)/(hetmers$c1 + hetmers$c2)
 
@@ -1313,54 +1315,83 @@ max_dist_bw_mut = function(x){
   max(diff(x$pos))
 }
 
+# remove invariant sites
+invar_check = function(x){
+  x[( (x$af < 1) & (x$af > 0) ), ]
+}
+
+allele_files = lapply(allele_files, invar_check)
+
 # length of invariant site run at sweep site
 dist_at_sweep_site = function(x, L){
   # find where distance to sweep site switches from positive to negative
   top_idx = which(diff(sign(x$pos - L/2)) != 0)
   
   # calculate difference between two positions
-  x$pos[(top_idx + 1)] - x$pos[(top_idx)]
+  result = x$pos[(top_idx + 1)] - x$pos[(top_idx)]
+  
+  return(result)
 }
 
 plotdata = data.frame(
   ID = allele_file_ids,
   mean_dist = unlist(lapply(allele_files, mean_dist_bw_mut)),
   max_dist = unlist(lapply(allele_files, max_dist_bw_mut)),
-  sweep_site_dist = unlist(lapply(allele_files, dist_at_sweep_site, L = 2e6)),
+  #sweep_site_dist = unlist(lapply(allele_files, dist_at_sweep_site, L = 2e6)),
   S = unlist(lapply(allele_files, nrow))
 )
 
 plotdata = merge(params, plotdata, by = "ID")
+
+# expected mean unitig length
+plotdata$es = mapply(ES, plotdata$N, plotdata$mu, plotdata$L, plotdata$n)
+
+plotdata$Ubar = plotdata$L/plotdata$es
+
+# Does the expected mean unitig length match reality for neutral simulations
+ggplot(plotdata[(plotdata$simtype == "onepop"),], aes(x = es, y = S)) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0) +
+  theme_classic()
+
+ggplot(plotdata[(plotdata$simtype == "onepop"),], aes(x = Ubar, y = mean_dist)) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0) +
+  theme_classic() +
+  labs(x = "Expected mean distance between mutations", y = "Observed mean distance between mutations")
+
+#
 plotdata$n = as.factor(plotdata$n)
 plotdata$cov = as.factor(plotdata$cov)
 plotdata$s = as.factor(plotdata$s)
 
 # expected mean unitig length
-plotdata$Ubar = plotdata$L/plotdata$S
-
-# parameter for geometric distribution
-plotdata$p = 1/plotdata$Ubar
-
-# 95 percentile for geometric distribution
-plotdata$geom_prob = pgeom(plotdata$max_dist, plotdata$p, lower.tail = F, log.p = T)
+# plotdata$Ubar = plotdata$L/plotdata$S
+# 
+# # parameter for geometric distribution
+# plotdata$p = 1/plotdata$Ubar
+# 
+# # 95 percentile for geometric distribution
+# plotdata$geom_prob = pgeom(plotdata$max_dist, plotdata$p, lower.tail = F, log.p = T)
 
 #plotdata$simtype[(plotdata$simtype == "onepop")] = "neutral"
 
-ggplot(plotdata, aes(x = n, y = mean_dist, color = s)) +
+# how do selective sweeps change distances between snps?
+ggplot(plotdata, aes(x = n, y = mean_dist, color = as.factor(Nes))) +
   geom_boxplot() +
   theme_classic() +
   labs(x = "Pool size", y = "Avg. distance between SNPs (bp)", color = "Selection", title = "Ground truth")
 
-ggplot(plotdata, aes(x = n, y = max_dist, color = s)) +
+ggplot(plotdata, aes(x = n, y = max_dist, color = as.factor(Nes))) +
   geom_boxplot() +
   theme_classic() +
   labs(x = "Pool size", y = "Max distance between SNPs (bp)", color = "Selection", title = "Ground truth")
     
-ggplot(plotdata, aes(x = n, y = sweep_site_dist/mean_dist, color = s)) +
-  geom_boxplot() +
-  theme_classic() +
-  geom_hline(yintercept = 1) +
-  labs(x = "Pool size", y = "Distance between snps at sweep/mean distance", color = "Selection", title = "Ground truth")
+# ggplot(plotdata, aes(x = n, y = sweep_site_dist/mean_dist, color = s)) +
+#   geom_boxplot() +
+#   theme_classic() +
+#   geom_hline(yintercept = 1) +
+#   labs(x = "Pool size", y = "Distance between snps at sweep/mean distance", color = "Selection", title = "Ground truth")
 
 # Hypothesis: after a selective sweep, the longest unitigs in a population graph are more likely to be near the sweep site, compared to neutral scenario
 unitig_files = list.files(path = "/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow", pattern = "unitig_alignments_.*", full.names = T)
@@ -1371,6 +1402,10 @@ unitig_files = lapply(unitig_files, read.table, col.names = c("qid", "sid", "pid
 
 max_len = function(x){
   max(x$alen)
+}
+
+mean_len = function(x){
+  mean(x$alen)
 }
 
 ss_max_len = function(x){
@@ -1384,11 +1419,23 @@ se_max_len = function(x){
 plotdata_unitigs = data.frame(
   ID = unitig_files_ids,
   max_len = unlist(lapply(unitig_files, max_len)),
+  mean_len = unlist(lapply(unitig_files, mean_len)),
   ss = unlist(lapply(unitig_files, ss_max_len)),
   se = unlist(lapply(unitig_files, se_max_len))
 )
 
 plotdata_unitigs = merge(params, plotdata_unitigs, by = "ID")
+
+# expected mean unitig length
+plotdata_unitigs$es = mapply(ES, plotdata_unitigs$N, plotdata_unitigs$mu, plotdata_unitigs$L, plotdata_unitigs$n)
+
+plotdata_unitigs$Ubar = plotdata_unitigs$L/plotdata_unitigs$es
+
+ggplot(plotdata_unitigs[(plotdata_unitigs$simtype == "onepop"),], aes(x = Ubar, y = mean_len)) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0) +
+  theme_classic() +
+  labs(x = "Expected mean distance between mutations", y = "Observed mean unitig lengths")
 
 #mod = lm(log10(max_len) ~ n + cov + sequencer + s + h, data = plotdata_unitigs)
 #summary(mod)
@@ -1412,30 +1459,33 @@ ggplot(plotdata_unitigs, aes(x = n, y = max_len, color = simtype, fill = cov)) +
 # see if long unitigs appear toward the sweep region
 plotdata_unitigs$sc = (plotdata_unitigs$ss + plotdata_unitigs$se)/2
 
-ggplot(plotdata_unitigs, aes(x = sc, color = s)) +
+plot_unitigs_all_sims = ggplot(plotdata_unitigs, aes(x = sc, color = as.factor(Nes))) +
   geom_density() +
   theme_classic() +
-  geom_vline(xintercept = 2e6/2, lty = 2, lwd = 1.5) +
-  labs(x = "Center of longest mapped unitig", color = "Simulation\ntype")
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) +
+  geom_vline(xintercept = 2e6/2, lty = 2, lwd = 1.) +
+  labs(x = "Center of longest unitig", color = "Nes", title = "All")
 
-ggplot(plotdata_unitigs, aes(x = sc, color = s)) +
+plot_unitigs_cov_breakdown = ggplot(plotdata_unitigs, aes(x = sc, color = as.factor(Nes))) +
   geom_density() +
   theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) +
   facet_grid(cov ~ .) +
-  geom_vline(xintercept = 2e6/2, lty = 2, lwd = 1.5) +
-  labs(x = "Center of longest mapped unitig", color = "Simulation\ntype")
+  geom_vline(xintercept = 2e6/2, lty = 2, lwd = 1.) +
+  labs(x = "Center of longest unitig", color = "Nes", title = "Coverage")
 
-ggplot(plotdata_unitigs, aes(x = sc, color = s)) +
+plot_unitigs_n_breakdown = ggplot(plotdata_unitigs, aes(x = sc, color = as.factor(Nes))) +
   geom_density() +
   theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) +
   facet_grid(n ~ .) +
-  geom_vline(xintercept = 2e6/2, lty = 2, lwd = 1.5) +
-  labs(x = "Center of longest mapped unitig", color = "Simulation\ntype")
+  geom_vline(xintercept = 2e6/2, lty = 2, lwd = 1) +
+  labs(x = "Center of longest unitig", color = "Nes", title = "Pool size")
 
 
+ggarrange(plot_unitigs_all_sims, plot_unitigs_cov_breakdown, plot_unitigs_n_breakdown, nrow = 1, ncol = 3, labels = c("A", "B", "C"), common.legend = T, widths = c(1.5, 1, 1))
 
-
-
+ggsave(paste("../results/", today, "/unitig_mapping.jpg", sep = ""), dpi = 400, height = 7, width = 9, unit = "in")
 
 
 
@@ -1764,10 +1814,16 @@ bench_files$ID = as.numeric(gsub(".*/|.bench", "", gsub("/mnt/scratch/robe1195/J
 # merge with workflow parameters
 bench_params = merge(params[(params$simtype == "onepop"),c("ID", "cov", "n")], bench_files, by = "ID")
 
-#
+# summarize time and memory by simulation parameters
 bench_summary_time = aggregate(s ~ tool + cov, data = bench_params, FUN = "sum")
 
-bench_summary_memory = aggregate(max_rss ~ tool + cov, data = bench_params, FUN = "sum")
+bench_summary_cpu_time = aggregate(cpu_time ~ tool + cov, data = bench_params, FUN = "sum")
+
+bench_summary_max_rss = aggregate(max_rss ~ tool + cov, data = bench_params, FUN = "sum")
+
+bench_summary_max_vms = aggregate(max_vms ~ tool + cov, data = bench_params, FUN = "sum")
+
+bench_summary_max_uss = aggregate(max_uss ~ tool + cov, data = bench_params, FUN = "sum")
 
 # try to summarize time and memory into snp calling workflow and kmer calling workflow
 workflow_summary = function(x, lev_col, resource_col){
@@ -1789,12 +1845,15 @@ workflow_summary = function(x, lev_col, resource_col){
 
     discosnp = x[(x$tool == "discosnp") & (x[,lev_col] == lev),resource_col]
     
+    unitig_caller = x[(x$tool == "unitig_caller") & (x[,lev_col] == lev),resource_col]
+    
     result = data.frame(
       lev_col = lev,
       bwa_varscan = bwa+varscan,
       bwa_poolsnp = bwa+poolsnp,
       kmc_smudgeplot = kmc+smudgeplot,
       kmc_hetmers=kmc+hetmers,
+      kmc_unitig_caller = kmc+unitig_caller,
       discosnp = discosnp
     )
     
@@ -1802,21 +1861,38 @@ workflow_summary = function(x, lev_col, resource_col){
     
   }
   
+  names(results) = c("lev_col", "bwa+varscan", "bwa+poolsnp", "kmc+smudgeplot", "kmc+hetmers", "kmc+unitig-caller", "discosnp")
+  
   return(results)
 }
 
 bench_summary_time_by_flow = workflow_summary(bench_summary_time, "cov", "s")
 bench_summary_time_by_flow = melt(bench_summary_time_by_flow, id = "lev_col")
 
-bench_summary_memory_by_flow = workflow_summary(bench_summary_memory, "cov", "max_rss")
-bench_summary_memory_by_flow = melt(bench_summary_memory_by_flow, id = "lev_col")
+bench_summary_cpu_time_by_flow = workflow_summary(bench_summary_cpu_time, "cov", "cpu_time")
+bench_summary_cpu_time_by_flow = melt(bench_summary_cpu_time_by_flow, id = "lev_col")
+
+# bench_summary_max_rss_by_flow = workflow_summary(bench_summary_max_rss, "cov", "max_rss")
+# bench_summary_max_rss_by_flow = melt(bench_summary_max_rss_by_flow, id = "lev_col")
+# 
+# bench_summary_max_vms_by_flow = workflow_summary(bench_summary_max_vms, "cov", "max_vms")
+# bench_summary_max_vms_by_flow = melt(bench_summary_max_vms_by_flow, id = "lev_col")
+# 
+# bench_summary_max_uss_by_flow = workflow_summary(bench_summary_max_uss, "cov", "max_uss")
+# bench_summary_max_uss_by_flow = melt(bench_summary_max_uss_by_flow, id = "lev_col")
 
 # calculate average times
 bench_summary_time_by_flow$value = bench_summary_time_by_flow$value/length(unique(bench_params$ID))
 
-bench_summary_memory_by_flow$value = bench_summary_memory_by_flow$value/length(unique(bench_params$ID))
+bench_summary_cpu_time_by_flow$value = bench_summary_cpu_time_by_flow$value/length(unique(bench_params$ID))
 
-#
+bench_summary_max_rss$max_rss = bench_summary_max_rss$max_rss/length(unique(bench_params$ID))
+
+# bench_summary_max_vms_by_flow$value = bench_summary_max_vms_by_flow$value/length(unique(bench_params$ID))
+# 
+# bench_summary_max_uss_by_flow$value = bench_summary_max_uss_by_flow$value/length(unique(bench_params$ID))
+
+# time plots
 my_colors = scico(4, palette = "hawaii")
 names(my_colors) = unique(bench_summary_time_by_flow$lev_col)
 
@@ -1824,20 +1900,45 @@ ggplot(bench_summary_time_by_flow, aes(x = variable, y = value, fill = as.factor
   geom_bar(stat = "identity", position = "dodge") +
   theme_classic() +
   scale_fill_manual(values = my_colors) +
-  labs(x = "workflow", y = "Average time (s)", fill = "coverage")
+  labs(x = "Workflow", y = "Average time (s)", fill = "Coverage")
 
-# ggplot(bench_summary_memory_by_flow, aes(x = variable, y = value, fill = as.factor(lev_col))) +
-#   geom_bar(stat = "identity", position = "dodge") +
-#   labs(x = "workflow", y = "Average Maximum Resident Set Size (MB)", fill = "coverage") +
-#   theme_classic() +
-#   scale_fill_manual(values = my_colors) 
-
-ggplot(bench_summary_memory, aes(x = tool, y = max_rss, fill = as.factor(cov))) +
+plot_time = ggplot(bench_summary_cpu_time_by_flow, aes(x = variable, y = value, fill = as.factor(lev_col))) +
   geom_bar(stat = "identity", position = "dodge") +
-  labs(x = "workflow", y = "Average Maximum Resident Set Size (MiB)", fill = "coverage") +
+  theme_classic() +
+  theme(
+    axis.line = element_line(colour = 'black', linewidth = 1),
+    axis.ticks = element_line(colour = "black", linewidth = 1),
+    axis.text.x = element_text(angle = 45, hjust=1),
+    text = element_text(family = "Sans")) +
+  scale_fill_manual(values = my_colors) +
+  labs(x = "Workflow", y = "Average CPU time (s)", fill = "Coverage")
+
+# memory plots
+plot_memory = ggplot(bench_summary_max_rss, aes(x = tool, y = max_rss, fill = as.factor(cov))) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(x = "Tool", y = "Average Maximum\nResident Set Size (MiB)", fill = "Coverage") +
+  theme_classic() +
+  theme(
+    axis.line = element_line(colour = 'black', linewidth = 1),
+    axis.ticks = element_line(colour = "black", linewidth = 1),
+    axis.text.x = element_text(angle = 45, hjust=1),
+    text = element_text(family = "Sans")) +
+  scale_fill_manual(values = my_colors) 
+
+ggplot(bench_summary_max_vms_by_flow, aes(x = variable, y = value, fill = as.factor(lev_col))) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(x = "workflow", y = "Average Maximum Virtual Memory Size (MiB)", fill = "coverage") +
+  theme_classic() +
+  scale_fill_manual(values = my_colors) 
+
+ggplot(bench_summary_max_uss_by_flow, aes(x = variable, y = value, fill = as.factor(lev_col))) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(x = "workflow", y = "Average Maximum Unique Set Size (MiB)", fill = "coverage") +
   theme_classic() +
   scale_fill_manual(values = my_colors) 
   
+ggarrange(plot_time, plot_memory, common.legend = T, font.label = list(size = 16), labels = c("A", "B"))
+ggsave(paste("../results/", today, "/memory_and_time.jpg", sep = ""), dpi = 450)
 ```
 
 # How does performance vary with sequencing parameters?
@@ -2346,6 +2447,94 @@ ggplot(all_min_af, aes(x = snp_min_af, y = kmer_min_af)) +
   geom_point() +
   theme_classic() +
   geom_abline(slope = 1, intercept = 0)
+```
+
+# Test zeta distribution
+```{r}
+pA = 0.25
+pC = 0.25
+pG = 0.25
+pT = 0.25
+shape_parameter = 2.5
+k = 31
+L = 1e5
+
+alphabet = c("A", "C", "G", "T")
+
+custom_probs = c(pA, pC, pG, pT)
+
+total_genome = c()
+
+while(k*length(total_genome) < L){
+
+  # generate random k-mer
+  kmer = paste(sample(alphabet, size = k, replace = T, prob = custom_probs), collapse = "")
+
+  # detmerine frequency of k-mer
+   freq = rzeta(1, shape_parameter)
+  #freq = 1
+
+  # copy k-mer 
+  kmers = rep(kmer, freq)
+
+  # add k-mers to total_genome
+  total_genome = c(total_genome, kmers)
+}
+
+# randomly order vector elements
+total_genome = sample(total_genome, replace = F)
+
+# concatenate k-mers together
+total_genome = paste(total_genome, collapse = "")
+
+# final genome length
+nchar(total_genome)
+
+# trim genome to target length
+total_genome = substring(total_genome, 1, L)
+
+# final genome length
+nchar(total_genome)
+
+# write genome output
+#print(total_genome)
+
+# count k-mers in synthetic genome to confirm zipf distribution
+start = 1
+stop = k
+
+kmer_list = list()
+
+while(stop < L){
+  
+  kmer = substring(total_genome, start, stop)
+  
+  if(is.null(kmer_list[[kmer]])){
+      kmer_list[[kmer]] = 1
+  } else {
+    kmer_list[[kmer]] = kmer_list[[kmer]] + 1
+  }
+
+  start = start + 1
+  stop = stop + 1
+}
+
+kmer_freqs = table(unlist(kmer_list))
+
+plotdata = data.frame(
+  freqs = as.numeric(names(kmer_freqs)),
+  ranks = kmer_freqs
+)
+
+#plotdata$ranks.Var1 = as.numeric(plotdata$ranks.Var1)
+
+#plotdata$ranks.Var1 = rank(plotdata$ranks.Freq, ties.method = "min")
+
+ggplot(plotdata, aes(x = log10(freqs), y = log10(ranks.Freq))) +
+  geom_point() +
+  theme_classic() +
+  labs(x = "log10(k-mer count)", y = "log10(Number of k-mers)")
+
 ```
 
 # DEPRECATED

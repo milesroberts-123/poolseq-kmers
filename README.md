@@ -72,7 +72,11 @@ snakemake --cluster "sbatch --time={resources.time} --cpus-per-task={threads} --
 
 - [x] add hetmers binary to workflow
 
-- [ ] generalize bayes theorem to work with minimum kmer counts > 1
+- [x] generalize bayes theorem to work with minimum kmer counts > 1
+
+- [ ] generate genomes that follow power-law distributions for k-mer counts
+
+- [ ] add 
 
 - [ ] generalize bayes theorem to negative binomial distribution
 

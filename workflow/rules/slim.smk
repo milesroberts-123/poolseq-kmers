@@ -56,7 +56,7 @@ def get_tau(wildcards):
 
 rule slim:
 	input:
-		"../config/parameters.tsv"
+		"ancestral_seq_{ID}.fasta"
 	output:
 		temp("slim_{ID}.vcf"),
 		temp("slim_{ID}.fasta")

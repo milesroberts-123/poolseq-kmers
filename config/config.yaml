@@ -1,2 +1,4 @@
-# k-mer count threshold
+# k-mer length
+
+# minimum k-mer count threshold
 mincount: 5
