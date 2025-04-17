@@ -40,4 +40,4 @@ rule ancestral_genome:
 	conda:
 		"../envs/R.yaml"
 	shell:
-		"Rscript scripts/random_genome.R {params.pA} {params.pC} {params.pG} {params.pT} {params.shape} 31 {params.L} {wildcards.ID}"
+		"Rscript scripts/random_genome.R {params.pA} {params.pC} {params.pG} {params.pT} {params.shape} 31 {params.L} {wildcards.ID} &> {log}"
