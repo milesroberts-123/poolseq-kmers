@@ -39,5 +39,9 @@ rule ancestral_genome:
 		L=get_L,
 	conda:
 		"../envs/R.yaml"
+	threads: 1
+	resources:
+		mem_mb_per_cpu=8000,
+		time=239
 	shell:
 		"Rscript scripts/random_genome.R {params.pA} {params.pC} {params.pG} {params.pT} {params.shape} 31 {params.L} {wildcards.ID} &> {log}"
