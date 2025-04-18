@@ -30,6 +30,7 @@ rule discosnp_one_pop:
 	params:
 		prefix = "discoRes_{ID}",
 		mincount = config["mincount"]
+	priority: 100
 	shell:
 		"""
 		# create file of files

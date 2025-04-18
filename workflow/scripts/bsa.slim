@@ -1,45 +1,62 @@
-// BSA simulation from:
-// https://doi.org/10.1093/g3journal/jkac012
-
-// Cannings Model simulation for BSA
 initialize() {
-	initializeSLiMOptions(keepPedigrees = T);
-	initializeTreeSeq();
-	initializeSex("A");
-	initializeMutationRate(0);
-	initializeMutationType("m1", 0.5, "f", 0.0);
-	initializeGenomicElementType("g1", m1, 1.0);
-	initializeGenomicElement(g1, 0, L);
+	initializeSLiMOptions(nucleotideBased=T);
+	defineConstant("L", initializeAncestralNucleotides(paste("ancestral_seq_" + ID + ".fasta", sep = "")));
+	initializeMutationTypeNuc("m1", 0.5, "f", 0.0);
+	initializeMutationTypeNuc("m2", 0.5, "n", 0.0, 2);
+	m2.convertToSubstitution = F;
+	initializeGenomicElementType("g1", c(m1, m2), c(0.9, 0.1), mmJukesCantor(mu/3));
+	initializeGenomicElement(g1, 0, asInteger(L)-1);
 	initializeRecombinationRate(R);
 }
 
-    ## add population
-1 late() {
-	sim.addSubpop("p1", N);
+mutationEffect(m2) { return 1.0; }
+
+1 early() {
+	catn("Creating subpopulations...");
+	sim.addSubpop("p1", asInteger(N));
+
+	// reschedule simulation end
+	community.rescheduleScriptBlock(s1, start=10*asInteger(N), end=10*asInteger(N));
 }
 
-    ## cannings model for each generation
-late() {
-	// after reproduction, everybody lives initially
-	sim.subpopulations.individuals.tag = 0;
-	
-	// afterwards, only NE samples survive and eligible for reproduction
-	samples = sample(sim.subpopulations.individuals, {});\n'.format(Ne))
-	
-	// make sure the samples are bisexual for eligible reproduction
-	while(sum(samples.sex == 'M') == N | sum(samples.sex == 'F') == N){
-		samples = sample(sim.subpopulations.individuals, N);
+early(){
+	if(sim.cycle % 1000 == 0){
+		inds = sim.subpopulations.individuals;
+		phenotypes = inds.sumOfMutationsOfType(m2);
+		catn(sim.cycle + ": Number of neutral mutations: " + size(sim.mutationsOfType(m1)));
+		catn(sim.cycle + ": Number of QTL mutations: " + size(sim.mutationsOfType(m2)));
+		catn(sim.cycle + ": Mean phenotype:" + mean(phenotypes));
+		catn(sim.cycle + ": SD phenotype:" + sd(phenotypes));
+		catn(sim.cycle + ": Maximum phenotype:" + max(phenotypes));
+		catn(sim.cycle + ": Minimum phenotype:" + min(phenotypes));
+		catn(sim.cycle + ": Max phenotype individual: " + which(phenotypes == max(phenotypes))[0]);
 	}
+}
 
-	samples.tag = 1;
-	fitness(NULL) {
-	// individuals tagged for death die here
-	if (individual.tag == 1)
-		return 1.0;
-	else
-		return 0.0;
+// stabilizing selection
+1: late() {
+	inds = sim.subpopulations.individuals;
+	phenotypes = inds.sumOfMutationsOfType(m2);
+	// catn(sim.cycle + ": Mean phenotype == " + mean(phenotypes));	
+	inds.fitnessScaling = 1.25 - (phenotypes - 0.0)^2 * 0.005;
+}
 
-    # SLiM output tree-seq file
-1000 late() {
-	sim.treeSeqOutput('{}');
+s1 10000000 late() {
+
+	// random sample of individuals, grab an extra individual to use as a refernce
+	catn("Randomly sampling population...");
+	gs = p1.sampleIndividuals(asInteger(n) + 1).genomes;
+
+	// output vcf of sample
+	catn("Outputting vcf...");
+	gs.outputVCF(filePath = paste("slim_" + ID + ".vcf", sep = ""));
+
+	// output genome sequences of sample
+	catn("Outputting fasta...");
+	i = 1;
+	for (g in gs){
+		writeFile(paste("slim_" + ID + ".fasta", sep = ""), ">" + i, append = T);
+		writeFile(paste("slim_" + ID + ".fasta", sep = ""), paste(g.nucleotides(format="char"), sep = ""), append = T);
+		i = i + 1;
+	}
 }

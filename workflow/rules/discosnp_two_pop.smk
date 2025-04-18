@@ -37,6 +37,7 @@ rule discosnp_two_pop:
 		prefix_p1 = "discoRes_{ID}_p1",
 		prefix_p2 = "discoRes_{ID}_p2",
 		mincount = config["mincount"]
+	priority: 100
 	shell:
 		"""
 		# create file of files
