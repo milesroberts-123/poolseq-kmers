@@ -1,6 +1,6 @@
 rule smudgeplot_one_pop:
 	input:
-		"kmer_counts_{ID}.txt"
+		"kmc_results/kmer_counts_{ID}.txt"
 	output:
 		"kmerpairs_{ID}_coverages.tsv",
 		"kmerpairs_{ID}_sequences.tsv"

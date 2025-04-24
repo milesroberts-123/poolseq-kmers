@@ -3,7 +3,7 @@ rule varscan_one_pop:
 		reffasta = "seqkit_results/ref_{ID}.fasta",
 		trimbam = "bwa_results/{ID}.bam"
 	output:
-		"varscan_results/calls_{ID}.tsv"
+		"varscan_results/{ID}.tsv"
 	threads: 1
 	resources:
 		mem_mb_per_cpu=8000,

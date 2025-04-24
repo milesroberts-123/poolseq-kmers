@@ -4,7 +4,7 @@ rule bcftools_slim_one_pop:
 		vcfidx = "slim_results/{ID}.vcf.gz.tbi",
 	output:
 		samplevcf = temp("slim_results/samples_{ID}.vcf.gz"),
-		allelefreq = "slim_results/slim_allele_freqs_{ID}.txt",
+		allelefreq = "slim_results/allele_freqs_{ID}.txt",
 		filledvcf = temp("slim_results/samples_filled_{ID}.vcf.gz")
 	threads: 1
 	resources:
