@@ -51,7 +51,7 @@ total_genome = substring(total_genome, 1, L)
 # write genome output
 #print(total_genome)
 print("Writing genome to fasta file...")
-writeLines(c("> foobar", total_genome), paste("ancestral_seq_", ID, ".fasta", sep = ""))
+writeLines(c("> foobar", total_genome), paste("ancestral_genomes/", ID, ".fasta", sep = ""))
 
 # count k-mers in synthetic genome to confirm zipf distribution
 #print("Counting k-mers genome...")
