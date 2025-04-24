@@ -8,7 +8,9 @@ rule seqkit_rename:
 		mem_mb_per_cpu=8000,
 		time=239
 	conda:
-		"../envs/seqkit.yaml"	
+		"../envs/seqkit.yaml"
+	log:
+		"logs/seqkit_rename/{ID}.log"	
 	shell:
 		"""
 		seqkit rename {input} > {output}

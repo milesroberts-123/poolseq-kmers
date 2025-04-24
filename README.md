@@ -76,7 +76,7 @@ snakemake --cluster "sbatch --time={resources.time} --cpus-per-task={threads} --
 
 - [x] generate genomes that follow power-law distributions for k-mer counts
 
-- [ ] put rule outputs in separate folders
+- [x] put rule outputs in separate folders
 
 - [ ] add script to model QTLs in a mapping population
 
