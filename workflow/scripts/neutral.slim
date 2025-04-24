@@ -29,14 +29,14 @@ s1 10000000 late() {
 
 	// output vcf of sample
 	catn("Outputting vcf...");
-	gs.outputVCF(filePath = paste("slim_results/slim_" + ID + ".vcf", sep = ""), simplifyNucleotides=T);
+	gs.outputVCF(filePath = paste("slim_results/" + ID + ".vcf", sep = ""), simplifyNucleotides=T);
 
 	// output genome sequences of sample
 	catn("Outputting fasta...");
 	i = 1;
 	for (g in gs){
-		writeFile(paste("slim_results/slim_" + ID + ".fasta", sep = ""), ">" + i, append = T);
-		writeFile(paste("slim_results/slim_" + ID + ".fasta", sep = ""), paste(g.nucleotides(format="char"), sep = ""), append = T);
+		writeFile(paste("slim_results/" + ID + ".fasta", sep = ""), ">" + i, append = T);
+		writeFile(paste("slim_results/" + ID + ".fasta", sep = ""), paste(g.nucleotides(format="char"), sep = ""), append = T);
 		i = i + 1;
 	}
 }
