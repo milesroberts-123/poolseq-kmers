@@ -5,11 +5,11 @@ sample_sizes = c(25, 50, 75, 100)
 coverages = c(50, 100, 150, 200)
 sequencers = c("miseq", "hiseq", "nextseq", "novaseq")
 
-population_sizes = c(1000, 2000)
-mutation_rates = c(1e-8, 2e-8)
-recombination_rates = c(1e-8, 2e-8)
+population_sizes = c(1000)
+mutation_rates = c(1e-8)
+recombination_rates = c(1e-8)
 
-shapes = c(4, 1000)
+shapes = c(4, 1e6)
 
 #sample_sizes = c(25, 50, 75, 100)
 #coverages = c(50, 100, 150, 200)
@@ -30,7 +30,7 @@ one_pop_params = expand.grid(
   L = chrom_length,
   sequencer = sequencers,
   simtype = "onepop",
-  shape = 4,
+  shape = shapes,
   pA = 0.25,
   pC = 0.25,
   pG = 0.25,
@@ -59,7 +59,7 @@ two_pop_params = expand.grid(
   cov = coverages,
   L = chrom_length,
   sequencer = sequencers,
-  shape = 4,
+  shape = shapes,
   pA = 0.25,
   pC = 0.25,
   pG = 0.25,
@@ -86,12 +86,16 @@ sweep_params = expand.grid(
   cov = coverages,
   L = chrom_length,
   sequencer = sequencers,
-  shape = 4,
+  shape = shapes,
   pA = 0.25,
   pC = 0.25,
   pG = 0.25,
   pT = 0.25,
-  simtype = "sweep"
+  simtype = "sweep",
+  N1 = 0,
+  N2 = 0,
+  mg1 = 0,
+  mg2 = 0
 )
 
 # selection coefficient
@@ -100,7 +104,8 @@ sweep_params$s = sweep_params$Nes/sweep_params$N
 # combine all parameters into one table
 #params = bind_rows(one_pop_params, two_pop_params, sweep_params)
 #params = bind_rows(one_pop_params, two_pop_params)
-params = bind_rows(one_pop_params, sweep_params)
+#params = bind_rows(one_pop_params, sweep_params)
+params = sweep_params
 
 # add simulation id
 params$ID = 1:nrow(params)
