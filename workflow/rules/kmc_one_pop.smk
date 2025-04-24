@@ -5,7 +5,7 @@ rule kmc_one_pop:
                 uread1 = "fastp_results/trimmed_unpaired_R1_{ID}.fastq",
                 uread2 = "fastp_results/trimmed_unpaired_R2_{ID}.fastq"
 	output:
-		"temp(kmc_results/kmer_counts_{ID}.txt)"
+		temp("kmc_results/kmer_counts_{ID}.txt")
 	threads: 1
 	resources:
 		mem_mb_per_cpu=8000,
