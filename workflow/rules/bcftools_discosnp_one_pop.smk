@@ -1,13 +1,13 @@
 rule bcftools_discosnp_one_pop:
 	input:
-		ref = "ref_{ID}.fasta",
+		ref = "seqkit_results/ref_{ID}.fasta",
 		vcf = "discoRes_{ID}_k_31_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_coherent.vcf",
 	output:
-		fai = temp("ref_{ID}.fasta.fai"),
+		fai = temp("seqkit_results/ref_{ID}.fasta.fai"),
 		header = temp("discoRes_header_{ID}.vcf"),
 		bgzip = temp("discoRes_sorted_{ID}.vcf.gz"),
 		tbi = temp("discoRes_sorted_{ID}.vcf.gz.tbi"),
-		final = "discoRes_ad_{ID}.txt"
+		final = "disco_results/{ID}.txt"
 	threads: 1
 	resources:
 		mem_mb_per_cpu=8000,

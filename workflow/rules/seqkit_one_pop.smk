@@ -11,8 +11,8 @@ rule seqkit_one_pop:
 		vcffilled= "slim_results/samples_filled_{ID}.vcf.gz",
 		slimfasta = "slim_results/{ID}.fasta"
 	output:
-		samplefasta = "seqkit_results/samples_{ID}.fasta",
-		reffasta = "seqkit_results/ref_{ID}.fasta",
+		samplefasta = temp("seqkit_results/samples_{ID}.fasta"),
+		reffasta = temp("seqkit_results/ref_{ID}.fasta"),
 		poskey = "seqkit_results/center_kmer_pairs_{ID}.txt",
 		snppos = temp("seqkit_results/snp_positions_{ID}.txt")
 	threads: 1

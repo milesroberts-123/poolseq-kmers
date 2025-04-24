@@ -5,7 +5,7 @@ rule kmc_one_pop:
                 uread1 = "fastp_results/trimmed_unpaired_R1_{ID}.fastq",
                 uread2 = "fastp_results/trimmed_unpaired_R2_{ID}.fastq"
 	output:
-		"kmc_results/kmer_counts_{ID}.txt"
+		"temp(kmc_results/kmer_counts_{ID}.txt)"
 	threads: 1
 	resources:
 		mem_mb_per_cpu=8000,
@@ -41,6 +41,6 @@ rule kmc_one_pop:
 		# dump all k-mers to text file
 		kmc_tools transform union_R1_R2_u1_u2_{wildcards.ID} dump {output} &>> {log}
 
-		# delete tmp directory
-		rm -r tmp_*_{wildcards.ID} union_*_{wildcards.ID}.kmc_*
+		# delete tmp files and directories
+		rm -r tmp_*_{wildcards.ID} union_*_{wildcards.ID}.kmc_* tmp_R1_{wildcards.ID}.kmc_pre tmp_R1_{wildcards.ID}.kmc_suf
 		"""

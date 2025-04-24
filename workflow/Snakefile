@@ -40,7 +40,7 @@ rule all:
 		#expand("calls_masked_{ID}.tsv", ID=one_pop_params.index.get_level_values("ID")),
 		expand("kmerpairs_{ID}_coverages.tsv", ID=one_pop_params.index.get_level_values("ID")),
 		expand("kmerpairs_{ID}_sequences.tsv", ID=one_pop_params.index.get_level_values("ID")),
-		expand("discoRes_ad_{ID}.txt", ID=one_pop_params.index.get_level_values("ID")),
+		expand("disco_results/{ID}.txt", ID=one_pop_params.index.get_level_values("ID")),
 		expand("slim_results/allele_freqs_{ID}.txt", ID=one_pop_params.index.get_level_values("ID")),
 		#expand("{ID}_poolsnp_output.vcf.gz", ID=one_pop_params.index.get_level_values("ID")),
 		expand("poolsnp_results/{ID}.txt", ID=one_pop_params.index.get_level_values("ID")),
