@@ -15,13 +15,10 @@ def get_samples(wildcards):
 def get_wd(wildcards):
 	return os.getcwd() + "/"
 
-#def get_prefix(wildcards):
-#	return os.getcwd() + "/" + str(wildcards.ID) + "_poolsnp_output" 
-
 rule poolsnp_one_pop:
 	input:
-		reffasta = "ref_{ID}.fasta",
-		trimbam = "trimmed_{ID}.bam"
+		reffasta = "seqkit_results/ref_{ID}.fasta",
+		trimbam = "bwa_results/{ID}.bam"
 	output:
 		vcf = "{ID}_poolsnp_output.vcf.gz",
 		#cov = "{ID}_poolsnp_output-cov-0.98.txt",

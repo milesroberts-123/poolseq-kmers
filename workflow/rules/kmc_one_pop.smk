@@ -1,11 +1,11 @@
 rule kmc_one_pop:
 	input:
-                pread1 = "trimmed_paired_R1_{ID}.fastq",
-                pread2 = "trimmed_paired_R2_{ID}.fastq",
-                uread1 = "trimmed_unpaired_R1_{ID}.fastq",
-                uread2 = "trimmed_unpaired_R2_{ID}.fastq"
+                pread1 = "fastp_results/trimmed_paired_R1_{ID}.fastq",
+                pread2 = "fastp_results/trimmed_paired_R2_{ID}.fastq",
+                uread1 = "fastp_results/trimmed_unpaired_R1_{ID}.fastq",
+                uread2 = "fastp_results/trimmed_unpaired_R2_{ID}.fastq"
 	output:
-		"kmer_counts_{ID}.txt"
+		"kmc_results/kmer_counts_{ID}.txt"
 	threads: 1
 	resources:
 		mem_mb_per_cpu=8000,

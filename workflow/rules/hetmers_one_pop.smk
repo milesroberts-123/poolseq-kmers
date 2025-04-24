@@ -10,7 +10,7 @@ def get_cov(wildcards):
 
 rule hetmers_one_pop:
 	input:
-		"kmer_counts_{ID}.txt"
+		"kmc_results/kmer_counts_{ID}.txt"
 	output:
 		"hetmers_{ID}_counts.csv",
 		"hetmers_{ID}_empirical_freqs.csv",

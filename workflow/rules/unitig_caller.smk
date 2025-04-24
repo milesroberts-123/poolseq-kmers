@@ -1,11 +1,11 @@
 rule unitig_caller:
 	input:
-		"kmer_counts_{ID}.txt"
+		"kmc_results/kmer_counts_{ID}.txt"
 	output:
-		unitigs_fasta = temp("unitigs_{ID}.fasta"),
-		readfile = temp("reads_for_unitig-caller_{ID}.txt"),
-		unitigs_rtab = temp("unitigs_{ID}.rtab"),
-		tmp_fasta = temp("kmer_seqs_{ID}.fa")
+		unitigs_fasta = temp("unitig_caller_results/unitigs_{ID}.fasta"),
+		readfile = temp("unitig_caller_results/reads_for_unitig-caller_{ID}.txt"),
+		unitigs_rtab = temp("unitig_caller_results/unitigs_{ID}.rtab"),
+		tmp_fasta = temp("unitig_caller_results/kmer_seqs_{ID}.fa")
 	conda:
 		"../envs/unitig-caller.yaml"
 	threads: 1

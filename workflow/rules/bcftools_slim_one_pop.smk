@@ -1,11 +1,11 @@
 rule bcftools_slim_one_pop:
 	input:
-		compvcf = "slim_{ID}.vcf.gz",
-		vcfidx = "slim_{ID}.vcf.gz.tbi",
+		compvcf = "slim_results/{ID}.vcf.gz",
+		vcfidx = "slim_results/{ID}.vcf.gz.tbi",
 	output:
-		samplevcf = temp("samples_{ID}.vcf.gz"),
-		allelefreq = "slim_allele_freqs_{ID}.txt",
-		filledvcf = temp("samples_filled_{ID}.vcf.gz")
+		samplevcf = temp("slim_results/samples_{ID}.vcf.gz"),
+		allelefreq = "slim_results/slim_allele_freqs_{ID}.txt",
+		filledvcf = temp("slim_results/samples_filled_{ID}.vcf.gz")
 	threads: 1
 	resources:
 		mem_mb_per_cpu=8000,

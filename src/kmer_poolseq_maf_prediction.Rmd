@@ -845,8 +845,8 @@ G = 2e6
 
 #for(i in dones){
 #for(i in params$ID[(params$simtype == "onepop") | (params$simtype == "sweep")]){
-#for(i in 923:1000){
-for(i in simids){
+for(i in 127:512){
+#for(i in simids){
   print(paste("Processing simulation ", i, "...", sep = ""))
   
 # get sequencing coverage data
@@ -854,7 +854,7 @@ for(i in simids){
 # json_data_U1 <- fromJSON(file=paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/", i, "_U1.json", sep = ""))
 # json_data_U2 <- fromJSON(file=paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/", i, "_U2.json", sep = ""))
 # 
-# n = params[(params$ID == i), "n"] # pool size
+  n = params[(params$ID == i), "n"] # pool size
 # 
 # B = json_data_R1R2$summary$after_filtering$total_bases + json_data_U1$summary$after_filtering$total_bases + json_data_U2$summary$after_filtering$total_bases # number of bases sequenced
 # 
@@ -920,11 +920,14 @@ hetmers_seqs = read.csv(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolse
 
 hetmers_counts = read.csv(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/hetmers_", i, "_counts.csv", sep = ""), col.names = c("c1", "c2"))
 
-hetmers_bayes = read.csv(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/hetmers_", i, "_bayes_states.csv", sep = ""), col.names = c("b1", "b2"))
+hetmers_bayes = read.csv(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/hetmers_", i, "_bayes_states.csv", sep = ""), col.names = c("bc"))
 
 hetmers = cbind(hetmers_seqs, hetmers_counts, hetmers_bayes)
 
+# calculate minor allele counts/frequencies
 hetmers$hetmer_maf = pmin(hetmers$c1, hetmers$c2)/(hetmers$c1 + hetmers$c2)
+
+#hetmers$hetmer_mac_bayes = pmin(hetmers$bc, 2*n - hetmers$bc)
 
 # load in actual allele freqs from simulations
 true_af = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/slim_allele_freqs_", i, ".txt", sep = ""), col.names = c("chrom", "pos", "ref", "alt", "ns", "af", "ac"))
@@ -940,7 +943,10 @@ true_af = true_af[complete.cases(true_af),]
 
 # calculate minor allele frequencies
 true_af$af = as.numeric(true_af$af)
+
 true_af$snp_maf = pmin(true_af$af, 1 - true_af$af)
+
+true_af$snp_mac = pmin(true_af$ac, 2*n - true_af$ac)
 
 true_af = true_af[(true_af$af < 1) & (true_af$af > 0),]
 
@@ -1003,9 +1009,9 @@ pos_hetmers = rbind(pos_hetmers, pos_hetmers_rc)
 pos_kmer_pairs = pos_kmer_pairs[( (pos_kmer_pairs$k3 == "") | is.na(pos_kmer_pairs$k3)),]
 pos_hetmers = pos_hetmers[( (pos_hetmers$k3 == "") | is.na(pos_hetmers$k3)),]
 
-compare_maf_kmer = merge(true_af[,c("pos", "snp_maf", "ac")], pos_kmer_pairs, by = "pos", all.x = T, all.y = T)
+compare_maf_kmer = merge(true_af[,c("pos", "snp_maf", "snp_mac")], pos_kmer_pairs, by = "pos", all.x = T, all.y = T)
 
-compare_maf_hetmer = merge(true_af[,c("pos", "snp_maf", "ac")], pos_hetmers, by = "pos", all.x = T, all.y = T)
+compare_maf_hetmer = merge(true_af[,c("pos", "snp_maf", "snp_mac")], pos_hetmers, by = "pos", all.x = T, all.y = T)
 
 # remove all na rows
 #compare_maf_kmer = compare_maf_kmer[rowSums(is.na(compare_maf_kmer)) != ncol(compare_maf_kmer), ]
@@ -1048,6 +1054,8 @@ kmer_vs_truth_maf_cor = cor.test(compare_maf_kmer$snp_maf, compare_maf_kmer$kmer
 
 hetmer_vs_truth_maf_cor = cor.test(compare_maf_hetmer$snp_maf, compare_maf_hetmer$hetmer_maf, method = "pearson")$estimate
 
+hetmer_vs_truth_bc_cor = cor.test(compare_maf_hetmer$snp_mac, compare_maf_hetmer$bc, method = "pearson")$estimate
+
 disco_vs_truth_maf_cor = tryCatch(
   cor.test(compare_maf_disco$snp_maf, compare_maf_disco$disco_maf, method = "pearson")$estimate, 
   error=function(err) NA)
@@ -1088,6 +1096,7 @@ result = data.frame(
   kmer_fnr = kmer_rates[11],
   hetmer_div = sum(diversity(hetmers$hetmer_maf))/G,
   hetmer_vs_truth_maf_cor = hetmer_vs_truth_maf_cor,
+  hetmer_vs_truth_bc_cor = hetmer_vs_truth_bc_cor,
   hetmer_pos = hetmer_rates[1],
   hetmer_neg = hetmer_rates[2],
   hetmer_tp = hetmer_rates[3],
@@ -1142,7 +1151,7 @@ result = data.frame(
 
 results = rbind(results, result)
 
-rm(compare_maf_kmer, compare_maf_varscan, compare_maf_poolsnp, poolsnp, poolsnp_rates, compare_maf_disco, disco, disco_rates, kmer_covs, kmer_pairs, pos_kmer_key, pos_kmer_pairs, pos_kmer_pairs_rc, true_af, varscan, kmer_rates, kmer_vs_truth_maf_cor, poolsnp_vs_truth_maf_cor, varscan_rates, varscan_vs_truth_maf_cor, disco_vs_truth_maf_cor, result, hetmer_rates, hetmers, hetmers_seqs, hetmers_counts, hetmer_vs_truth_maf_cor)
+rm(compare_maf_kmer, compare_maf_varscan, compare_maf_poolsnp, poolsnp, poolsnp_rates, compare_maf_disco, disco, disco_rates, kmer_covs, kmer_pairs, pos_kmer_key, pos_kmer_pairs, pos_kmer_pairs_rc, true_af, varscan, kmer_rates, kmer_vs_truth_maf_cor, poolsnp_vs_truth_maf_cor, varscan_rates, varscan_vs_truth_maf_cor, disco_vs_truth_maf_cor, result, hetmer_rates, hetmers, hetmers_seqs, hetmers_counts, hetmer_vs_truth_maf_cor, hetmers_bayes)
 
 }
 
@@ -1153,7 +1162,6 @@ write.table(pares, paste("/mnt/ufs18/home-010/robe1195/Josephs_Lab_Projects/pool
 
 # site frequency spectrum
 ```{r}
-
 # compare accuracy of allele frequency estimates
 plotdata_af_cor = melt(pares[,c("ID", "cov", "n", "kmer_vs_truth_maf_cor", "hetmer_vs_truth_maf_cor", "disco_vs_truth_maf_cor", "varscan_vs_truth_maf_cor", "poolsnp_vs_truth_maf_cor")], id = c("ID", "cov", "n"))
 
@@ -1188,55 +1196,46 @@ ggplot(plotdata_div, aes(x = as.factor(cov), y = value, color = as.factor(variab
   theme_classic()
 
 
-
-
-
-
-
-
-
-
-
-ggplot(pares, aes(x = log10(true_div), y = log10(kmer_div), color = as.factor(cov))) +
-  geom_point() +
-  geom_abline(slope = 1, intercept = 0) +
-  theme_classic()
-
-ggplot(pares, aes(x = log10(true_div), y = log10(hetmer_div), color = as.factor(cov))) +
-  geom_point() +
-  geom_abline(slope = 1, intercept = 0) +
-  theme_classic()
-
-ggplot(pares, aes(x = log10(true_div), y = log10(disco_div), color = as.factor(cov))) +
-  geom_point() +
-  geom_abline(slope = 1, intercept = 0) +
-  theme_classic()
-
-ggplot(pares, aes(x = log10(true_div), y = log10(varscan_div), color = as.factor(cov))) +
-  geom_point() +
-  geom_abline(slope = 1, intercept = 0) +
-  theme_classic()
-
-ggplot(pares, aes(x = log10(true_div), y = log10(poolsnp_div), color = as.factor(cov))) +
-  geom_point() +
-  geom_abline(slope = 1, intercept = 0) +
-  theme_classic()
-
-# site-frequency spectrum
-all_sfs = merge(compare_maf_kmer[,c("pos", "snp_maf", "kmer_maf")], varscan[,c("pos", "snp_maf_varscan")], by = "pos", all.x = T, all.y = T)
-
-all_sfs = merge(all_sfs, poolsnp[,c("pos", "snp_maf_poolsnp")], by = "pos", all.x = T, all.y = T)
-
-all_sfs = merge(all_sfs, disco[,c("pos", "disco_maf")], by = "pos", all.x = T, all.y = T)
-
-plotdata = melt(all_sfs, id = "pos")
-
-ggplot(plotdata, aes(x = value, fill = variable)) +
-  geom_density(alpha = 0.5) +
-  theme_classic() +
-  labs(x = "Minor allele frequency", y = "density")
-
-ggsave(paste("/mnt/home/robe1195/Josephs_Lab_Projects/poolseq-kmers/results/", today,  "/","kmer_vs_snp_sfs.png", sep = ""), height= 7, width = 8)
+# ggplot(pares, aes(x = log10(true_div), y = log10(kmer_div), color = as.factor(cov))) +
+#   geom_point() +
+#   geom_abline(slope = 1, intercept = 0) +
+#   theme_classic()
+# 
+# ggplot(pares, aes(x = log10(true_div), y = log10(hetmer_div), color = as.factor(cov))) +
+#   geom_point() +
+#   geom_abline(slope = 1, intercept = 0) +
+#   theme_classic()
+# 
+# ggplot(pares, aes(x = log10(true_div), y = log10(disco_div), color = as.factor(cov))) +
+#   geom_point() +
+#   geom_abline(slope = 1, intercept = 0) +
+#   theme_classic()
+# 
+# ggplot(pares, aes(x = log10(true_div), y = log10(varscan_div), color = as.factor(cov))) +
+#   geom_point() +
+#   geom_abline(slope = 1, intercept = 0) +
+#   theme_classic()
+# 
+# ggplot(pares, aes(x = log10(true_div), y = log10(poolsnp_div), color = as.factor(cov))) +
+#   geom_point() +
+#   geom_abline(slope = 1, intercept = 0) +
+#   theme_classic()
+# 
+# # site-frequency spectrum
+# all_sfs = merge(compare_maf_kmer[,c("pos", "snp_maf", "kmer_maf")], varscan[,c("pos", "snp_maf_varscan")], by = "pos", all.x = T, all.y = T)
+# 
+# all_sfs = merge(all_sfs, poolsnp[,c("pos", "snp_maf_poolsnp")], by = "pos", all.x = T, all.y = T)
+# 
+# all_sfs = merge(all_sfs, disco[,c("pos", "disco_maf")], by = "pos", all.x = T, all.y = T)
+# 
+# plotdata = melt(all_sfs, id = "pos")
+# 
+# ggplot(plotdata, aes(x = value, fill = variable)) +
+#   geom_density(alpha = 0.5) +
+#   theme_classic() +
+#   labs(x = "Minor allele frequency", y = "density")
+# 
+# ggsave(paste("/mnt/home/robe1195/Josephs_Lab_Projects/poolseq-kmers/results/", today,  "/","kmer_vs_snp_sfs.png", sep = ""), height= 7, width = 8)
 ```
 
 # check if theoretical distributions fit kmer counts
@@ -1354,8 +1353,8 @@ ggplot(plotdata[(plotdata$simtype == "onepop"),], aes(x = es, y = S)) +
   geom_abline(slope = 1, intercept = 0) +
   theme_classic()
 
-ggplot(plotdata[(plotdata$simtype == "onepop"),], aes(x = Ubar, y = mean_dist)) +
-  geom_point() +
+plot_mean_dist_neutral = ggplot(plotdata[(plotdata$simtype == "onepop"),], aes(x = Ubar, y = mean_dist, color = as.factor(mu))) +
+  geom_point(aes(shape = as.factor(n))) +
   geom_abline(slope = 1, intercept = 0) +
   theme_classic() +
   labs(x = "Expected mean distance between mutations", y = "Observed mean distance between mutations")
@@ -1382,7 +1381,7 @@ ggplot(plotdata, aes(x = n, y = mean_dist, color = as.factor(Nes))) +
   theme_classic() +
   labs(x = "Pool size", y = "Avg. distance between SNPs (bp)", color = "Selection", title = "Ground truth")
 
-ggplot(plotdata, aes(x = n, y = max_dist, color = as.factor(Nes))) +
+plot_max_dist_sweep = ggplot(plotdata, aes(x = n, y = max_dist, color = as.factor(Nes))) +
   geom_boxplot() +
   theme_classic() +
   labs(x = "Pool size", y = "Max distance between SNPs (bp)", color = "Selection", title = "Ground truth")
@@ -1866,8 +1865,8 @@ workflow_summary = function(x, lev_col, resource_col){
   return(results)
 }
 
-bench_summary_time_by_flow = workflow_summary(bench_summary_time, "cov", "s")
-bench_summary_time_by_flow = melt(bench_summary_time_by_flow, id = "lev_col")
+#bench_summary_time_by_flow = workflow_summary(bench_summary_time, "cov", "s")
+#bench_summary_time_by_flow = melt(bench_summary_time_by_flow, id = "lev_col")
 
 bench_summary_cpu_time_by_flow = workflow_summary(bench_summary_cpu_time, "cov", "cpu_time")
 bench_summary_cpu_time_by_flow = melt(bench_summary_cpu_time_by_flow, id = "lev_col")
@@ -1882,7 +1881,7 @@ bench_summary_cpu_time_by_flow = melt(bench_summary_cpu_time_by_flow, id = "lev_
 # bench_summary_max_uss_by_flow = melt(bench_summary_max_uss_by_flow, id = "lev_col")
 
 # calculate average times
-bench_summary_time_by_flow$value = bench_summary_time_by_flow$value/length(unique(bench_params$ID))
+# bench_summary_time_by_flow$value = bench_summary_time_by_flow$value/length(unique(bench_params$ID))
 
 bench_summary_cpu_time_by_flow$value = bench_summary_cpu_time_by_flow$value/length(unique(bench_params$ID))
 
@@ -1894,13 +1893,13 @@ bench_summary_max_rss$max_rss = bench_summary_max_rss$max_rss/length(unique(benc
 
 # time plots
 my_colors = scico(4, palette = "hawaii")
-names(my_colors) = unique(bench_summary_time_by_flow$lev_col)
+names(my_colors) = unique(bench_summary_cpu_time_by_flow$lev_col)
 
-ggplot(bench_summary_time_by_flow, aes(x = variable, y = value, fill = as.factor(lev_col))) +
-  geom_bar(stat = "identity", position = "dodge") +
-  theme_classic() +
-  scale_fill_manual(values = my_colors) +
-  labs(x = "Workflow", y = "Average time (s)", fill = "Coverage")
+# ggplot(bench_summary_time_by_flow, aes(x = variable, y = value, fill = as.factor(lev_col))) +
+#   geom_bar(stat = "identity", position = "dodge") +
+#   theme_classic() +
+#   scale_fill_manual(values = my_colors) +
+#   labs(x = "Workflow", y = "Average time (s)", fill = "Coverage")
 
 plot_time = ggplot(bench_summary_cpu_time_by_flow, aes(x = variable, y = value, fill = as.factor(lev_col))) +
   geom_bar(stat = "identity", position = "dodge") +
@@ -1911,12 +1910,16 @@ plot_time = ggplot(bench_summary_cpu_time_by_flow, aes(x = variable, y = value, 
     axis.text.x = element_text(angle = 45, hjust=1),
     text = element_text(family = "Sans")) +
   scale_fill_manual(values = my_colors) +
-  labs(x = "Workflow", y = "Average CPU time (s)", fill = "Coverage")
+  labs(x = "Workflow", y = "Average CPU Time (s)", fill = "Coverage")
 
 # memory plots
-plot_memory = ggplot(bench_summary_max_rss, aes(x = tool, y = max_rss, fill = as.factor(cov))) +
+bench_summary_max_rss$tool[(bench_summary_max_rss$tool == "unitig_caller")] = "unitig-caller"
+
+bench_summary_max_rss$tool = factor(bench_summary_max_rss$tool, levels = c("bwa", "varscan", "poolsnp", "kmc", "smudgeplot", "hetmers", "unitig-caller", "discosnp"))
+
+plot_memory = ggplot(bench_summary_max_rss, aes(x = tool, y = max_rss*1.04858, fill = as.factor(cov))) +
   geom_bar(stat = "identity", position = "dodge") +
-  labs(x = "Tool", y = "Average Maximum\nResident Set Size (MiB)", fill = "Coverage") +
+  labs(x = "Tool", y = "Average Memory (MB)", fill = "Coverage") +
   theme_classic() +
   theme(
     axis.line = element_line(colour = 'black', linewidth = 1),
@@ -1925,17 +1928,17 @@ plot_memory = ggplot(bench_summary_max_rss, aes(x = tool, y = max_rss, fill = as
     text = element_text(family = "Sans")) +
   scale_fill_manual(values = my_colors) 
 
-ggplot(bench_summary_max_vms_by_flow, aes(x = variable, y = value, fill = as.factor(lev_col))) +
-  geom_bar(stat = "identity", position = "dodge") +
-  labs(x = "workflow", y = "Average Maximum Virtual Memory Size (MiB)", fill = "coverage") +
-  theme_classic() +
-  scale_fill_manual(values = my_colors) 
-
-ggplot(bench_summary_max_uss_by_flow, aes(x = variable, y = value, fill = as.factor(lev_col))) +
-  geom_bar(stat = "identity", position = "dodge") +
-  labs(x = "workflow", y = "Average Maximum Unique Set Size (MiB)", fill = "coverage") +
-  theme_classic() +
-  scale_fill_manual(values = my_colors) 
+# ggplot(bench_summary_max_vms_by_flow, aes(x = variable, y = value, fill = as.factor(lev_col))) +
+#   geom_bar(stat = "identity", position = "dodge") +
+#   labs(x = "workflow", y = "Average Maximum Virtual Memory Size (MiB)", fill = "coverage") +
+#   theme_classic() +
+#   scale_fill_manual(values = my_colors) 
+# 
+# ggplot(bench_summary_max_uss_by_flow, aes(x = variable, y = value, fill = as.factor(lev_col))) +
+#   geom_bar(stat = "identity", position = "dodge") +
+#   labs(x = "workflow", y = "Average Maximum Unique Set Size (MiB)", fill = "coverage") +
+#   theme_classic() +
+#   scale_fill_manual(values = my_colors) 
   
 ggarrange(plot_time, plot_memory, common.legend = T, font.label = list(size = 16), labels = c("A", "B"))
 ggsave(paste("../results/", today, "/memory_and_time.jpg", sep = ""), dpi = 450)
@@ -1944,9 +1947,9 @@ ggsave(paste("../results/", today, "/memory_and_time.jpg", sep = ""), dpi = 450)
 # How does performance vary with sequencing parameters?
 ```{r}
 # compare sensitivities for SNPs represented in reference
-tpr_plot_data = melt(pares[,c("ID", "ID2", "cov", "n", "sequencer", "simtype", "kmer_tpr", "disco_tpr", "varscan_tpr", "poolsnp_tpr")], id = c("ID", "ID2", "cov", "n", "sequencer", "simtype"))
+tpr_plot_data = melt(pares[,c("ID", "ID2", "cov", "n", "sequencer", "simtype", "kmer_tpr", "hetmer_tpr", "disco_tpr", "varscan_tpr", "poolsnp_tpr")], id = c("ID", "ID2", "cov", "n", "sequencer", "simtype"))
 
-tpr_plot_data$variable = factor(gsub("_tpr", "", tpr_plot_data$variable), levels = c("kmer", "disco", "varscan", "poolsnp"), ordered = T)
+tpr_plot_data$variable = factor(gsub("_tpr", "", tpr_plot_data$variable), levels = c("kmer", "hetmer", "disco", "varscan", "poolsnp"), ordered = T)
 
 tpr_plot_data$cov_per_n = as.factor(tpr_plot_data$cov/(tpr_plot_data$n * 2))
 
@@ -1957,7 +1960,7 @@ tpr_vs_coverage_plot = ggplot(tpr_plot_data, aes(x = cov, y = value, color = var
   geom_boxplot() +
   theme_classic() +
   theme(text = element_text(size = 12)) +
-  labs(x = "Total coverage", y = "Sensitivity (true positive rate)", color = "Method", title = "All instruments")
+  labs(x = "Total coverage", y = "Sensitivity", color = "Method", title = "All instruments")
 
 #ggsave(paste("../results/", today, "/coverage_vs_sensitivity.png", sep = ""), unit = "in")
 
@@ -1968,9 +1971,9 @@ tpr_vs_coverage_plot = ggplot(tpr_plot_data, aes(x = cov, y = value, color = var
 #   labs(x = "Coverage per haploid genome", y = "Sensitivity (true positive rate)", color = "Method", title = "All instruments")
 
 # coverage vs false discovery rate
-fpr_plot_data = melt(pares[,c("ID", "cov", "n", "sequencer", "kmer_fpr", "disco_fpr", "varscan_fpr", "poolsnp_fpr")], id = c("ID", "cov", "n", "sequencer"))
+fpr_plot_data = melt(pares[,c("ID", "cov", "n", "sequencer", "kmer_fpr", "hetmer_fpr", "disco_fpr", "varscan_fpr", "poolsnp_fpr")], id = c("ID", "cov", "n", "sequencer"))
 
-fpr_plot_data$variable = factor(gsub("_fpr", "", fpr_plot_data$variable), levels = c("kmer", "disco", "varscan", "poolsnp"), ordered = T)
+fpr_plot_data$variable = factor(gsub("_fpr", "", fpr_plot_data$variable), levels = c("kmer", "hetmer", "disco", "varscan", "poolsnp"), ordered = T)
 
 fpr_plot_data$cov = as.factor(fpr_plot_data$cov)
 fpr_plot_data$n = as.factor(fpr_plot_data$n)
@@ -1984,9 +1987,9 @@ fpr_vs_coverage_plot = ggplot(fpr_plot_data, aes(x = cov, y = value, color = var
 #ggsave(paste("../results/", today, "/coverage_vs_fpr.png", sep = ""), unit = "in")
 
 # coverage vs false negative rate
-fnr_plot_data = melt(pares[,c("ID", "cov", "n", "sequencer", "kmer_fnr", "disco_fnr", "varscan_fnr", "poolsnp_fnr")], id = c("ID", "cov", "n", "sequencer"))
+fnr_plot_data = melt(pares[,c("ID", "cov", "n", "sequencer", "kmer_fnr", "hetmer_fnr", "disco_fnr", "varscan_fnr", "poolsnp_fnr")], id = c("ID", "cov", "n", "sequencer"))
 
-fnr_plot_data$variable = factor(gsub("_fnr", "", fnr_plot_data$variable), levels = c("kmer", "disco", "varscan", "poolsnp"), ordered = T)
+fnr_plot_data$variable = factor(gsub("_fnr", "", fnr_plot_data$variable), levels = c("kmer", "hetmer", "disco", "varscan", "poolsnp"), ordered = T)
 
 fnr_plot_data$cov = as.factor(fnr_plot_data$cov)
 fnr_plot_data$n = as.factor(fnr_plot_data$n)
@@ -1998,9 +2001,9 @@ fnr_vs_coverage_plot = ggplot(fnr_plot_data, aes(x = cov, y = value, color = var
   labs(x = "Total coverage", y = "False negative rate", color = "Method", title = "All instruments")
 
 # coverage vs specificity
-tnr_plot_data = melt(pares[,c("ID", "ID2", "cov", "n", "sequencer", "simtype", "kmer_tnr", "disco_tnr", "varscan_tnr", "poolsnp_tnr")], id = c("ID", "ID2", "cov", "n", "sequencer", "simtype"))
+tnr_plot_data = melt(pares[,c("ID", "ID2", "cov", "n", "sequencer", "simtype", "kmer_tnr", "hetmer_tnr", "disco_tnr", "varscan_tnr", "poolsnp_tnr")], id = c("ID", "ID2", "cov", "n", "sequencer", "simtype"))
 
-tnr_plot_data$variable = factor(gsub("_tnr", "", tnr_plot_data$variable), levels = c("kmer", "disco", "varscan", "poolsnp"), ordered = T)
+tnr_plot_data$variable = factor(gsub("_tnr", "", tnr_plot_data$variable), levels = c("kmer", "hetmer", "disco", "varscan", "poolsnp"), ordered = T)
 
 tnr_plot_data$cov = as.factor(tnr_plot_data$cov)
 tnr_plot_data$n = as.factor(tnr_plot_data$n)
@@ -2009,12 +2012,12 @@ tnr_vs_coverage_plot = ggplot(tnr_plot_data, aes(x = cov, y = value, color = var
   geom_boxplot() +
   theme_classic() +
   theme(text = element_text(size = 12)) +
-  labs(x = "Total coverage", y = "Specificity (true negative rate)", color = "Method", title = "All instruments")
+  labs(x = "Total coverage", y = "Specificity", color = "Method", title = "All instruments")
 
 # plot tpr and fnr together
 ggarrange(tpr_vs_coverage_plot, tnr_vs_coverage_plot, fpr_vs_coverage_plot, fnr_vs_coverage_plot, common.legend = T, font.label = list(size = 16), labels = c("A", "B", "C", "D"), nrow = 1, ncol = 4)
 
-ggsave(paste("../results/", today, "/coverage_vs_tpr_tnr_fpr_fnr.png", sep = ""), unit = "in", width = 8, height = 8, dpi = 350)
+ggsave(paste("../results/", today, "/coverage_vs_tpr_tnr_fpr_fnr.png", sep = ""), unit = "in", width = 12, height = 4, dpi = 350)
 
 
 

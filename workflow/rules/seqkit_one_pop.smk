@@ -8,13 +8,13 @@ def get_num_genos(wildcards):
 
 rule seqkit_one_pop:
 	input:
-		vcffilled= "samples_filled_{ID}.vcf.gz",
-		slimfasta = "slim_{ID}.fasta"
+		vcffilled= "slim_results/samples_filled_{ID}.vcf.gz",
+		slimfasta = "slim_results/{ID}.fasta"
 	output:
-		samplefasta = "samples_{ID}.fasta",
-		reffasta = "ref_{ID}.fasta",
-		poskey = "center_kmer_pairs_{ID}.txt",
-		snppos = temp("snp_positions_{ID}.txt")
+		samplefasta = "seqkit_results/samples_{ID}.fasta",
+		reffasta = "seqkit_results/ref_{ID}.fasta",
+		poskey = "seqkit_results/center_kmer_pairs_{ID}.txt",
+		snppos = temp("seqkit_results/snp_positions_{ID}.txt")
 	threads: 1
 	resources:
 		mem_mb_per_cpu=8000,
