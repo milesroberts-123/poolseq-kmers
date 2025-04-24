@@ -95,7 +95,8 @@ sweep_params = expand.grid(
   N1 = 0,
   N2 = 0,
   mg1 = 0,
-  mg2 = 0
+  mg2 = 0,
+  tau = 0
 )
 
 # selection coefficient
