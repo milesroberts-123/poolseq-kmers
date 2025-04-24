@@ -1,6 +1,6 @@
 initialize() {
 	initializeSLiMOptions(nucleotideBased=T);
-	defineConstant("L", initializeAncestralNucleotides(paste("ancestral_seq_" + ID + ".fasta", sep = "")));
+	defineConstant("L", initializeAncestralNucleotides(paste("ancestral_genome_results/" + ID + ".fasta", sep = "")));
 	initializeMutationTypeNuc("m1", 0.5, "f", 0.0);
 	initializeMutationTypeNuc("m2", 0.5, "n", 0.0, 2);
 	m2.convertToSubstitution = F;
@@ -49,14 +49,14 @@ s1 10000000 late() {
 
 	// output vcf of sample
 	catn("Outputting vcf...");
-	gs.outputVCF(filePath = paste("slim_" + ID + ".vcf", sep = ""));
+	gs.outputVCF(filePath = paste("slim_results/" + ID + ".vcf", sep = ""));
 
 	// output genome sequences of sample
 	catn("Outputting fasta...");
 	i = 1;
 	for (g in gs){
-		writeFile(paste("slim_" + ID + ".fasta", sep = ""), ">" + i, append = T);
-		writeFile(paste("slim_" + ID + ".fasta", sep = ""), paste(g.nucleotides(format="char"), sep = ""), append = T);
+		writeFile(paste("slim_results/" + ID + ".fasta", sep = ""), ">" + i, append = T);
+		writeFile(paste("slim_results/" + ID + ".fasta", sep = ""), paste(g.nucleotides(format="char"), sep = ""), append = T);
 		i = i + 1;
 	}
 }

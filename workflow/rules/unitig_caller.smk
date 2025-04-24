@@ -13,7 +13,7 @@ rule unitig_caller:
 		mem_mb_per_cpu=8000,
 		time=239
 	params:
-		rtab_prefix = "unitigs_{ID}"
+		rtab_prefix = "unitig_caller_results/unitigs_{ID}"
 	benchmark:
 		"benchmarks/unitig_caller/{ID}.bench"
 	shell:
