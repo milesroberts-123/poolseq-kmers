@@ -56,7 +56,7 @@ def get_tau(wildcards):
 
 rule slim:
 	input:
-		"ancestral_genomes/{ID}.fasta"
+		"ancestral_genome_results/{ID}.fasta"
 	output:
 		temp("slim_results/{ID}.vcf"),
 		temp("slim_results/{ID}.fasta")

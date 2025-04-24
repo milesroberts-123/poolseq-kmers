@@ -26,7 +26,7 @@ rule ancestral_genome:
 	input:
 		"../config/parameters.tsv"
 	output:
-		"ancestral_genomes/{ID}.fasta",
+		"ancestral_genome_results/{ID}.fasta",
 		#"power_law_{ID}.jpg"
 	log:
 		"logs/ancestral_genome/{ID}.log"

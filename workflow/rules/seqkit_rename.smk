@@ -1,8 +1,8 @@
 rule seqkit_rename:
 	input:
-		"unitigs_{ID}.fasta"
+		"unitig_caller_results/unitigs_{ID}.fasta"
 	output:
-		"unitigs_renamed_{ID}.fasta"
+		"unitig_caller_results/unitigs_renamed_{ID}.fasta"
 	threads: 1
 	resources:
 		mem_mb_per_cpu=8000,

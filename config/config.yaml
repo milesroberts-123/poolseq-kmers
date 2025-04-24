@@ -1,4 +1,14 @@
 # k-mer length
 
+# pA
+
+# pC
+
+# pG
+
+# pT
+
 # minimum k-mer count threshold
 mincount: 5
+
+# e-value for blast
