@@ -16,10 +16,10 @@ rule discosnp_one_pop:
 		fof = temp("fof_{ID}.txt"),
 		fof_reads = temp("fof_reads_{ID}.txt"),
 		vcf = "discoRes_{ID}_k_31_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_coherent.vcf",
-		h5 = temp("discoRes_1_k_31_c_" + str(config["mincount"]) + "_cov.h5"),
-		sam = temp("discoRes_1_k_31_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_coherentBWA_MEM.sam"),
-		igv = temp("discoRes_1_k_31_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_coherent_for_IGV.vcf"),
-		uncofa = temp("discoRes_1_k_31_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_uncoherent.fa")
+		h5 = temp("discoRes_{ID}_k_31_c_" + str(config["mincount"]) + "_cov.h5"),
+		sam = temp("discoRes_{ID}_k_31_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_coherentBWA_MEM.sam"),
+		igv = temp("discoRes_{ID}_k_31_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_coherent_for_IGV.vcf"),
+		uncofa = temp("discoRes_{ID}_k_31_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_uncoherent.fa")
 	threads: 1
 	resources:
 		mem_mb_per_cpu=16000,
