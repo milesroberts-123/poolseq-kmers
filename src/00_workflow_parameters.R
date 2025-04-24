@@ -9,7 +9,7 @@ population_sizes = c(1000, 2000)
 mutation_rates = c(1e-8, 2e-8)
 recombination_rates = c(1e-8, 2e-8)
 
-# shapes = c(2, 3, 4)
+shapes = c(4, 1000)
 
 #sample_sizes = c(25, 50, 75, 100)
 #coverages = c(50, 100, 150, 200)

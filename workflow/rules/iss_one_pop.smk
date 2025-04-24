@@ -59,5 +59,5 @@ rule iss_one_pop:
 		fi
 
 		# simulate reads
-		iss generate -g {input} --cpus {threads} --model {params.sequencer} -n $nreads --abundance uniform --output reads_{wildcards.ID} &> {log}
+		iss generate -g {input} --cpus {threads} --model {params.sequencer} -n $nreads --abundance uniform --output iss_results/reads_{wildcards.ID} &> {log}
 		"""
