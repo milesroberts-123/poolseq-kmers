@@ -3,14 +3,14 @@ rule blast:
 		ref = "seqkit_results/ref_{ID}.fasta",
 		unitigs = "unitig_caller_results/unitigs_renamed_{ID}.fasta"
 	output:
-		ndb = temp("seqkit_results/ref_{ID}.ndb"),
-		nhr = temp("seqkit_results/ref_{ID}.nhr"),
-		nin = temp("seqkit_results/ref_{ID}.nin"),
-		njs = temp("seqkit_results/ref_{ID}.njs"),
-		not_dbfile = temp("seqkit_results/ref_{ID}.not"),
-		nsq = temp("seqkit_results/ref_{ID}.nsq"),
-		ntf = temp("seqkit_results/ref_{ID}.ntf"),
-		nto = temp("seqkit_results/ref_{ID}.nto"),
+		ndb = temp("ref_{ID}.ndb"),
+		nhr = temp("ref_{ID}.nhr"),
+		nin = temp("ref_{ID}.nin"),
+		njs = temp("ref_{ID}.njs"),
+		not_dbfile = temp("ref_{ID}.not"),
+		nsq = temp("ref_{ID}.nsq"),
+		ntf = temp("ref_{ID}.ntf"),
+		nto = temp("ref_{ID}.nto"),
 		alignments = "blast_results/{ID}.txt"
 	conda:
 		"../envs/blast.yaml"
