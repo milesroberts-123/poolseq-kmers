@@ -1298,13 +1298,13 @@ ggplot(true_af, aes(x = snp_maf)) +
 # selective sweeps
 ```{r}
 # Hypothesis: the average distance between SNPs is higher after selective sweep compared to neutral scenario
-allele_files = list.files(path = "/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow", pattern = "slim_allele_freqs_.*", full.names = T)
+allele_file_names = list.files(path = "/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/slim_results", pattern = "allele_freqs_.*", full.names = T)
 
-allele_files = allele_files[!grepl("_p.", allele_files)]
+allele_file_names = allele_file_names[!grepl("_p.", allele_file_names)]
 
-allele_file_ids = as.numeric(gsub(".txt", "", gsub("slim_allele_freqs_", "", gsub("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/", "", allele_files))))
+allele_file_ids = as.numeric(gsub(".txt", "", gsub("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/slim_results/allele_freqs_", "", allele_file_names)))
 
-allele_files = lapply(allele_files, read.table, col.names = c("chrom", "pos", "ref", "alt", "ns", "af", "ac"))
+allele_files = lapply(allele_file_names, read.table, col.names = c("chrom", "pos", "ref", "alt", "ns", "af", "ac"))
 
 mean_dist_bw_mut = function(x){
   mean(diff(x$pos))
@@ -1393,9 +1393,9 @@ plot_max_dist_sweep = ggplot(plotdata, aes(x = n, y = max_dist, color = as.facto
 #   labs(x = "Pool size", y = "Distance between snps at sweep/mean distance", color = "Selection", title = "Ground truth")
 
 # Hypothesis: after a selective sweep, the longest unitigs in a population graph are more likely to be near the sweep site, compared to neutral scenario
-unitig_files = list.files(path = "/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow", pattern = "unitig_alignments_.*", full.names = T)
+unitig_files = list.files(path = "/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/blast_results", pattern = ".*txt", full.names = T)
 
-unitig_files_ids = as.numeric(gsub(".txt", "", gsub("unitig_alignments_", "", gsub("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/", "", unitig_files))))
+unitig_files_ids = as.numeric(gsub(".txt", "", gsub("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/blast_results/", "", unitig_files)))
 
 unitig_files = lapply(unitig_files, read.table, col.names = c("qid", "sid", "pid", "alen", "mm", "go", "qs", "qe", "ss", "se", "ev", "bs"))
 
@@ -1478,6 +1478,14 @@ plot_unitigs_n_breakdown = ggplot(plotdata_unitigs, aes(x = sc, color = as.facto
   theme_classic() +
   theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) +
   facet_grid(n ~ .) +
+  geom_vline(xintercept = 2e6/2, lty = 2, lwd = 1) +
+  labs(x = "Center of longest unitig", color = "Nes", title = "Pool size")
+
+plot_unitigs_shape_breakdown = ggplot(plotdata_unitigs, aes(x = sc, color = as.factor(Nes))) +
+  geom_density() +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) +
+  facet_grid(shape ~ .) +
   geom_vline(xintercept = 2e6/2, lty = 2, lwd = 1) +
   labs(x = "Center of longest unitig", color = "Nes", title = "Pool size")
 

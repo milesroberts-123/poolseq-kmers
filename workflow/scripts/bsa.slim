@@ -2,7 +2,7 @@ initialize() {
 	initializeSLiMOptions(nucleotideBased=T);
 	defineConstant("L", initializeAncestralNucleotides(paste("ancestral_genome_results/" + ID + ".fasta", sep = "")));
 	initializeMutationTypeNuc("m1", 0.5, "f", 0.0);
-	initializeMutationTypeNuc("m2", 0.5, "n", 0.0, 2);
+	initializeMutationTypeNuc("m2", 0.5, "n", 0.0, 1);
 	m2.convertToSubstitution = F;
 	initializeGenomicElementType("g1", c(m1, m2), c(0.9, 0.1), mmJukesCantor(mu/3));
 	initializeGenomicElement(g1, 0, asInteger(L)-1);
@@ -29,7 +29,7 @@ early(){
 		catn(sim.cycle + ": SD phenotype:" + sd(phenotypes));
 		catn(sim.cycle + ": Maximum phenotype:" + max(phenotypes));
 		catn(sim.cycle + ": Minimum phenotype:" + min(phenotypes));
-		catn(sim.cycle + ": Max phenotype individual: " + which(phenotypes == max(phenotypes))[0]);
+		//catn(sim.cycle + ": Max phenotype individual: " + which(phenotypes == max(phenotypes))[0]);
 	}
 }
 
@@ -38,25 +38,65 @@ early(){
 	inds = sim.subpopulations.individuals;
 	phenotypes = inds.sumOfMutationsOfType(m2);
 	// catn(sim.cycle + ": Mean phenotype == " + mean(phenotypes));	
-	inds.fitnessScaling = 1.25 - (phenotypes - 0.0)^2 * 0.005;
+	//inds.fitnessScaling = 1.25 - (phenotypes - 0.0)^2 * 0.001;
+	inds.fitnessScaling = 1.0 + dnorm(phenotypes, OPTIMUM, SIGMA_K); 
+        //
+        //catn("Test add cross");
+	//p1.addCrossed(p1.sampleIndividuals(1), p1.sampleIndividuals(1));
+
 }
 
 s1 10000000 late() {
 
+	catn("Sampling population...");
+	inds = sim.subpopulations.individuals;
+	phenotypes = inds.sumOfMutationsOfType(m2);
+	catn(sim.cycle + ": Number of neutral mutations: " + size(sim.mutationsOfType(m1)));
+	catn(sim.cycle + ": Number of QTL mutations: " + size(sim.mutationsOfType(m2)));
+	catn(sim.cycle + ": Mean phenotype:" + mean(phenotypes));
+	catn(sim.cycle + ": SD phenotype:" + sd(phenotypes));
+	catn(sim.cycle + ": Maximum phenotype:" + max(phenotypes));
+	catn(sim.cycle + ": Minimum phenotype:" + min(phenotypes));
+
+        // sample one bulk of individuals with a high phenotype and another bulk of individuals with a low phenotype
+	catn("Low phenotype cutoff:");        
+	low_pheno_cutoff = quantile(phenotypes, 0.025);
+	catn(low_pheno_cutoff);
+
+	catn("High phenotype cutoff:"); 
+        high_pheno_cutoff = quantile(phenotypes, 0.975);
+	catn(high_pheno_cutoff);
+
 	// random sample of individuals, grab an extra individual to use as a refernce
-	catn("Randomly sampling population...");
-	gs = p1.sampleIndividuals(asInteger(n) + 1).genomes;
+        catn("Low phenotype individuals:");
+	low_inds = which(phenotypes < low_pheno_cutoff);
+	catn(low_inds);
+        catn("High phenotype individuals:");
+	high_inds = which(phenotypes > high_pheno_cutoff);
+	catn(high_inds);
+
+        catn("Sampling genomes...");
+	gs_low = sample(inds[low_inds], asInteger(n)).genomes;
+	gs_high = sample(inds[high_inds], asInteger(n)).genomes;
+	gs_ref = p1.sampleIndividuals(1).genomes;
+
+	gs_all = c(gs_ref, gs_low, gs_high);
 
 	// output vcf of sample
 	catn("Outputting vcf...");
-	gs.outputVCF(filePath = paste("slim_results/" + ID + ".vcf", sep = ""));
+	gs_all.outputVCF(filePath = paste("slim_results/" + ID + ".vcf", sep = ""), simplifyNucleotides=F);
 
 	// output genome sequences of sample
 	catn("Outputting fasta...");
 	i = 1;
-	for (g in gs){
+	for (g in gs_all){
 		writeFile(paste("slim_results/" + ID + ".fasta", sep = ""), ">" + i, append = T);
 		writeFile(paste("slim_results/" + ID + ".fasta", sep = ""), paste(g.nucleotides(format="char"), sep = ""), append = T);
 		i = i + 1;
 	}
+
+	// compare fst between qtl and neutral mutations
+	catn("Calculating Fst...");
+	catn("Fst for neutral mutations:" + calcFST(gs_low, gs_high, sim.mutationsOfType(m1)));
+	catn("Fst for QTL mutations:" + calcFST(gs_low, gs_high, sim.mutationsOfType(m2)));
 }
