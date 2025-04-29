@@ -1,18 +1,18 @@
 rule bcftools_discosnp_two_pop:
 	input:
-		ref = "ref_{ID}_p1.fasta",
+		ref = "seqkit_results/ref_{ID}_p1.fasta",
 		vcf_p1 = "discoRes_{ID}_p1_k_31_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_coherent.vcf",
 		vcf_p2 = "discoRes_{ID}_p2_k_31_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_coherent.vcf",
 	output:
-		fai = temp("ref_{ID}_p1.fasta.fai"),
+		fai = temp("seqkit_results/ref_{ID}_p1.fasta.fai"),
 		header_p1 = temp("discoRes_header_{ID}_p1.vcf"),
 		header_p2 = temp("discoRes_header_{ID}_p2.vcf"),
 		bgzip_p1 = temp("discoRes_sorted_{ID}_p1.vcf.gz"),
 		bgzip_p2 = temp("discoRes_sorted_{ID}_p2.vcf.gz"),
 		tbi_p1 = temp("discoRes_sorted_{ID}_p1.vcf.gz.tbi"),
 		tbi_p2 = temp("discoRes_sorted_{ID}_p2.vcf.gz.tbi"),
-		final_p1 = "discoRes_ad_{ID}_p1.txt",
-		final_p2 = "discoRes_ad_{ID}_p2.txt"
+		final_p1 = "disco_results/{ID}_p1.txt",
+		final_p2 = "disco_results/{ID}_p2.txt"
 	threads: 1
 	resources:
 		mem_mb_per_cpu=8000,

@@ -1,20 +1,32 @@
 rule fastp_two_pop:
 	input:
-		read1_p1 = "reads_{ID}_p1_R1.fastq",
-		read2_p1 = "reads_{ID}_p1_R2.fastq",
-		read1_p2 = "reads_{ID}_p2_R1.fastq",
-		read2_p2 = "reads_{ID}_p2_R2.fastq"
+		read1_p1 = "iss_results/reads_{ID}_p1_R1.fastq",
+		read2_p1 = "iss_results/reads_{ID}_p1_R2.fastq",
+		read1_p2 = "iss_results/reads_{ID}_p2_R1.fastq",
+		read2_p2 = "iss_results/reads_{ID}_p2_R2.fastq"
 	output:
-		pread1_p1 = temp("trimmed_paired_R1_{ID}_p1.fastq"),
-		pread2_p1 = temp("trimmed_paired_R2_{ID}_p1.fastq"),
-		uread1_p1 = temp("trimmed_unpaired_R1_{ID}_p1.fastq"),
-		uread2_p1 = temp("trimmed_unpaired_R2_{ID}_p1.fastq"),
-		pread1_p2 = temp("trimmed_paired_R1_{ID}_p2.fastq"),
-		pread2_p2 = temp("trimmed_paired_R2_{ID}_p2.fastq"),
-		uread1_p2 = temp("trimmed_unpaired_R1_{ID}_p2.fastq"),
-		uread2_p2 = temp("trimmed_unpaired_R2_{ID}_p2.fastq"),
-		json_p1 = "{ID}_p1.json",
-		json_p2 = "{ID}_p2.json"
+		dpread1_p1 = temp("fastp_results/dedup_paired_R1_{ID}_p1.fastq"),
+		dpread2_p1 = temp("fastp_results/dedup_paired_R2_{ID}_p1.fastq"),
+		duread1_p1 = temp("fastp_results/dedup_unpaired_R1_{ID}_p1.fastq"),
+		duread2_p1 = temp("fastp_results/dedup_unpaired_R2_{ID}_p1.fastq"),
+		dpread1_p2 = temp("fastp_results/dedup_paired_R1_{ID}_p2.fastq"),
+		dpread2_p2 = temp("fastp_results/dedup_paired_R2_{ID}_p2.fastq"),
+		duread1_p2 = temp("fastp_results/dedup_unpaired_R1_{ID}_p2.fastq"),
+		duread2_p2 = temp("fastp_results/dedup_unpaired_R2_{ID}_p2.fastq"),
+		pread1_p1 = temp("fastp_results/trimmed_paired_R1_{ID}_p1.fastq"),
+		pread2_p1 = temp("fastp_results/trimmed_paired_R2_{ID}_p1.fastq"),
+		uread1_p1 = temp("fastp_results/trimmed_unpaired_R1_{ID}_p1.fastq"),
+		uread2_p1 = temp("fastp_results/trimmed_unpaired_R2_{ID}_p1.fastq"),
+		pread1_p2 = temp("fastp_results/trimmed_paired_R1_{ID}_p2.fastq"),
+		pread2_p2 = temp("fastp_results/trimmed_paired_R2_{ID}_p2.fastq"),
+		uread1_p2 = temp("fastp_results/trimmed_unpaired_R1_{ID}_p2.fastq"),
+		uread2_p2 = temp("fastp_results/trimmed_unpaired_R2_{ID}_p2.fastq"),
+		jsonR1R2_p1 = "fastp_results/{ID}_R1R2_p1.json",
+		jsonU1_p1 = "fastp_results/{ID}_U1_p1.json",
+		jsonU2_p1 = "fastp_results/{ID}_U2_p1.json",
+		jsonR1R2_p2 = "fastp_results/{ID}_R1R2_p2.json",
+		jsonU1_p2 = "fastp_results/{ID}_U1_p2.json",
+		jsonU2_p2 = "fastp_results/{ID}_U2_p2.json",
 	threads: 1
 	resources:
 		mem_mb_per_cpu=8000,
@@ -25,7 +37,22 @@ rule fastp_two_pop:
 		"logs/fastp/{ID}.log"
 	shell:
 		"""
-		fastp -u 40 -q 30 -l 31 --dedup --correction --json {output.json_p1} -i {input.read1_p1} -I {input.read2_p1} -o {output.pread1_p1} -O {output.pread2_p1} --unpaired1 {output.uread1_p1} --unpaired2 {output.uread2_p1} &> {log}
+		# population one
 
-		fastp -u 40 -q 30 -l 31 --dedup --correction --json {output.json_p2} -i {input.read1_p2} -I {input.read2_p2} -o {output.pread1_p2} -O {output.pread2_p2} --unpaired1 {output.uread1_p2} --unpaired2 {output.uread2_p2} &> {log}
+		## deduplicate and correct
+		fastp -u 40 -q 30 -l 31 --dedup --correction -i {input.read1_p1} -I {input.read2_p1} -o {output.dpread1_p1} -O {output.dpread2_p1} --unpaired1 {output.duread1_p1} --unpaired2 {output.duread2_p1} &> {log}
+		## trim low quality bases
+		fastp -Q -l 31 --cut_tail --cut_tail_window_size 1 --cut_tail_mean_quality 30 --json {output.jsonR1R2_p1} -i {output.dpread1_p1} -I {output.dpread2_p1} -o {output.pread1_p1} -O {output.pread2_p1} &> {log}
+		fastp -Q -l 31 --cut_tail --cut_tail_window_size 1 --cut_tail_mean_quality 30 --json {output.jsonU1_p1} -i {output.duread1_p1} -o {output.uread1_p1} &> {log}
+		fastp -Q -l 31 --cut_tail --cut_tail_window_size 1 --cut_tail_mean_quality 30 --json {output.jsonU2_p1} -i {output.duread2_p1} -o {output.uread2_p1} &> {log}
+
+		# population two
+
+		## deduplicate and correct
+		fastp -u 40 -q 30 -l 31 --dedup --correction -i {input.read1_p2} -I {input.read2_p2} -o {output.dpread1_p2} -O {output.dpread2_p2} --unpaired1 {output.duread1_p2} --unpaired2 {output.duread2_p2} &> {log}
+
+		## trim low quality bases
+		fastp -Q -l 31 --cut_tail --cut_tail_window_size 1 --cut_tail_mean_quality 30 --json {output.jsonR1R2_p2} -i {output.dpread1_p2} -I {output.dpread2_p2} -o {output.pread1_p2} -O {output.pread2_p2} &> {log}
+		fastp -Q -l 31 --cut_tail --cut_tail_window_size 1 --cut_tail_mean_quality 30 --json {output.jsonU1_p2} -i {output.duread1_p2} -o {output.uread1_p2} &> {log}
+		fastp -Q -l 31 --cut_tail --cut_tail_window_size 1 --cut_tail_mean_quality 30 --json {output.jsonU2_p2} -i {output.duread2_p2} -o {output.uread2_p2} &> {log}
 		"""

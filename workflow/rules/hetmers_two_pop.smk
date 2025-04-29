@@ -1,14 +1,16 @@
 rule hetmers_two_pop:
 	input:
-		p1="kmer_counts_{ID}_p1.txt",
-		p2="kmer_counts_{ID}_p2.txt"
+		p1="kmc_results/kmer_counts_{ID}_p1.txt",
+		p2="kmc_results/kmer_counts_{ID}_p2.txt"
 	output:
 		"hetmers_{ID}_p1_counts.csv",
 		"hetmers_{ID}_p1_empirical_freqs.csv",
+		"hetmers_{ID}_p1_bayes_states.csv",
 		"hetmers_{ID}_p1_hashes.csv",
 		"hetmers_{ID}_p1_seqs.csv",
 		"hetmers_{ID}_p2_counts.csv",
 		"hetmers_{ID}_p2_empirical_freqs.csv",
+		"hetmers_{ID}_p2_bayes_states.csv",
 		"hetmers_{ID}_p2_hashes.csv",
 		"hetmers_{ID}_p2_seqs.csv"
 	threads: 1
@@ -20,10 +22,12 @@ rule hetmers_two_pop:
 	benchmark:
 		"benchmarks/hetmers/{ID}.bench"
 	params:
-		mincount = config["mincount"]
+		mincount = config["mincount"],
+		pool = get_pool,
+		cov = get_cov
 	shell:
 		"""
-		./scripts/hetmers --inputs {input.p1} --outputs hetmers_{wildcards.ID}_p1 --coverages 1 --pools 1 --alphas 1 --betas 1 --minimums {params.mincount} &> {log}
+		./scripts/hetmers --inputs {input.p1} --outputs hetmers_{wildcards.ID}_p1 --coverages {params.cov} --pools {params.pool} --alphas 1 --betas 1 --minimums {params.mincount} &> {log}
 
-		./scripts/hetmers --inputs {input.p2} --outputs hetmers_{wildcards.ID}_p2 --coverages 1 --pools 1 --alphas 1 --betas 1 --minimums {params.mincount} &> {log}
+		./scripts/hetmers --inputs {input.p2} --outputs hetmers_{wildcards.ID}_p2 --coverages {params.cov} --pools {params.pool} --alphas 1 --betas 1 --minimums {params.mincount} &> {log}
                 """

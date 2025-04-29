@@ -20,9 +20,9 @@ def get_wd(wildcards):
 
 rule poolsnp_two_pop:
 	input:
-		reffasta = "ref_{ID}_p1.fasta",
-		trimbam_p1 = "trimmed_{ID}_p1.bam",
-		trimbam_p2 = "trimmed_{ID}_p2.bam"
+		reffasta = "seqkit_results/ref_{ID}_p1.fasta",
+		trimbam_p1 = "bwa_results/{ID}_p1.bam",
+		trimbam_p2 = "bwa_results/{ID}_p2.bam"
 	output:
 		vcf_p1 = "{ID}_p1_poolsnp_output.vcf.gz",
 		#cov_p1 = "{ID}_p1_poolsnp_output-cov-0.98.txt",

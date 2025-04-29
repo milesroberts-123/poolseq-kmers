@@ -1,12 +1,10 @@
-# k-mer length
+# k-mer length/minimum read trim length
 
-# pA
+# quality threshold for dropping reads
 
-# pC
+# quality score for read trimming
 
-# pG
-
-# pT
+# window length for read trimming
 
 # minimum k-mer count threshold
 mincount: 5

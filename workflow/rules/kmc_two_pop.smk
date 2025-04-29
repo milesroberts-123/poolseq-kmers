@@ -1,16 +1,16 @@
 rule kmc_two_pop:
 	input:
-                pread1_p1 = "trimmed_paired_R1_{ID}_p1.fastq",
-                pread2_p1 = "trimmed_paired_R2_{ID}_p1.fastq",
-                uread1_p1 = "trimmed_unpaired_R1_{ID}_p1.fastq",
-                uread2_p1 = "trimmed_unpaired_R2_{ID}_p1.fastq",
-                pread1_p2 = "trimmed_paired_R1_{ID}_p2.fastq",
-                pread2_p2 = "trimmed_paired_R2_{ID}_p2.fastq",
-                uread1_p2 = "trimmed_unpaired_R1_{ID}_p2.fastq",
-                uread2_p2 = "trimmed_unpaired_R2_{ID}_p2.fastq"
+                pread1_p1 = "fastp_results/trimmed_paired_R1_{ID}_p1.fastq",
+                pread2_p1 = "fastp_results/trimmed_paired_R2_{ID}_p1.fastq",
+                uread1_p1 = "fastp_results/trimmed_unpaired_R1_{ID}_p1.fastq",
+                uread2_p1 = "fastp_results/trimmed_unpaired_R2_{ID}_p1.fastq",
+                pread1_p2 = "fastp_results/trimmed_paired_R1_{ID}_p2.fastq",
+                pread2_p2 = "fastp_results/trimmed_paired_R2_{ID}_p2.fastq",
+                uread1_p2 = "fastp_results/trimmed_unpaired_R1_{ID}_p2.fastq",
+                uread2_p2 = "fastp_results/trimmed_unpaired_R2_{ID}_p2.fastq"
 	output:
-		p1="kmer_counts_{ID}_p1.txt",
-		p2="kmer_counts_{ID}_p2.txt"
+		p1=temp("kmc_results/kmer_counts_{ID}_p1.txt"),
+		p2=temp("kmc_results/kmer_counts_{ID}_p2.txt")
 	threads: 1
 	resources:
 		mem_mb_per_cpu=8000,

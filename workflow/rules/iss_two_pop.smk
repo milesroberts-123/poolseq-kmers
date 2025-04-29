@@ -16,13 +16,13 @@ def get_sequencer(wildcards):
 
 rule iss_two_pop:
 	input:
-		p1="samples_{ID}_p1.fasta",
-		p2="samples_{ID}_p2.fasta"
+		p1="seqkit_results/samples_{ID}_p1.fasta",
+		p2="seqkit_results/samples_{ID}_p2.fasta"
 	output:
-		temp("reads_{ID}_p1_R1.fastq"),
-		temp("reads_{ID}_p1_R2.fastq"),
-		temp("reads_{ID}_p2_R1.fastq"),
-		temp("reads_{ID}_p2_R2.fastq")
+		temp("iss_results/reads_{ID}_p1_R1.fastq"),
+		temp("iss_results/reads_{ID}_p1_R2.fastq"),
+		temp("iss_results/reads_{ID}_p2_R1.fastq"),
+		temp("iss_results/reads_{ID}_p2_R2.fastq")
 	threads: 8
 	resources:
 		mem_mb_per_cpu=2000,
@@ -55,6 +55,6 @@ rule iss_two_pop:
 			nreads=$(({params.L}*{params.cov}/125))
 		fi
 
-		iss generate -g {input.p1} --cpus {threads} --model {params.sequencer} -n $nreads --abundance uniform --output reads_{wildcards.ID}_p1 &> {log}
-		iss generate -g {input.p2} --cpus {threads} --model {params.sequencer} -n $nreads --abundance uniform --output reads_{wildcards.ID}_p2 &> {log}
+		iss generate -g {input.p1} --cpus {threads} --model {params.sequencer} -n $nreads --abundance uniform --output iss_results/reads_{wildcards.ID}_p1 &> {log}
+		iss generate -g {input.p2} --cpus {threads} --model {params.sequencer} -n $nreads --abundance uniform --output iss_results/reads_{wildcards.ID}_p2 &> {log}
 		"""

@@ -11,10 +11,6 @@ recombination_rates = c(1e-8)
 
 shapes = c(4, 1e6)
 
-#sample_sizes = c(25, 50, 75, 100)
-#coverages = c(50, 100, 150, 200)
-#sequencers = c("miseq", "hiseq", "nextseq", "novaseq")
-
 chrom_length = 2e6
 
 # create data frame of workflow parameters
@@ -78,7 +74,7 @@ sweep_params = expand.grid(
   n = sample_sizes,
   #h = c(0, 0.5, 1)
   h = c(0.5),
-  Nes = c(10, 25, 50, 100),
+  Nes = c(5, 10, 25, 50, 100),
   #s = 0.1,
   sigma = c(0),
   mu = mutation_rates,
@@ -99,14 +95,14 @@ sweep_params = expand.grid(
   tau = 0
 )
 
-# selection coefficient
+# convert Nes to selection coefficient
 sweep_params$s = sweep_params$Nes/sweep_params$N
 
 # combine all parameters into one table
-#params = bind_rows(one_pop_params, two_pop_params, sweep_params)
+params = bind_rows(one_pop_params, two_pop_params, sweep_params)
 #params = bind_rows(one_pop_params, two_pop_params)
 #params = bind_rows(one_pop_params, sweep_params)
-params = sweep_params
+#params = sweep_params
 
 # add simulation id
 params$ID = 1:nrow(params)

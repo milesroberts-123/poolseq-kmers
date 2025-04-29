@@ -1,18 +1,18 @@
 rule bwa_two_pop:
 	input:
-		reffasta = "ref_{ID}_p1.fasta",
-		read1_p1 = "trimmed_paired_R1_{ID}_p1.fastq",
-		read2_p1 = "trimmed_paired_R2_{ID}_p1.fastq",
-		read1_p2 = "trimmed_paired_R1_{ID}_p2.fastq",
-		read2_p2 = "trimmed_paired_R2_{ID}_p2.fastq"
+		reffasta = "seqkit_results/ref_{ID}_p1.fasta",
+		read1_p1 = "fastp_results/trimmed_paired_R1_{ID}_p1.fastq",
+		read2_p1 = "fastp_results/trimmed_paired_R2_{ID}_p1.fastq",
+		read1_p2 = "fastp_results/trimmed_paired_R1_{ID}_p2.fastq",
+		read2_p2 = "fastp_results/trimmed_paired_R2_{ID}_p2.fastq"
 	output:
-		bam_p1 = temp("trimmed_{ID}_p1.bam"),
-		bam_p2 = temp("trimmed_{ID}_p2.bam"),
-		amb = temp("ref_{ID}_p1.fasta.amb"),
-		ann = temp("ref_{ID}_p1.fasta.ann"),
-		bwt = temp("ref_{ID}_p1.fasta.bwt"),
-		pac = temp("ref_{ID}_p1.fasta.pac"),
-		sa = temp("ref_{ID}_p1.fasta.sa")
+		bam_p1 = temp("bwa_results/{ID}_p1.bam"),
+		bam_p2 = temp("bwa_results/{ID}_p2.bam"),
+		amb = temp("seqkit_results/ref_{ID}_p1.fasta.amb"),
+		ann = temp("seqkit_results/ref_{ID}_p1.fasta.ann"),
+		bwt = temp("seqkit_results/ref_{ID}_p1.fasta.bwt"),
+		pac = temp("seqkit_results/ref_{ID}_p1.fasta.pac"),
+		sa = temp("seqkit_results/ref_{ID}_p1.fasta.sa")
 	threads: 2
 	resources:
 		mem_mb_per_cpu=8000,

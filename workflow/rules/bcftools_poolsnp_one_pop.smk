@@ -1,6 +1,6 @@
 rule bcftools_poolsnp_one_pop:
 	input:
-		ref = "seqkit_results/ref_{ID}.fasta",
+		#ref = "seqkit_results/ref_{ID}.fasta",
 		vcf = "{ID}_poolsnp_output.vcf.gz",
 	output:
 		tbi = temp("{ID}_poolsnp_output.vcf.gz.tbi"),
