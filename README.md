@@ -78,7 +78,9 @@ snakemake --cluster "sbatch --time={resources.time} --cpus-per-task={threads} --
 
 - [x] put rule outputs in separate folders
 
-- [ ] add script to model QTLs in a mapping population
+- [x] add script to model QTLs in a mapping population
+
+- [ ] mark kmc output files as temp files
 
 - [ ] generalize bayes theorem to negative binomial distribution
 
