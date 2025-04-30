@@ -12,14 +12,14 @@ rule discosnp_one_pop:
 		sa = "seqkit_results/ref_{ID}.fasta.sa"
 	output:
 		#tmpread = temp("tmp_read_set_{ID}.fastq"),
-		fasta = temp("discoRes_{ID}_k_31_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_coherent.fa"),
+		fasta = temp("discoRes_{ID}_" + str(config["k"]) + "_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_coherent.fa"),
 		fof = temp("fof_{ID}.txt"),
 		fof_reads = temp("fof_reads_{ID}.txt"),
-		vcf = "discoRes_{ID}_k_31_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_coherent.vcf",
-		h5 = temp("discoRes_{ID}_k_31_c_" + str(config["mincount"]) + "_cov.h5"),
-		sam = temp("discoRes_{ID}_k_31_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_coherentBWA_MEM.sam"),
-		igv = temp("discoRes_{ID}_k_31_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_coherent_for_IGV.vcf"),
-		uncofa = temp("discoRes_{ID}_k_31_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_uncoherent.fa")
+		vcf = "discoRes_{ID}_" + str(config["k"]) + "_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_coherent.vcf",
+		h5 = temp("discoRes_{ID}_" + str(config["k"]) + "_c_" + str(config["mincount"]) + "_cov.h5"),
+		sam = temp("discoRes_{ID}_" + str(config["k"]) + "_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_coherentBWA_MEM.sam"),
+		igv = temp("discoRes_{ID}_" + str(config["k"]) + "_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_coherent_for_IGV.vcf"),
+		uncofa = temp("discoRes_{ID}_" + str(config["k"]) + "_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_uncoherent.fa")
 	threads: 1
 	resources:
 		mem_mb_per_cpu=16000,
@@ -33,7 +33,8 @@ rule discosnp_one_pop:
 		"benchmarks/discosnp/{ID}.bench"
 	params:
 		prefix = "discoRes_{ID}",
-		mincount = config["mincount"]
+		mincount = config["mincount"],
+		k = config["k"]
 	priority: 100
 	shell:
 		"""
@@ -58,5 +59,5 @@ rule discosnp_one_pop:
 		fi
 
 		# run discosnp, with results for mapping SNPs to reference
-		run_discoSnp++.sh -r {output.fof} -c {params.mincount} -G {input.ref} -p {params.prefix}
+		run_discoSnp++.sh -r {output.fof} -c {params.mincount} -k {params.k} -G {input.ref} -p {params.prefix} &> {log}
 		"""

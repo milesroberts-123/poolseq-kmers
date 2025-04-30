@@ -1,12 +1,17 @@
 # k-mer length/minimum read trim length
+k: 31
 
-# quality threshold for dropping reads
+# unqualified_percent_limit for fastp: how many percents of bases are allowed to be unqualified in terms of quality score
+unqualLimit: 40
 
 # quality score for read trimming
+qualThresh: 30
 
 # window length for read trimming
+windowLength: 1
 
 # minimum k-mer count threshold
 mincount: 5
 
 # e-value for blast
+blastEvalue: 0.0000000001

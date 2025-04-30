@@ -35,24 +35,30 @@ rule fastp_two_pop:
 		"../envs/fastp.yaml"
 	log: 
 		"logs/fastp/{ID}.log"
+	params:
+		unqualLimit = config["unqualLimit"],
+		k = config["k"],
+		qualThresh = config["qualThresh"],
+		windowLength = config["windowLength"],
 	shell:
 		"""
 		# population one
 
 		## deduplicate and correct
-		fastp -u 40 -q 30 -l 31 --dedup --correction -i {input.read1_p1} -I {input.read2_p1} -o {output.dpread1_p1} -O {output.dpread2_p1} --unpaired1 {output.duread1_p1} --unpaired2 {output.duread2_p1} &> {log}
+		fastp -u {params.unqualLimit} -q {params.qualThresh} --dedup --correction -i {input.read1_p1} -I {input.read2_p1} -o {output.dpread1_p1} -O {output.dpread2_p1} --unpaired1 {output.duread1_p1} --unpaired2 {output.duread2_p1} &>> {log}
+
 		## trim low quality bases
-		fastp -Q -l 31 --cut_tail --cut_tail_window_size 1 --cut_tail_mean_quality 30 --json {output.jsonR1R2_p1} -i {output.dpread1_p1} -I {output.dpread2_p1} -o {output.pread1_p1} -O {output.pread2_p1} &> {log}
-		fastp -Q -l 31 --cut_tail --cut_tail_window_size 1 --cut_tail_mean_quality 30 --json {output.jsonU1_p1} -i {output.duread1_p1} -o {output.uread1_p1} &> {log}
-		fastp -Q -l 31 --cut_tail --cut_tail_window_size 1 --cut_tail_mean_quality 30 --json {output.jsonU2_p1} -i {output.duread2_p1} -o {output.uread2_p1} &> {log}
+		fastp -Q -l {params.k} --cut_tail --cut_tail_window_size {params.windowLength} --cut_tail_mean_quality {params.qualThresh} --json {output.jsonR1R2_p1} -i {output.dpread1_p1} -I {output.dpread2_p1} -o {output.pread1_p1} -O {output.pread2_p1} &>> {log}
+		fastp -Q -l {params.k} --cut_tail --cut_tail_window_size {params.windowLength} --cut_tail_mean_quality {params.qualThresh} --json {output.jsonU1_p1} -i {output.duread1_p1} -o {output.uread1_p1} &>> {log}
+		fastp -Q -l {params.k} --cut_tail --cut_tail_window_size {params.windowLength} --cut_tail_mean_quality {params.qualThresh} --json {output.jsonU2_p1} -i {output.duread2_p1} -o {output.uread2_p1} &>> {log}
 
 		# population two
 
 		## deduplicate and correct
-		fastp -u 40 -q 30 -l 31 --dedup --correction -i {input.read1_p2} -I {input.read2_p2} -o {output.dpread1_p2} -O {output.dpread2_p2} --unpaired1 {output.duread1_p2} --unpaired2 {output.duread2_p2} &> {log}
+		fastp -u {params.unqualLimit} -q {params.qualThresh} --dedup --correction -i {input.read1_p2} -I {input.read2_p2} -o {output.dpread1_p2} -O {output.dpread2_p2} --unpaired1 {output.duread1_p2} --unpaired2 {output.duread2_p2} &>> {log}
 
 		## trim low quality bases
-		fastp -Q -l 31 --cut_tail --cut_tail_window_size 1 --cut_tail_mean_quality 30 --json {output.jsonR1R2_p2} -i {output.dpread1_p2} -I {output.dpread2_p2} -o {output.pread1_p2} -O {output.pread2_p2} &> {log}
-		fastp -Q -l 31 --cut_tail --cut_tail_window_size 1 --cut_tail_mean_quality 30 --json {output.jsonU1_p2} -i {output.duread1_p2} -o {output.uread1_p2} &> {log}
-		fastp -Q -l 31 --cut_tail --cut_tail_window_size 1 --cut_tail_mean_quality 30 --json {output.jsonU2_p2} -i {output.duread2_p2} -o {output.uread2_p2} &> {log}
+		fastp -Q -l {params.k} --cut_tail --cut_tail_window_size {params.windowLength} --cut_tail_mean_quality {params.qualThresh} --json {output.jsonR1R2_p2} -i {output.dpread1_p2} -I {output.dpread2_p2} -o {output.pread1_p2} -O {output.pread2_p2} &>> {log}
+		fastp -Q -l {params.k} --cut_tail --cut_tail_window_size {params.windowLength} --cut_tail_mean_quality {params.qualThresh} --json {output.jsonU1_p2} -i {output.duread1_p2} -o {output.uread1_p2} &>> {log}
+		fastp -Q -l {params.k} --cut_tail --cut_tail_window_size {params.windowLength} --cut_tail_mean_quality {params.qualThresh} --json {output.jsonU2_p2} -i {output.duread2_p2} -o {output.uread2_p2} &>> {log}
 		"""

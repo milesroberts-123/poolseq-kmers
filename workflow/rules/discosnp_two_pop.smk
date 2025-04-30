@@ -16,14 +16,14 @@ rule discosnp_two_pop:
 		sa = "seqkit_results/ref_{ID}_p1.fasta.sa"
 	output:
 		#tmpread_p1 = "tmp_read_set_{ID}_p1.fastq",
-		fasta_p1 = temp("discoRes_{ID}_p1_k_31_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_coherent.fa"),
+		fasta_p1 = temp("discoRes_{ID}_p1_" + str(config["k"]) + "_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_coherent.fa"),
 		fof = temp("fof_{ID}.txt"),
 		fof_p1 = temp("fof_{ID}_p1.txt"),
-		vcf_p1 = "discoRes_{ID}_p1_k_31_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_coherent.vcf",
+		vcf_p1 = "discoRes_{ID}_p1_" + str(config["k"]) + "_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_coherent.vcf",
 		#tmpread_p2 = "tmp_read_set_{ID}_p2.fastq",
-		fasta_p2 = temp("discoRes_{ID}_p2_k_31_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_coherent.fa"),
+		fasta_p2 = temp("discoRes_{ID}_p2_" + str(config["k"]) + "_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_coherent.fa"),
 		fof_p2 = temp("fof_{ID}_p2.txt"),
-		vcf_p2 = "discoRes_{ID}_p2_k_31_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_coherent.vcf"
+		vcf_p2 = "discoRes_{ID}_p2_" + str(config["k"]) + "_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_coherent.vcf"
 	threads: 1
 	resources:
 		mem_mb_per_cpu=16000,
@@ -36,7 +36,8 @@ rule discosnp_two_pop:
 	params:
 		prefix_p1 = "discoRes_{ID}_p1",
 		prefix_p2 = "discoRes_{ID}_p2",
-		mincount = config["mincount"]
+		mincount = config["mincount"],
+		k = config["k"]
 	priority: 100
 	shell:
 		"""
@@ -83,5 +84,5 @@ rule discosnp_two_pop:
 			echo {input.uread2_p2} >> {output.fof_p2}
 		fi
 
-		run_discoSnp++.sh -r {output.fof} -c {params.mincount} -G {input.ref} -p {params.prefix_p2}
+		run_discoSnp++.sh -r {output.fof} -c {params.mincount} -k {params.k} -G {input.ref} -p {params.prefix_p2}
 		"""

@@ -22,13 +22,18 @@ rule fastp_one_pop:
 		"../envs/fastp.yaml"
 	log: 
 		"logs/fastp/{ID}.log"
+	params:
+		unqualLimit = config["unqualLimit"],
+		k = config["k"],
+		qualThresh = config["qualThresh"],
+		windowLength = config["windowLength"],
 	shell:
 		"""
 		# remove duplicates, do read correction, drop low quality reads
-		fastp -u 40 -q 25 --dedup --correction -i {input.read1} -I {input.read2} -o {output.dpread1} -O {output.dpread2} --unpaired1 {output.duread1} --unpaired2 {output.duread2} &> {log}
+		fastp -u {params.unqualLimit} -q {params.qualThresh} --dedup --correction -i {input.read1} -I {input.read2} -o {output.dpread1} -O {output.dpread2} --unpaired1 {output.duread1} --unpaired2 {output.duread2} &> {log}
 
 		# trim low quality bases
-		fastp -Q -l 31 --cut_tail --cut_tail_window_size 1 --cut_tail_mean_quality 30 --json {output.jsonR1R2} -i {output.dpread1} -I {output.dpread2} -o {output.pread1} -O {output.pread2} &> {log}
-		fastp -Q -l 31 --cut_tail --cut_tail_window_size 1 --cut_tail_mean_quality 30 --json {output.jsonU1} -i {output.duread1} -o {output.uread1} &> {log}
-		fastp -Q -l 31 --cut_tail --cut_tail_window_size 1 --cut_tail_mean_quality 30 --json {output.jsonU2} -i {output.duread2} -o {output.uread2} &> {log}
+		fastp -Q -l {params.k} --cut_tail --cut_tail_window_size {params.windowLength} --cut_tail_mean_quality {params.qualThresh} --json {output.jsonR1R2} -i {output.dpread1} -I {output.dpread2} -o {output.pread1} -O {output.pread2} &> {log}
+		fastp -Q -l {params.k} --cut_tail --cut_tail_window_size {params.windowLength} --cut_tail_mean_quality {params.qualThresh} --json {output.jsonU1} -i {output.duread1} -o {output.uread1} &> {log}
+		fastp -Q -l {params.k} --cut_tail --cut_tail_window_size {params.windowLength} --cut_tail_mean_quality {params.qualThresh} --json {output.jsonU2} -i {output.duread2} -o {output.uread2} &> {log}
 		"""

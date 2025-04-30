@@ -18,9 +18,11 @@ rule blast:
 	resources:
 		mem_mb_per_cpu=8000,
 		time=239
+	params:
+		blastEvalue = config["blastEvalue"]
 	shell:
 		"""
 		makeblastdb -in {input.ref} -title $(basename {input.ref} .fasta) -dbtype nucl -out $(basename {input.ref} .fasta)
 
-		blastn -query {input.unitigs} -db $(basename {input.ref} .fasta) -out {output.alignments} -max_target_seqs 1 -evalue 1e-10 -outfmt 6
+		blastn -query {input.unitigs} -db $(basename {input.ref} .fasta) -out {output.alignments} -max_target_seqs 1 -evalue {params.blastEvalue} -outfmt 6
 		"""

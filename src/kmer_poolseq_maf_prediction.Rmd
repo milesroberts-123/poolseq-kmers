@@ -1485,7 +1485,7 @@ plot_unitigs_shape_breakdown = ggplot(plotdata_unitigs, aes(x = sc, color = as.f
   geom_density() +
   theme_classic() +
   theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) +
-  facet_grid(shape ~ .) +
+  facet_grid(shape + cov ~ .) +
   geom_vline(xintercept = 2e6/2, lty = 2, lwd = 1) +
   labs(x = "Center of longest unitig", color = "Nes", title = "Pool size")
 
