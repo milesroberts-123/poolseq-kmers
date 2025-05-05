@@ -54,6 +54,8 @@ snakemake --cluster "sbatch --time={resources.time} --cpus-per-task={threads} --
 
 ## to do
 
+### higher priority
+
 - [x] add option to vary sequencing machine
 
 - [x] add rule to remove regions from references
@@ -84,13 +86,15 @@ snakemake --cluster "sbatch --time={resources.time} --cpus-per-task={threads} --
 
 - [x] add more parameters to config.yaml
 
-- [ ] figure out way to run workflow in batches
-
 - [ ] parallelize discosnp
+
+- [ ] write hetmers binary to calculate fst
 
 - [ ] generalize bayes theorem to negative binomial distribution
 
-- [ ] write hetmers binary to calculate fst
+### lower priority
+
+- [ ] figure out way to run workflow in batches?
 
 - [ ] update to smudgeplot >0.3.0, once we're able to get k-mer sequences again
 

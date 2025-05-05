@@ -20,9 +20,9 @@ rule poolsnp_one_pop:
 		reffasta = "seqkit_results/ref_{ID}.fasta",
 		trimbam = "bwa_results/{ID}.bam"
 	output:
-		vcf = "{ID}_poolsnp_output.vcf.gz",
-		cov = "{ID}_poolsnp_output-cov-0.9999.txt",
-		bs = "{ID}_poolsnp_output_BS.txt.gz",
+		vcf = temp("{ID}_poolsnp_output.vcf.gz"),
+		cov = temp("{ID}_poolsnp_output-cov-0.9999.txt"),
+		bs = temp("{ID}_poolsnp_output_BS.txt.gz"),
 		mpileup = temp("{ID}.mpileup")
 	params:
 		#names = get_names,
