@@ -69,7 +69,7 @@ rule discosnp_one_pop:
 		# run discosnp, with results for mapping SNPs to reference
 		cd tmp_discosnp_{wildcards.ID}
 
-		run_discoSnp++.sh -r ../{output.fof} -c {params.mincount} -k {params.k} -G {input.ref} -p {params.prefix} &> ../{log}
+		run_discoSnp++.sh -r ../{output.fof} -c {params.mincount} -k {params.k} -G ../{input.ref} -p {params.prefix} &> ../{log}
 
 		# move output from temp directory
 		mv {params.prefix}* ..
