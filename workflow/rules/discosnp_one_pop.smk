@@ -12,14 +12,14 @@ rule discosnp_one_pop:
 		sa = "seqkit_results/ref_{ID}.fasta.sa"
 	output:
 		#tmpread = temp("tmp_read_set_{ID}.fastq"),
-		fasta = temp("discoRes_{ID}_" + str(config["k"]) + "_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_coherent.fa"),
+		fasta = temp("discoRes_{ID}_k_" + str(config["k"]) + "_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_coherent.fa"),
 		fof = temp("fof_{ID}.txt"),
 		fof_reads = temp("fof_reads_{ID}.txt"),
-		vcf = temp("discoRes_{ID}_" + str(config["k"]) + "_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_coherent.vcf"),
-		h5 = temp("discoRes_{ID}_" + str(config["k"]) + "_c_" + str(config["mincount"]) + "_cov.h5"),
-		sam = temp("discoRes_{ID}_" + str(config["k"]) + "_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_coherentBWA_MEM.sam"),
-		igv = temp("discoRes_{ID}_" + str(config["k"]) + "_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_coherent_for_IGV.vcf"),
-		uncofa = temp("discoRes_{ID}_" + str(config["k"]) + "_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_uncoherent.fa"),
+		vcf = temp("discoRes_{ID}_k_" + str(config["k"]) + "_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_coherent.vcf"),
+		h5 = temp("discoRes_{ID}_k_" + str(config["k"]) + "_c_" + str(config["mincount"]) + "_cov.h5"),
+		sam = temp("discoRes_{ID}_k_" + str(config["k"]) + "_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_coherentBWA_MEM.sam"),
+		igv = temp("discoRes_{ID}_k_" + str(config["k"]) + "_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_coherent_for_IGV.vcf"),
+		uncofa = temp("discoRes_{ID}_k_" + str(config["k"]) + "_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_uncoherent.fa"),
 		corres = temp("discoRes_{ID}_read_files_correspondance.txt")
 	threads: 1
 	resources:
