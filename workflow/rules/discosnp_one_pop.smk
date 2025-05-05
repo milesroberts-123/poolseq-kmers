@@ -38,26 +38,40 @@ rule discosnp_one_pop:
 	priority: 100
 	shell:
 		"""
+		# create temp directory
+		if [ -d "tmp_discosnp_{wildcards.ID}" ]; then
+			rm -r tmp_discosnp_{wildcards.ID}
+		fi
+
+		mkdir tmp_discosnp_{wildcards.ID}
+
 		# create file of files
-		echo "{output.fof_reads}" > {output.fof}
+		echo "../{output.fof_reads}" > {output.fof}
 
 		# check each file for being empty, use only non-empty files
 		if [ -s {input.pread1} ]; then
-			echo {input.pread1} >> {output.fof_reads}
+			echo "../{input.pread1}" >> {output.fof_reads}
 		fi
 
 		if [ -s {input.pread2} ]; then
-			echo {input.pread2} >> {output.fof_reads}
+			echo "../{input.pread2}" >> {output.fof_reads}
 		fi
 
 		if [ -s {input.uread1} ]; then
-			echo {input.uread1} >> {output.fof_reads}
+			echo "../{input.uread1}" >> {output.fof_reads}
 		fi
 
 		if [ -s {input.uread2} ]; then
-			echo {input.uread2} >> {output.fof_reads}
+			echo "../{input.uread2}" >> {output.fof_reads}
 		fi
 
 		# run discosnp, with results for mapping SNPs to reference
-		run_discoSnp++.sh -r {output.fof} -c {params.mincount} -k {params.k} -G {input.ref} -p {params.prefix} &> {log}
+		cd tmp_discosnp_{wildcards.ID}
+
+		run_discoSnp++.sh -r ../{output.fof} -c {params.mincount} -k {params.k} -G {input.ref} -p {params.prefix} &> {log}
+
+		# move output from temp directory
+		mv {params.prefix}* ..
+
+		rm -r tmp_discosnp_{wildcards.ID}
 		"""

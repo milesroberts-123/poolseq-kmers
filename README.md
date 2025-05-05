@@ -84,6 +84,10 @@ snakemake --cluster "sbatch --time={resources.time} --cpus-per-task={threads} --
 
 - [x] add more parameters to config.yaml
 
+- [ ] figure out way to run workflow in batches
+
+- [ ] parallelize discosnp
+
 - [ ] generalize bayes theorem to negative binomial distribution
 
 - [ ] write hetmers binary to calculate fst
