@@ -86,7 +86,9 @@ snakemake --cluster "sbatch --time={resources.time} --cpus-per-task={threads} --
 
 - [x] add more parameters to config.yaml
 
-- [ ] parallelize discosnp
+- [x] parallelize discosnp for one population
+
+- [x] parallelize discosnp for two populations
 
 - [ ] write hetmers binary to calculate fst
 
