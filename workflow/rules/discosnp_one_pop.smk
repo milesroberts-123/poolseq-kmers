@@ -74,5 +74,7 @@ rule discosnp_one_pop:
 		# move output from temp directory
 		mv {params.prefix}* ..
 
+		# delete temporary directory
+		cd ..
 		rm -r tmp_discosnp_{wildcards.ID}
 		"""
