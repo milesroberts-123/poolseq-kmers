@@ -15,16 +15,17 @@ rule discosnp_one_pop:
 		fasta = temp("discoRes_{ID}_" + str(config["k"]) + "_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_coherent.fa"),
 		fof = temp("fof_{ID}.txt"),
 		fof_reads = temp("fof_reads_{ID}.txt"),
-		vcf = "discoRes_{ID}_" + str(config["k"]) + "_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_coherent.vcf",
+		vcf = temp("discoRes_{ID}_" + str(config["k"]) + "_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_coherent.vcf"),
 		h5 = temp("discoRes_{ID}_" + str(config["k"]) + "_c_" + str(config["mincount"]) + "_cov.h5"),
 		sam = temp("discoRes_{ID}_" + str(config["k"]) + "_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_coherentBWA_MEM.sam"),
 		igv = temp("discoRes_{ID}_" + str(config["k"]) + "_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_coherent_for_IGV.vcf"),
-		uncofa = temp("discoRes_{ID}_" + str(config["k"]) + "_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_uncoherent.fa")
+		uncofa = temp("discoRes_{ID}_" + str(config["k"]) + "_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_uncoherent.fa"),
+		corres = temp("discoRes_{ID}_read_files_correspondance.txt")
 	threads: 1
 	resources:
 		mem_mb_per_cpu=16000,
 		time=239,
-		load = 1
+		#load = 1
 	conda:
 		"../envs/discosnp.yaml"
 	log: 

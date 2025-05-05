@@ -1,7 +1,7 @@
 rule bcftools_discosnp_one_pop:
 	input:
 		ref = "seqkit_results/ref_{ID}.fasta",
-		vcf = "discoRes_{ID}_k_31_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_coherent.vcf",
+		vcf = "discoRes_{ID}_k_" + str(config["k"]) + "_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_coherent.vcf",
 	output:
 		fai = temp("seqkit_results/ref_{ID}.fasta.fai"),
 		header = temp("discoRes_header_{ID}.vcf"),
