@@ -22,6 +22,10 @@ def get_L(wildcards):
         L = parameters.loc[parameters["ID"] == wildcards.ID, "L"]
         return int(L.iloc[0])
 
+def get_shuffle(wildcards):
+        shuffle = parameters.loc[parameters["ID"] == wildcards.ID, "shuffle"]
+        return shuffle.iloc[0]
+
 rule ancestral_genome:
 	input:
 		"../config/parameters.tsv"
@@ -37,6 +41,8 @@ rule ancestral_genome:
 		pT=get_pT,
 		shape=get_shape,
 		L=get_L,
+		k=config["k"],
+		shuffleKmers=get_shuffle
 	conda:
 		"../envs/R.yaml"
 	threads: 1
@@ -44,4 +50,4 @@ rule ancestral_genome:
 		mem_mb_per_cpu=8000,
 		time=239
 	shell:
-		"Rscript scripts/random_genome.R {params.pA} {params.pC} {params.pG} {params.pT} {params.shape} 31 {params.L} {wildcards.ID} &> {log}"
+		"Rscript scripts/random_genome.R {params.pA} {params.pC} {params.pG} {params.pT} {params.shape} {params.k} {params.L} {wildcards.ID} {params.shuffleKmers} &> {log}"

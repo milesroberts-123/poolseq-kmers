@@ -12,7 +12,8 @@ shape = as.numeric(args[5])
 k = as.numeric(args[6])
 L = as.numeric(args[7])
 ID = as.numeric(args[8])
-countKmers = as.numeric(args[8])
+#countKmers = as.numeric(args[8])
+shuffleKmers = as.logical(args[9])
 
 alphabet = c("A", "C", "G", "T")
 
@@ -37,8 +38,10 @@ while(k*length(total_genome) < L){
 }
 
 # randomly order vector elements
-print("Randomly ordering k-mers...")
-total_genome = sample(total_genome, replace = F)
+if(shuffleKmers){
+	print("Randomly ordering k-mers...")
+	total_genome = sample(total_genome, replace = F)
+}
 
 # concatenate k-mers together
 print("Concatenating shuffled k-mers...")

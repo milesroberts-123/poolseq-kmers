@@ -1,16 +1,17 @@
 library("dplyr") 
 
-replicates = 1
-sample_sizes = c(25, 50, 75, 100)
-coverages = c(50, 100, 150, 200)
-sequencers = c("miseq", "hiseq", "nextseq", "novaseq")
+replicates = 1:3
+sample_sizes = c(50, 75, 100)
+coverages = c(100, 150, 200)
+sequencers = c("miseq")
+#sequencers = c("miseq", "hiseq", "nextseq", "novaseq")
 
 population_sizes = c(1000)
 mutation_rates = c(1e-8)
 recombination_rates = c(1e-8)
 
-shapes = c(4, 1e6)
-
+shapes = c(4.22, 1e6)
+shuffle = c(TRUE, FALSE)
 chrom_length = 2e6
 
 # create data frame of workflow parameters
@@ -27,6 +28,7 @@ one_pop_params = expand.grid(
   sequencer = sequencers,
   simtype = "onepop",
   shape = shapes,
+  shuffle = shuffle,
   pA = 0.25,
   pC = 0.25,
   pG = 0.25,
@@ -56,6 +58,7 @@ two_pop_params = expand.grid(
   L = chrom_length,
   sequencer = sequencers,
   shape = shapes,
+  shuffle = shuffle,
   pA = 0.25,
   pC = 0.25,
   pG = 0.25,
@@ -74,7 +77,7 @@ sweep_params = expand.grid(
   n = sample_sizes,
   #h = c(0, 0.5, 1)
   h = c(0.5),
-  Nes = c(5, 10, 25, 50, 100),
+  Nes = c(10, 25, 50, 100),
   #s = 0.1,
   sigma = c(0),
   mu = mutation_rates,
@@ -83,6 +86,7 @@ sweep_params = expand.grid(
   L = chrom_length,
   sequencer = sequencers,
   shape = shapes,
+  shuffle = shuffle,
   pA = 0.25,
   pC = 0.25,
   pG = 0.25,

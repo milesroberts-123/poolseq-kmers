@@ -97,9 +97,9 @@ rule discosnp_two_pop:
 		# run discosnp, with results for mapping SNPs to reference
 		cd tmp_discosnp_{wildcards.ID}
 
-		run_discoSnp++.sh -r ../{output.fof1} -c {params.mincount} -k {params.k} -G ../{input.ref} -p {params.prefix_p1} &> ../{log}
+		run_discoSnp++.sh -r ../{output.fof1} -c {params.mincount} -k {params.k} -G ../{input.ref} -p {params.prefix_p1} &>> ../{log}
 
-		run_discoSnp++.sh -r ../{output.fof2} -c {params.mincount} -k {params.k} -G ../{input.ref} -p {params.prefix_p2} &> ../{log}
+		run_discoSnp++.sh -r ../{output.fof2} -c {params.mincount} -k {params.k} -G ../{input.ref} -p {params.prefix_p2} &>> ../{log}
 
 		# move output from temp directory
 		mv {params.prefix_p1}* ..

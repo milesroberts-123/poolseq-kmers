@@ -90,6 +90,8 @@ snakemake --cluster "sbatch --time={resources.time} --cpus-per-task={threads} --
 
 - [x] parallelize discosnp for two populations
 
+- [ ] add bulk segregant analysis simulation for fst
+
 - [ ] write hetmers binary to calculate fst
 
 - [ ] generalize bayes theorem to negative binomial distribution
