@@ -54,30 +54,29 @@ def get_tau(wildcards):
         tau = parameters.loc[parameters["ID"] == wildcards.ID, "tau"]
         return int(tau.iloc[0])
 
-
 def get_qtl_mean(wildcards):
         qtl_mean = parameters.loc[parameters["ID"] == wildcards.ID, "qtl_mean"]
-        return int(qtl_mean.iloc[0])
+        return float(qtl_mean.iloc[0])
 
 def get_qtl_sigma(wildcards):
         qtl_sigma = parameters.loc[parameters["ID"] == wildcards.ID, "qtl_sigma"]
-        return int(qtl_sigma.iloc[0])
+        return float(qtl_sigma.iloc[0])
 
 def get_qtl_prop(wildcards):
         qtl_prop = parameters.loc[parameters["ID"] == wildcards.ID, "qtl_prop"]
-        return int(qtl_prop.iloc[0])
+        return float(qtl_prop.iloc[0])
 
 def get_optimum_mean(wildcards):
         optimum_mean = parameters.loc[parameters["ID"] == wildcards.ID, "optimum_mean"]
-        return int(optimum_mean.iloc[0])
+        return float(optimum_mean.iloc[0])
 
 def get_optimum_sigma(wildcards):
         optimum_sigma = parameters.loc[parameters["ID"] == wildcards.ID, "optimum_sigma"]
-        return int(optimum_sigma.iloc[0])
+        return float(optimum_sigma.iloc[0])
 
 def get_phenotype_cutoff(wildcards):
         phenotype_cutoff = parameters.loc[parameters["ID"] == wildcards.ID, "phenotype_cutoff"]
-        return int(phenotype_cutoff.iloc[0])
+        return float(phenotype_cutoff.iloc[0])
 
 rule slim:
 	input:
