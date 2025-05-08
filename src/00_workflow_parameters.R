@@ -131,9 +131,10 @@ bsa_params = expand.grid(
 bsa_params$neutral_prop = 1 - bsa_params$qtl_prop
 
 # combine all parameters into one table
-params = bind_rows(one_pop_params, two_pop_params, sweep_params, bsa_params)
+#params = bind_rows(one_pop_params, two_pop_params, sweep_params, bsa_params)
 #params = bind_rows(one_pop_params, two_pop_params)
 #params = bind_rows(one_pop_params, sweep_params)
+params = bind_rows(two_pop_params, bsa_params)
 #params = sweep_params
 
 # add simulation id
