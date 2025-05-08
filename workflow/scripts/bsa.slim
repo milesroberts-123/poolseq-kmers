@@ -54,11 +54,11 @@ s1 10000000 late() {
 
         // sample one bulk of individuals with a high phenotype and another bulk of individuals with a low phenotype
 	catn("Low phenotype cutoff:");        
-	low_pheno_cutoff = quantile(phenotypes, phenotype_cutoff/2);
+	low_pheno_cutoff = quantile(phenotypes, phenotype_cutoff);
 	catn(low_pheno_cutoff);
 
 	catn("High phenotype cutoff:"); 
-        high_pheno_cutoff = quantile(phenotypes, 1 - phenotype_cutoff/2);
+        high_pheno_cutoff = quantile(phenotypes, 1 - phenotype_cutoff);
 	catn(high_pheno_cutoff);
 
 	// random sample of individuals, grab an extra individual to use as a refernce
