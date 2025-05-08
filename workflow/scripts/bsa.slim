@@ -72,7 +72,7 @@ s1 10000000 late() {
         catn("Sampling genomes...");
 	gs_low = sample(inds[low_inds], asInteger(n)).genomes;
 	gs_high = sample(inds[high_inds], asInteger(n)).genomes;
-	gs_ref = sample(inds[!(c(low_inds,high_inds))], 1).genomes;
+	gs_ref = sample(inds, 1).genomes;
 
 	gs_all = c(gs_ref, gs_low, gs_high);
 
