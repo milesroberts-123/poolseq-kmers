@@ -2,9 +2,9 @@ initialize() {
 	initializeSLiMOptions(nucleotideBased=T);
 	defineConstant("L", initializeAncestralNucleotides(paste("ancestral_genome_results/" + ID + ".fasta", sep = "")));
 	initializeMutationTypeNuc("m1", 0.5, "f", 0.0);
-	initializeMutationTypeNuc("m2", 0.5, "n", 0.0, 1);
+	initializeMutationTypeNuc("m2", 0.5, "n", qtl_mean, qtl_sigma);
 	m2.convertToSubstitution = F;
-	initializeGenomicElementType("g1", c(m1, m2), c(0.9, 0.1), mmJukesCantor(mu/3));
+	initializeGenomicElementType("g1", c(m1, m2), c(neutral_prop, qtl_prop), mmJukesCantor(mu/3));
 	initializeGenomicElement(g1, 0, asInteger(L)-1);
 	initializeRecombinationRate(R);
 }
@@ -37,13 +37,7 @@ early(){
 1: late() {
 	inds = sim.subpopulations.individuals;
 	phenotypes = inds.sumOfMutationsOfType(m2);
-	// catn(sim.cycle + ": Mean phenotype == " + mean(phenotypes));	
-	//inds.fitnessScaling = 1.25 - (phenotypes - 0.0)^2 * 0.001;
-	inds.fitnessScaling = 1.0 + dnorm(phenotypes, OPTIMUM, SIGMA_K); 
-        //
-        //catn("Test add cross");
-	//p1.addCrossed(p1.sampleIndividuals(1), p1.sampleIndividuals(1));
-
+	inds.fitnessScaling = 1.0 + dnorm(phenotypes, optimum_mean, optimum_sigma); 
 }
 
 s1 10000000 late() {
@@ -60,11 +54,11 @@ s1 10000000 late() {
 
         // sample one bulk of individuals with a high phenotype and another bulk of individuals with a low phenotype
 	catn("Low phenotype cutoff:");        
-	low_pheno_cutoff = quantile(phenotypes, 0.025);
+	low_pheno_cutoff = quantile(phenotypes, phenotype_cutoff/2);
 	catn(low_pheno_cutoff);
 
 	catn("High phenotype cutoff:"); 
-        high_pheno_cutoff = quantile(phenotypes, 0.975);
+        high_pheno_cutoff = quantile(phenotypes, 1 - phenotype_cutoff/2);
 	catn(high_pheno_cutoff);
 
 	// random sample of individuals, grab an extra individual to use as a refernce
@@ -78,7 +72,7 @@ s1 10000000 late() {
         catn("Sampling genomes...");
 	gs_low = sample(inds[low_inds], asInteger(n)).genomes;
 	gs_high = sample(inds[high_inds], asInteger(n)).genomes;
-	gs_ref = p1.sampleIndividuals(1).genomes;
+	gs_ref = sample(inds[!(c(low_inds,high_inds))], 1).genomes;
 
 	gs_all = c(gs_ref, gs_low, gs_high);
 

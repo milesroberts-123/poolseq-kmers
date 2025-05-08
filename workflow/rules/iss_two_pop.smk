@@ -23,7 +23,7 @@ rule iss_two_pop:
 		temp("iss_results/reads_{ID}_p1_R2.fastq"),
 		temp("iss_results/reads_{ID}_p2_R1.fastq"),
 		temp("iss_results/reads_{ID}_p2_R2.fastq")
-	threads: 8
+	threads: 4
 	resources:
 		mem_mb_per_cpu=2000,
 		time=239

@@ -49,6 +49,7 @@ rule kmc_two_pop:
 		"logs/kmc/{ID}.log"
 	params:
 		mincount = config["mincount"],
+		maxcount = config["maxcount"],
 		k = config["k"]
 	shell:
 		"""
@@ -66,15 +67,15 @@ rule kmc_two_pop:
 		mkdir tmp_kmc_{wildcards.ID}_p2
 
 		# count k-mers
-		kmc -ci{params.mincount} -k{params.k} {input.pread1_p1} tmp_R1_{wildcards.ID}_p1 tmp_kmc_{wildcards.ID}_p1 &>> {log}
-		kmc -ci{params.mincount} -k{params.k} {input.pread2_p1} tmp_R2_{wildcards.ID}_p1 tmp_kmc_{wildcards.ID}_p1 &>> {log}
-		kmc -ci{params.mincount} -k{params.k} {input.uread1_p1} tmp_u_R1_{wildcards.ID}_p1 tmp_kmc_{wildcards.ID}_p1 &>> {log}
-		kmc -ci{params.mincount} -k{params.k} {input.uread2_p1} tmp_u_R2_{wildcards.ID}_p1 tmp_kmc_{wildcards.ID}_p1 &>> {log}
+		kmc -ci{params.mincount} -cs{params.maxcount} -k{params.k} {input.pread1_p1} tmp_R1_{wildcards.ID}_p1 tmp_kmc_{wildcards.ID}_p1 &>> {log}
+		kmc -ci{params.mincount} -cs{params.maxcount} -k{params.k} {input.pread2_p1} tmp_R2_{wildcards.ID}_p1 tmp_kmc_{wildcards.ID}_p1 &>> {log}
+		kmc -ci{params.mincount} -cs{params.maxcount} -k{params.k} {input.uread1_p1} tmp_u_R1_{wildcards.ID}_p1 tmp_kmc_{wildcards.ID}_p1 &>> {log}
+		kmc -ci{params.mincount} -cs{params.maxcount} -k{params.k} {input.uread2_p1} tmp_u_R2_{wildcards.ID}_p1 tmp_kmc_{wildcards.ID}_p1 &>> {log}
 
-		kmc -ci{params.mincount} -k{params.k} {input.pread1_p2} tmp_R1_{wildcards.ID}_p2 tmp_kmc_{wildcards.ID}_p2 &>> {log}
-		kmc -ci{params.mincount} -k{params.k} {input.pread2_p2} tmp_R2_{wildcards.ID}_p2 tmp_kmc_{wildcards.ID}_p2 &>> {log}
-		kmc -ci{params.mincount} -k{params.k} {input.uread1_p2} tmp_u_R1_{wildcards.ID}_p2 tmp_kmc_{wildcards.ID}_p2 &>> {log}
-		kmc -ci{params.mincount} -k{params.k} {input.uread2_p2} tmp_u_R2_{wildcards.ID}_p2 tmp_kmc_{wildcards.ID}_p2 &>> {log}
+		kmc -ci{params.mincount} -cs{params.maxcount} -k{params.k} {input.pread1_p2} tmp_R1_{wildcards.ID}_p2 tmp_kmc_{wildcards.ID}_p2 &>> {log}
+		kmc -ci{params.mincount} -cs{params.maxcount} -k{params.k} {input.pread2_p2} tmp_R2_{wildcards.ID}_p2 tmp_kmc_{wildcards.ID}_p2 &>> {log}
+		kmc -ci{params.mincount} -cs{params.maxcount} -k{params.k} {input.uread1_p2} tmp_u_R1_{wildcards.ID}_p2 tmp_kmc_{wildcards.ID}_p2 &>> {log}
+		kmc -ci{params.mincount} -cs{params.maxcount} -k{params.k} {input.uread2_p2} tmp_u_R2_{wildcards.ID}_p2 tmp_kmc_{wildcards.ID}_p2 &>> {log}
 
 		# combine k-mer counts into one database
 		kmc_tools simple tmp_R1_{wildcards.ID}_p1 tmp_R2_{wildcards.ID}_p1 union union_R1_R2_{wildcards.ID}_p1 &>> {log}

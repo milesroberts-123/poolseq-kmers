@@ -54,6 +54,31 @@ def get_tau(wildcards):
         tau = parameters.loc[parameters["ID"] == wildcards.ID, "tau"]
         return int(tau.iloc[0])
 
+
+def get_qtl_mean(wildcards):
+        qtl_mean = parameters.loc[parameters["ID"] == wildcards.ID, "qtl_mean"]
+        return int(qtl_mean.iloc[0])
+
+def get_qtl_sigma(wildcards):
+        qtl_sigma = parameters.loc[parameters["ID"] == wildcards.ID, "qtl_sigma"]
+        return int(qtl_sigma.iloc[0])
+
+def get_qtl_prop(wildcards):
+        qtl_prop = parameters.loc[parameters["ID"] == wildcards.ID, "qtl_prop"]
+        return int(qtl_prop.iloc[0])
+
+def get_optimum_mean(wildcards):
+        optimum_mean = parameters.loc[parameters["ID"] == wildcards.ID, "optimum_mean"]
+        return int(optimum_mean.iloc[0])
+
+def get_optimum_sigma(wildcards):
+        optimum_sigma = parameters.loc[parameters["ID"] == wildcards.ID, "optimum_sigma"]
+        return int(optimum_sigma.iloc[0])
+
+def get_phenotype_cutoff(wildcards):
+        phenotype_cutoff = parameters.loc[parameters["ID"] == wildcards.ID, "phenotype_cutoff"]
+        return int(phenotype_cutoff.iloc[0])
+
 rule slim:
 	input:
 		"ancestral_genome_results/{ID}.fasta"
@@ -76,7 +101,13 @@ rule slim:
 		mu=get_mu,
 		R=get_R,
 		#L=get_L,
-		tau=get_tau
+		tau=get_tau,
+		qtl_mean=get_qtl_mean,
+		qtl_sigma=get_qtl_sigma,
+		qtl_prop=get_qtl_prop,
+		optimum_mean=get_optimum_mean,
+		optimum_sigma=get_optimum_sigma,
+		phenotype_cutoff=get_phenotype_cutoff
 	threads: 1
 	resources:
 		mem_mb_per_cpu=8000,
@@ -94,7 +125,7 @@ rule slim:
 		fi
 
 		if [ "{params.simtype}" == "bsa" ]; then
-			slim -d ID={wildcards.ID} -d N={params.N} -d mu={params.mu} -d R={params.R} -d n={params.n} scripts/bsa.slim &> {log}
+			slim -d ID={wildcards.ID} -d N={params.N} -d mu={params.mu} -d R={params.R} -d n={params.n} -d qtl_mean={params.qtl_mean} -d qtl_sigma={params.qtl_sigma} -d qtl_prop={params.qtl_prop} -d optimum_mean={params.optimum_mean} -d optimum_sigma={params.optimum_sigma} -d phenotype_cutoff={params.phenotype_cutoff} scripts/bsa.slim &> {log}
 		fi
 
 		if [ "{params.simtype}" == "sweep" ]; then

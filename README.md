@@ -90,7 +90,9 @@ snakemake --cluster "sbatch --time={resources.time} --cpus-per-task={threads} --
 
 - [x] parallelize discosnp for two populations
 
-- [ ] add bulk segregant analysis simulation for fst
+- [x] add bulk segregant analysis simulation for fst
+
+- [ ] figure out way to run workflow in batches
 
 - [ ] write hetmers binary to calculate fst
 
@@ -98,7 +100,9 @@ snakemake --cluster "sbatch --time={resources.time} --cpus-per-task={threads} --
 
 ### lower priority
 
-- [ ] figure out way to run workflow in batches?
+- [ ] add in ploidyfrost
+
+- [ ] add purifying selection simulation - does this also create unitigs?
 
 - [ ] update to smudgeplot >0.3.0, once we're able to get k-mer sequences again
 

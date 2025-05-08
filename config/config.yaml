@@ -13,5 +13,8 @@ windowLength: 1
 # minimum k-mer count threshold
 mincount: 5
 
+# maximum k-mer count recorded
+maxcount: 10000
+
 # e-value for blast
 blastEvalue: 0.0000000001

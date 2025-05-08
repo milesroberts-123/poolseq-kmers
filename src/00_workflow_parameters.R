@@ -11,7 +11,7 @@ mutation_rates = c(1e-8)
 recombination_rates = c(1e-8)
 
 shapes = c(4.22, 1e6)
-shuffle = c(TRUE, FALSE)
+shuffles = c(TRUE, FALSE)
 chrom_length = 2e6
 
 # create data frame of workflow parameters
@@ -28,7 +28,7 @@ one_pop_params = expand.grid(
   sequencer = sequencers,
   simtype = "onepop",
   shape = shapes,
-  shuffle = shuffle,
+  shuffle = shuffles,
   pA = 0.25,
   pC = 0.25,
   pG = 0.25,
@@ -58,7 +58,7 @@ two_pop_params = expand.grid(
   L = chrom_length,
   sequencer = sequencers,
   shape = shapes,
-  shuffle = shuffle,
+  shuffle = shuffles,
   pA = 0.25,
   pC = 0.25,
   pG = 0.25,
@@ -86,7 +86,7 @@ sweep_params = expand.grid(
   L = chrom_length,
   sequencer = sequencers,
   shape = shapes,
-  shuffle = shuffle,
+  shuffle = shuffles,
   pA = 0.25,
   pC = 0.25,
   pG = 0.25,
@@ -102,8 +102,36 @@ sweep_params = expand.grid(
 # convert Nes to selection coefficient
 sweep_params$s = sweep_params$Nes/sweep_params$N
 
+# bulk-segregant analysis parameters
+bsa_params = expand.grid(
+  rep = replicates,
+  N = 2000,
+  n = sample_sizes,
+  sigma = c(0),
+  mu = mutation_rates,
+  R = recombination_rates,
+  cov = coverages,
+  L = chrom_length,
+  sequencer = sequencers,
+  simtype = "bsa",
+  shape = shapes,
+  shuffle = shuffles,
+  pA = 0.25,
+  pC = 0.25,
+  pG = 0.25,
+  pT = 0.25,
+  qtl_mean = 0,
+  qtl_sigma = 1,
+  qtl_prop = 0.1,
+  optimum_mean = 0,
+  optimum_sigma = 10,
+  phenotype_cutoff = 0.05
+)
+
+bsa_params$neutral_prop = 1 - bsa_params$qtl_prop
+
 # combine all parameters into one table
-params = bind_rows(one_pop_params, two_pop_params, sweep_params)
+params = bind_rows(one_pop_params, two_pop_params, sweep_params, bsa_params)
 #params = bind_rows(one_pop_params, two_pop_params)
 #params = bind_rows(one_pop_params, sweep_params)
 #params = sweep_params

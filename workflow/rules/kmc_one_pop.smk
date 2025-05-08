@@ -32,6 +32,7 @@ rule kmc_one_pop:
 		"benchmarks/kmc/{ID}.bench"
 	params:
 		mincount = config["mincount"],
+		maxcount = config["maxcount"],
 		k = config["k"]
 	shell:
 		"""
@@ -43,10 +44,10 @@ rule kmc_one_pop:
 		mkdir tmp_kmc_{wildcards.ID}
 
 		# count k-mers
-		kmc -ci{params.mincount} -k{params.k} {input.pread1} tmp_R1_{wildcards.ID} tmp_kmc_{wildcards.ID} &>> {log}
-		kmc -ci{params.mincount} -k{params.k} {input.pread2} tmp_R2_{wildcards.ID} tmp_kmc_{wildcards.ID} &>> {log}
-		kmc -ci{params.mincount} -k{params.k} {input.uread1} tmp_u_R1_{wildcards.ID} tmp_kmc_{wildcards.ID} &>> {log}
-		kmc -ci{params.mincount} -k{params.k} {input.uread2} tmp_u_R2_{wildcards.ID} tmp_kmc_{wildcards.ID} &>> {log}
+		kmc -t{threads} -ci{params.mincount} -cs{params.maxcount} -k{params.k} {input.pread1} tmp_R1_{wildcards.ID} tmp_kmc_{wildcards.ID} &>> {log}
+		kmc -t{threads} -ci{params.mincount} -cs{params.maxcount} -k{params.k} {input.pread2} tmp_R2_{wildcards.ID} tmp_kmc_{wildcards.ID} &>> {log}
+		kmc -t{threads} -ci{params.mincount} -cs{params.maxcount} -k{params.k} {input.uread1} tmp_u_R1_{wildcards.ID} tmp_kmc_{wildcards.ID} &>> {log}
+		kmc -t{threads} -ci{params.mincount} -cs{params.maxcount} -k{params.k} {input.uread2} tmp_u_R2_{wildcards.ID} tmp_kmc_{wildcards.ID} &>> {log}
 
 		# combine k-mer counts into one database
 		kmc_tools simple tmp_R1_{wildcards.ID} tmp_R2_{wildcards.ID} union union_R1_R2_{wildcards.ID} &>> {log}
