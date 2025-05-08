@@ -31,23 +31,19 @@ rule all:
 		expand("slim_results/allele_freqs_{ID}_p2.txt", ID=two_pop_params.index.get_level_values("ID")),
 		expand("poolsnp_results/{ID}_p1.txt", ID=two_pop_params.index.get_level_values("ID")),
 		expand("poolsnp_results/{ID}_p2.txt", ID=two_pop_params.index.get_level_values("ID")),		
-		expand("hetmers_{ID}_p1_counts.csv", ID=two_pop_params.index.get_level_values("ID")),
-		expand("hetmers_{ID}_p2_counts.csv", ID=two_pop_params.index.get_level_values("ID")),
+		expand("hetmers_results/{ID}_p1_counts.csv", ID=two_pop_params.index.get_level_values("ID")),
+		expand("hetmers_results/{ID}_p2_counts.csv", ID=two_pop_params.index.get_level_values("ID")),
 		#expand("dissimilarity_{ID}.txt", ID=two_pop_params.index.get_level_values("ID")),
-		#expand("{ID}_p1_poolsnp_output.vcf.gz", ID=two_pop_params.index.get_level_values("ID")),
-		#expand("{ID}_p2_poolsnp_output.vcf.gz", ID=two_pop_params.index.get_level_values("ID")),
 		expand("varscan_results/{ID}.tsv", ID=one_pop_params.index.get_level_values("ID")),
 		#expand("calls_masked_{ID}.tsv", ID=one_pop_params.index.get_level_values("ID")),
 		expand("smudgeplot_results/{ID}_coverages.tsv", ID=one_pop_params.index.get_level_values("ID")),
 		expand("smudgeplot_results/{ID}_sequences.tsv", ID=one_pop_params.index.get_level_values("ID")),
 		expand("disco_results/{ID}.txt", ID=one_pop_params.index.get_level_values("ID")),
 		expand("slim_results/allele_freqs_{ID}.txt", ID=one_pop_params.index.get_level_values("ID")),
-		#expand("{ID}_poolsnp_output.vcf.gz", ID=one_pop_params.index.get_level_values("ID")),
 		expand("poolsnp_results/{ID}.txt", ID=one_pop_params.index.get_level_values("ID")),
 		#expand("poolsnp_final_masked_{ID}.txt", ID=one_pop_params.index.get_level_values("ID")),
 		expand("blast_results/{ID}.txt", ID=one_pop_params.index.get_level_values("ID")),
-		expand("hetmers_{ID}_counts.csv", ID=one_pop_params.index.get_level_values("ID")),
-		expand("hetmers_{ID}_seqs.csv", ID=one_pop_params.index.get_level_values("ID"))
+		expand("hetmers_results/{ID}_counts.csv", ID=one_pop_params.index.get_level_values("ID")),
 
 include: "rules/ancestral_genome.smk"
 include: "rules/bcftools_discosnp_one_pop.smk"

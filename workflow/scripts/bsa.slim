@@ -4,7 +4,7 @@ initialize() {
 	initializeMutationTypeNuc("m1", 0.5, "f", 0.0);
 	initializeMutationTypeNuc("m2", 0.5, "n", qtl_mean, qtl_sigma);
 	m2.convertToSubstitution = F;
-	initializeGenomicElementType("g1", c(m1, m2), c(neutral_prop, qtl_prop), mmJukesCantor(mu/3));
+	initializeGenomicElementType("g1", c(m1, m2), c(1 - qtl_prop, qtl_prop), mmJukesCantor(mu/3));
 	initializeGenomicElement(g1, 0, asInteger(L)-1);
 	initializeRecombinationRate(R);
 }

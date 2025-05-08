@@ -32,14 +32,7 @@ one_pop_params = expand.grid(
   pA = 0.25,
   pC = 0.25,
   pG = 0.25,
-  pT = 0.25,
-  N1 = 0,
-  N2 = 0,
-  mg1 = 0,
-  mg2 = 0,
-  h = 0,
-  s = 0,
-  tau = 0
+  pT = 0.25
 )
 
 # parameters for two population model
@@ -91,12 +84,7 @@ sweep_params = expand.grid(
   pC = 0.25,
   pG = 0.25,
   pT = 0.25,
-  simtype = "sweep",
-  N1 = 0,
-  N2 = 0,
-  mg1 = 0,
-  mg2 = 0,
-  tau = 0
+  simtype = "sweep"
 )
 
 # convert Nes to selection coefficient
@@ -113,7 +101,6 @@ bsa_params = expand.grid(
   cov = coverages,
   L = chrom_length,
   sequencer = sequencers,
-  simtype = "bsa",
   shape = shapes,
   shuffle = shuffles,
   pA = 0.25,
@@ -125,23 +112,25 @@ bsa_params = expand.grid(
   qtl_prop = 0.1,
   optimum_mean = 0,
   optimum_sigma = 10,
-  phenotype_cutoff = 0.05
+  phenotype_cutoff = 0.05,
+  simtype = "bsa"
 )
 
-bsa_params$neutral_prop = 1 - bsa_params$qtl_prop
-
 # combine all parameters into one table
-#params = bind_rows(one_pop_params, two_pop_params, sweep_params, bsa_params)
+params = bind_rows(one_pop_params, two_pop_params, sweep_params, bsa_params)
 #params = bind_rows(one_pop_params, two_pop_params)
 #params = bind_rows(one_pop_params, sweep_params)
-params = bind_rows(two_pop_params, bsa_params)
+#params = bind_rows(two_pop_params, bsa_params)
 #params = sweep_params
-
-# add simulation id
-params$ID = 1:nrow(params)
 
 # replace all NA with 0, so that snakemake stays happy
 params[is.na(params)] = 0
+
+# subset if needed
+params = params[(params$simtype %in% c("twopop", "bsa")),]
+
+# add simulation id
+params$ID = 1:nrow(params)
 
 # save
 write.table(params, "../config/parameters.tsv", sep = "\t", quote = F, row.names = F)

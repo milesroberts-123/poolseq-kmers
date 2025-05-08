@@ -92,6 +92,8 @@ snakemake --cluster "sbatch --time={resources.time} --cpus-per-task={threads} --
 
 - [x] add bulk segregant analysis simulation for fst
 
+- [x] output hetmers to their own directory
+
 - [ ] figure out way to run workflow in batches
 
 - [ ] write hetmers binary to calculate fst
