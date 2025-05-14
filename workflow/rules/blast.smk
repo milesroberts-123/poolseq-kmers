@@ -20,9 +20,11 @@ rule blast:
 		time=239
 	params:
 		blastEvalue = config["blastEvalue"]
+	log:
+		"logs/blast/{ID}.log"
 	shell:
 		"""
-		makeblastdb -in {input.ref} -title $(basename {input.ref} .fasta) -dbtype nucl -out $(basename {input.ref} .fasta)
+		makeblastdb -in {input.ref} -title $(basename {input.ref} .fasta) -dbtype nucl -out $(basename {input.ref} .fasta) &>> {log}
 
-		blastn -query {input.unitigs} -db $(basename {input.ref} .fasta) -out {output.alignments} -max_target_seqs 1 -evalue {params.blastEvalue} -outfmt 6
+		blastn -query {input.unitigs} -db $(basename {input.ref} .fasta) -out {output.alignments} -max_target_seqs 1 -evalue {params.blastEvalue} -outfmt 6 &>> {log}
 		"""

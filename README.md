@@ -109,6 +109,12 @@ sudo docker push milesroberts/poolseq-kmers
 
 - [x] figure out way to run workflow in batches
 
+- [ ] remove need for ref.txt in config/
+
+- [ ] write workflow schema
+
+- [ ] resolve workflow lints `snakemake --lint`
+
 - [ ] write hetmers binary to calculate fst
 
 - [ ] generalize bayes theorem to negative binomial distribution

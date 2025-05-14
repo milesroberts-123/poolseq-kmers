@@ -1,17 +1,3 @@
-def get_samples(wildcards):
-	# get sample size
-        n = parameters.loc[parameters["ID"] == wildcards.ID, "n"]
-	n = int(n.iloc[0])
-
-	# create list of sample names from slim convention
-	samples = list(range(1, n + 1))
-	samples = ["i" + str(x) for x in samples] 
-
-	# create comma-sep list for bcftools
-	samples = ','.join(samples)
-
-        return samples
-
 def get_wd(wildcards):
 	return os.getcwd() + "/"
 
@@ -25,9 +11,7 @@ rule poolsnp_one_pop:
 		bs = temp("{ID}_poolsnp_output_BS.txt.gz"),
 		mpileup = temp("{ID}.mpileup")
 	params:
-		#names = get_names,
 		wd = get_wd,
-		#prefix = get_prefix
 		mincount = config["mincount"]
 	conda:
 		"../envs/poolsnp.yaml"
