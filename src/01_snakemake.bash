@@ -38,5 +38,10 @@ snakemake --unlock --cores 1
 # rerun-incomplete in case previous snakemake instances failed and left incomplete files
 # Max cpu count for my SLURM account is 1040, subtract 1 to account for scheduler
 # Max job submit count is 1000, subtract 1 to account for scheduler
-echo Running snakemake...
-snakemake --cluster "sbatch --time={resources.time} --cpus-per-task={threads} --mem-per-cpu={resources.mem_mb_per_cpu} --partition=josephsnodes --account=josephsnodes --output=logs/slurm/%j.out --error=logs/slurm/%j.out" --jobs 950 --cores 950 --use-conda --rerun-incomplete --rerun-triggers mtime --scheduler greedy --retries 1 --keep-going
+#echo Running snakemake...
+#snakemake --cluster "sbatch --time={resources.time} --cpus-per-task={threads} --mem-per-cpu={resources.mem_mb_per_cpu} --partition=josephsnodes --account=josephsnodes --output=logs/slurm/%j.out --error=logs/slurm/%j.out" --jobs 950 --cores 950 --use-conda --rerun-incomplete --rerun-triggers mtime --scheduler greedy --retries 1 --keep-going
+
+for num in {1..50}
+do
+  snakemake --cluster "sbatch --time={resources.time} --cpus-per-task={threads} --mem-per-cpu={resources.mem_mb_per_cpu} --partition=josephsnodes --account=josephsnodes" --jobs 950 --cores 950 --use-conda --rerun-incomplete --rerun-triggers mtime --scheduler greedy --retries 1 --keep-going --batch all=$num/50
+done

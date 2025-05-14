@@ -52,6 +52,19 @@ A snippet for debugging:
 snakemake --cluster "sbatch --time={resources.time} --cpus-per-task={threads} --mem-per-cpu={resources.mem_mb_per_cpu} --partition=josephsnodes --account=josephsnodes" --resources load=1 --jobs 950 --cores 950 --use-conda --rerun-incomplete --rerun-triggers mtime --scheduler greedy --keep-incomplete calls_2600_p1.tsv kmerpairs_2600_p1_coverages.tsv kmerpairs_2600_p1_sequences.tsv discoRes_ad_2600_p1.txt slim_allele_freqs_2600_p1.txt 2600_p1_poolsnp_output.vcf.gz calls_2600_p2.tsv kmerpairs_2600_p2_coverages.tsv kmerpairs_2600_p2_sequences.tsv discoRes_ad_2600_p2.txt slim_allele_freqs_2600_p2.txt 2600_p2_poolsnp_output.vcf.gz
 ```
 
+## 2025-05-08
+
+https://github.com/snakemake/snakemake/issues/2602
+
+Create docker file with `snakemake --containerize > Dockerfile`. Copy Dockerfile and envs to same directory. Then run these commands from a computer with docker:
+
+```
+sudo docker build -t poolseq-kmers .
+sudo docker login -u milesroberts
+sudo docker tag poolseq-kmers milesroberts/poolseq-kmers
+sudo docker push milesroberts/poolseq-kmers
+```
+
 ## to do
 
 ### higher priority
@@ -94,7 +107,7 @@ snakemake --cluster "sbatch --time={resources.time} --cpus-per-task={threads} --
 
 - [x] output hetmers to their own directory
 
-- [ ] figure out way to run workflow in batches
+- [x] figure out way to run workflow in batches
 
 - [ ] write hetmers binary to calculate fst
 
@@ -103,6 +116,8 @@ snakemake --cluster "sbatch --time={resources.time} --cpus-per-task={threads} --
 ### lower priority
 
 - [ ] add in ploidyfrost
+
+- [ ] try adding kmer2snp
 
 - [ ] add purifying selection simulation - does this also create unitigs?
 

@@ -127,7 +127,7 @@ params = bind_rows(one_pop_params, two_pop_params, sweep_params, bsa_params)
 params[is.na(params)] = 0
 
 # subset if needed
-params = params[(params$simtype %in% c("twopop", "bsa")),]
+#params = params[(params$simtype %in% c("twopop", "bsa")),]
 
 # add simulation id
 params$ID = 1:nrow(params)

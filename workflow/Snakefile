@@ -5,6 +5,9 @@ import os
 # configuration
 configfile: "../config/config.yaml"
 
+# container version of workflow
+containerized: "docker://milesroberts/poolseq-kmers"
+
 # load samples
 parameters = pd.read_table("../config/parameters.tsv", sep="\t", dtype={"ID": str}).set_index(["ID"], drop=False)
 
@@ -16,34 +19,70 @@ two_pop_params = parameters[(parameters["simtype"] == "twopop") | (parameters["s
 wildcard_constraints:
 	ID="\d+"
 
-# gather all images for training CNN
+#rule all:
+#	input:
+#		expand("varscan_results/{ID}_p1.tsv", ID=two_pop_params.index.get_level_values("ID")),
+#		expand("varscan_results/{ID}_p2.tsv", ID=two_pop_params.index.get_level_values("ID")),
+#		expand("smudgeplot_results/{ID}_p1_coverages.tsv", ID=two_pop_params.index.get_level_values("ID")),
+#		expand("smudgeplot_results/{ID}_p1_sequences.tsv", ID=two_pop_params.index.get_level_values("ID")),
+#		expand("smudgeplot_results/{ID}_p2_coverages.tsv", ID=two_pop_params.index.get_level_values("ID")),
+#		expand("smudgeplot_results/{ID}_p2_sequences.tsv", ID=two_pop_params.index.get_level_values("ID")),
+#		expand("disco_results/{ID}_p1.txt", ID=two_pop_params.index.get_level_values("ID")),
+#		expand("disco_results/{ID}_p2.txt", ID=two_pop_params.index.get_level_values("ID")),
+#		expand("slim_results/allele_freqs_{ID}_p1.txt", ID=two_pop_params.index.get_level_values("ID")),
+#		expand("slim_results/allele_freqs_{ID}_p2.txt", ID=two_pop_params.index.get_level_values("ID")),
+#		expand("poolsnp_results/{ID}_p1.txt", ID=two_pop_params.index.get_level_values("ID")),
+#		expand("poolsnp_results/{ID}_p2.txt", ID=two_pop_params.index.get_level_values("ID")),		
+#		expand("hetmers_results/{ID}_p1_counts.csv", ID=two_pop_params.index.get_level_values("ID")),
+#		expand("hetmers_results/{ID}_p2_counts.csv", ID=two_pop_params.index.get_level_values("ID")),
+#		#expand("dissimilarity_{ID}.txt", ID=two_pop_params.index.get_level_values("ID")),
+#		expand("varscan_results/{ID}.tsv", ID=one_pop_params.index.get_level_values("ID")),
+#		#expand("calls_masked_{ID}.tsv", ID=one_pop_params.index.get_level_values("ID")),
+#		expand("smudgeplot_results/{ID}_coverages.tsv", ID=one_pop_params.index.get_level_values("ID")),
+#		expand("smudgeplot_results/{ID}_sequences.tsv", ID=one_pop_params.index.get_level_values("ID")),
+#		expand("disco_results/{ID}.txt", ID=one_pop_params.index.get_level_values("ID")),
+#		expand("slim_results/allele_freqs_{ID}.txt", ID=one_pop_params.index.get_level_values("ID")),
+#		expand("poolsnp_results/{ID}.txt", ID=one_pop_params.index.get_level_values("ID")),
+#		#expand("poolsnp_final_masked_{ID}.txt", ID=one_pop_params.index.get_level_values("ID")),
+#		expand("blast_results/{ID}.txt", ID=one_pop_params.index.get_level_values("ID")),
+#		expand("hetmers_results/{ID}_counts.csv", ID=one_pop_params.index.get_level_values("ID")),
+
 rule all:
 	input:
-		expand("varscan_results/{ID}_p1.tsv", ID=two_pop_params.index.get_level_values("ID")),
-		expand("varscan_results/{ID}_p2.tsv", ID=two_pop_params.index.get_level_values("ID")),
-		expand("smudgeplot_results/{ID}_p1_coverages.tsv", ID=two_pop_params.index.get_level_values("ID")),
-		expand("smudgeplot_results/{ID}_p1_sequences.tsv", ID=two_pop_params.index.get_level_values("ID")),
-		expand("smudgeplot_results/{ID}_p2_coverages.tsv", ID=two_pop_params.index.get_level_values("ID")),
-		expand("smudgeplot_results/{ID}_p2_sequences.tsv", ID=two_pop_params.index.get_level_values("ID")),
-		expand("disco_results/{ID}_p1.txt", ID=two_pop_params.index.get_level_values("ID")),
-		expand("disco_results/{ID}_p2.txt", ID=two_pop_params.index.get_level_values("ID")),
-		expand("slim_results/allele_freqs_{ID}_p1.txt", ID=two_pop_params.index.get_level_values("ID")),
-		expand("slim_results/allele_freqs_{ID}_p2.txt", ID=two_pop_params.index.get_level_values("ID")),
-		expand("poolsnp_results/{ID}_p1.txt", ID=two_pop_params.index.get_level_values("ID")),
-		expand("poolsnp_results/{ID}_p2.txt", ID=two_pop_params.index.get_level_values("ID")),		
-		expand("hetmers_results/{ID}_p1_counts.csv", ID=two_pop_params.index.get_level_values("ID")),
-		expand("hetmers_results/{ID}_p2_counts.csv", ID=two_pop_params.index.get_level_values("ID")),
-		#expand("dissimilarity_{ID}.txt", ID=two_pop_params.index.get_level_values("ID")),
-		expand("varscan_results/{ID}.tsv", ID=one_pop_params.index.get_level_values("ID")),
-		#expand("calls_masked_{ID}.tsv", ID=one_pop_params.index.get_level_values("ID")),
-		expand("smudgeplot_results/{ID}_coverages.tsv", ID=one_pop_params.index.get_level_values("ID")),
-		expand("smudgeplot_results/{ID}_sequences.tsv", ID=one_pop_params.index.get_level_values("ID")),
-		expand("disco_results/{ID}.txt", ID=one_pop_params.index.get_level_values("ID")),
-		expand("slim_results/allele_freqs_{ID}.txt", ID=one_pop_params.index.get_level_values("ID")),
-		expand("poolsnp_results/{ID}.txt", ID=one_pop_params.index.get_level_values("ID")),
-		#expand("poolsnp_final_masked_{ID}.txt", ID=one_pop_params.index.get_level_values("ID")),
-		expand("blast_results/{ID}.txt", ID=one_pop_params.index.get_level_values("ID")),
-		expand("hetmers_results/{ID}_counts.csv", ID=one_pop_params.index.get_level_values("ID")),
+		expand("{ID}.done", ID=one_pop_params.index.get_level_values("ID")),
+		expand("{ID}_p1p2.done", ID=two_pop_params.index.get_level_values("ID"))
+
+rule all_one_pops:
+	input:
+		"varscan_results/{ID}.tsv", 
+		"smudgeplot_results/{ID}_coverages.tsv", 
+		"smudgeplot_results/{ID}_sequences.tsv", 
+		"disco_results/{ID}.txt", 
+		"slim_results/allele_freqs_{ID}.txt", 
+		"poolsnp_results/{ID}.txt", 
+		"blast_results/{ID}.txt", 
+		"hetmers_results/{ID}_counts.csv"
+	output:
+		touch("{ID}.done")
+
+rule all_two_pops:
+	input:
+		"varscan_results/{ID}_p1.tsv", 
+		"varscan_results/{ID}_p2.tsv", 
+		"smudgeplot_results/{ID}_p1_coverages.tsv", 
+		"smudgeplot_results/{ID}_p1_sequences.tsv", 
+		"smudgeplot_results/{ID}_p2_coverages.tsv", 
+		"smudgeplot_results/{ID}_p2_sequences.tsv", 
+		"disco_results/{ID}_p1.txt", 
+		"disco_results/{ID}_p2.txt", 
+		"slim_results/allele_freqs_{ID}_p1.txt", 
+		"slim_results/allele_freqs_{ID}_p2.txt", 
+		"poolsnp_results/{ID}_p1.txt", 
+		"poolsnp_results/{ID}_p2.txt", 		
+		"hetmers_results/{ID}_p1_counts.csv", 
+		"hetmers_results/{ID}_p2_counts.csv", 
+	output:
+		touch("{ID}_p1p2.done")
 
 include: "rules/ancestral_genome.smk"
 include: "rules/bcftools_discosnp_one_pop.smk"
