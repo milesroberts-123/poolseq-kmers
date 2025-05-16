@@ -111,9 +111,15 @@ sudo docker push milesroberts/poolseq-kmers
 
 - [x] remove need for ref.txt in config/
 
-- [ ] write workflow schema
+- [x] write workflow schema for config.yaml
+
+- [x] write workflow schema for parameters.tsv
 
 - [ ] resolve workflow lints `snakemake --lint`
+
+- [ ] integration tests
+
+- [ ] github actions
 
 - [ ] write hetmers binary to calculate fst
 

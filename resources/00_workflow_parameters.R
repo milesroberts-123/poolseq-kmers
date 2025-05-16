@@ -1,8 +1,8 @@
 library("dplyr") 
 
 replicates = 1:3
-sample_sizes = c(50, 75, 100)
-coverages = c(100, 150, 200)
+sample_sizes = c(25, 50, 75, 100)
+coverages = c(50, 100, 150, 200)
 sequencers = c("miseq")
 #sequencers = c("miseq", "hiseq", "nextseq", "novaseq")
 
@@ -68,8 +68,8 @@ sweep_params = expand.grid(
   #rep = replicates,
   N = population_sizes,
   n = sample_sizes,
-  #h = c(0, 0.5, 1)
-  h = c(0.5),
+  h = c(0, 0.5, 1)
+  #h = c(0.5),
   Nes = c(10, 25, 50, 100),
   #s = 0.1,
   sigma = c(0),
@@ -120,14 +120,14 @@ bsa_params = expand.grid(
 params = bind_rows(one_pop_params, two_pop_params, sweep_params, bsa_params)
 #params = bind_rows(one_pop_params, two_pop_params)
 #params = bind_rows(one_pop_params, sweep_params)
-#params = bind_rows(two_pop_params, bsa_params)
+#params = bind_rows(sweep_params, bsa_params)
 #params = sweep_params
 
 # replace all NA with 0, so that snakemake stays happy
 params[is.na(params)] = 0
 
 # subset if needed
-#params = params[(params$simtype %in% c("twopop", "bsa")),]
+params = params[(params$simtype %in% c("sweep", "bsa")),]
 
 # add simulation id
 params$ID = 1:nrow(params)
