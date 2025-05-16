@@ -12,6 +12,7 @@ containerized: "docker://milesroberts/poolseq-kmers"
 
 # load samples
 parameters = pd.read_table("../config/parameters.tsv", sep="\t", dtype={"ID": str}).set_index(["ID"], drop=False)
+validate(parameters, "../config/parameters.schema.yaml")
 
 # split into paired-end and single-end
 one_pop_params = parameters[(parameters["simtype"] == "onepop") | (parameters["simtype"] == "sweep")]
@@ -79,8 +80,8 @@ rule all_two_pops:
 		"disco_results/{ID}_p2.txt", 
 		"slim_results/allele_freqs_{ID}_p1.txt", 
 		"slim_results/allele_freqs_{ID}_p2.txt", 
-		"poolsnp_results/{ID}_p1.txt", 
-		"poolsnp_results/{ID}_p2.txt", 		
+		"poolsnp_results/{ID}_p1.txt",
+		"poolsnp_results/{ID}_p2.txt",
 		"hetmers_results/{ID}_p1_counts.csv", 
 		"hetmers_results/{ID}_p2_counts.csv", 
 	output:
