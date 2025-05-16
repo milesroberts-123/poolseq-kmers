@@ -1,8 +1,8 @@
 library("dplyr") 
 
 replicates = 1:3
-sample_sizes = c(25, 50, 75, 100)
-coverages = c(50, 100, 150, 200)
+sample_sizes = c(50, 75, 100)
+coverages = c(100, 150, 200)
 sequencers = c("miseq")
 #sequencers = c("miseq", "hiseq", "nextseq", "novaseq")
 
