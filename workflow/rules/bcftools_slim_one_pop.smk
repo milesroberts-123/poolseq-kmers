@@ -17,9 +17,10 @@ rule bcftools_slim_one_pop:
 	shell:
 		"""
 		# remove reference
-		bcftools view --samples-file ^../config/ref.txt -Oz -o {output.samplevcf} {input.compvcf} &> {log}
+		# bcftools view --samples-file ^../config/ref.txt -Oz -o {output.samplevcf} {input.compvcf} &>> {log}
+		bcftools view --samples ^i0 -Oz -o {output.samplevcf} {input.compvcf} &>> {log}
 
 		# calculate allele frequencies
-		bcftools +fill-tags {output.samplevcf} -Oz -o {output.filledvcf} &> {log}
-		bcftools query -f '%CHROM %POS %REF %ALT %NS %AF %AC\n' -o {output.allelefreq} {output.filledvcf} &> {log}
+		bcftools +fill-tags {output.samplevcf} -Oz -o {output.filledvcf} &>> {log}
+		bcftools query -f '%CHROM %POS %REF %ALT %NS %AF %AC\n' -o {output.allelefreq} {output.filledvcf} &>> {log}
 		"""

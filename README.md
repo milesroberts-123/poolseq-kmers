@@ -109,7 +109,7 @@ sudo docker push milesroberts/poolseq-kmers
 
 - [x] figure out way to run workflow in batches
 
-- [ ] remove need for ref.txt in config/
+- [x] remove need for ref.txt in config/
 
 - [ ] write workflow schema
 

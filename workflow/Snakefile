@@ -1,9 +1,11 @@
 # load packages
 import pandas as pd
 import os
+from snakemake.utils import validate
 
 # configuration
 configfile: "../config/config.yaml"
+validate(config, "../config/config.schema.yaml")
 
 # container version of workflow
 containerized: "docker://milesroberts/poolseq-kmers"

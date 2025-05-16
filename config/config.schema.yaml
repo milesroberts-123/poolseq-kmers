@@ -1,0 +1,27 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+description: universal parameters applied to all simulations in table
+properties:
+  k:
+    type: integer
+    description: k-mer length/minimum read trim length
+    default: 31
+  unqualLimit:
+    type: integer
+    description: unqualified_percent_limit for fastp, how many percents of bases are allowed to be unqualified in terms of quality score
+    default: 40
+  windowLength:
+    type: integer
+    default: 1
+    description: window length for read trimming
+  mincount:
+    type: integer
+    default: 5
+    description: minimum k-mer count threshold and minimum read depth
+  maxcount:
+    type: integer
+    default: 10000
+    description: maximum k-mer count
+  blastEvalue:
+    type: number
+    default: 0.0000000001
+    description: e-value cutoff for blast when aligning unitigs to reference genome
