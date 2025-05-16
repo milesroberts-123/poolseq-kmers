@@ -115,7 +115,7 @@ sudo docker push milesroberts/poolseq-kmers
 
 - [x] write workflow schema for parameters.tsv
 
-- [ ] resolve workflow lints `snakemake --lint`
+- [x] resolve workflow lints `snakemake --lint`
 
 - [ ] integration tests
 

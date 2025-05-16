@@ -1,6 +1,3 @@
-def get_wd(wildcards):
-	return os.getcwd() + "/"
-
 rule poolsnp_two_pop:
 	input:
 		reffasta = "seqkit_results/ref_{ID}_p1.fasta",
@@ -23,13 +20,15 @@ rule poolsnp_two_pop:
 	resources:
 		mem_mb_per_cpu=8000,
 		time=239
+	log:
+		"logs/poolsnp/{ID}.log"
 	shell:
 		"""
 		samtools mpileup -f {input.reffasta} {input.trimbam_p1} > {output.mpileup_p1}
 
 		samtools mpileup -f {input.reffasta} {input.trimbam_p2} > {output.mpileup_p2}
 
-		PoolSNP.sh mpileup={params.wd}{output.mpileup_p1} reference={params.wd}{input.reffasta} names={wildcards.ID}_p1 max-cov=0.9999 min-cov={params.mincount} min-count={params.mincount} min-freq=0.01 miss-frac=0 badsites=1 allsites=0 output={params.wd}{wildcards.ID}_p1_poolsnp_output
+		PoolSNP.sh mpileup={params.wd}{output.mpileup_p1} reference={params.wd}{input.reffasta} names={wildcards.ID}_p1 max-cov=0.9999 min-cov={params.mincount} min-count={params.mincount} min-freq=0.01 miss-frac=0 badsites=1 allsites=0 output={params.wd}{wildcards.ID}_p1_poolsnp_output &>{log}
 	
-        	PoolSNP.sh mpileup={params.wd}{output.mpileup_p2} reference={params.wd}{input.reffasta} names={wildcards.ID}_p2 max-cov=0.9999 min-cov={params.mincount} min-count={params.mincount} min-freq=0.01 miss-frac=0 badsites=1 allsites=0 output={params.wd}{wildcards.ID}_p2_poolsnp_output
+		PoolSNP.sh mpileup={params.wd}{output.mpileup_p2} reference={params.wd}{input.reffasta} names={wildcards.ID}_p2 max-cov=0.9999 min-cov={params.mincount} min-count={params.mincount} min-freq=0.01 miss-frac=0 badsites=1 allsites=0 output={params.wd}{wildcards.ID}_p2_poolsnp_output &> {log}
 		"""

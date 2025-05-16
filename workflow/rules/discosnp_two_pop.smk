@@ -24,7 +24,7 @@ rule discosnp_two_pop:
 		vcf_p1 = temp("discoRes_{ID}_p1_k_" + str(config["k"]) + "_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_coherent.vcf"),
 		igv_vcf_p1 = temp("discoRes_{ID}_p1_k_" + str(config["k"]) + "_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_coherent_for_IGV.vcf"),
 		sam_p1 = temp("discoRes_{ID}_p1_k_" + str(config["k"]) + "_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_coherentBWA_MEM.sam"),
-		cov_h5_p1 = temp("discoRes_{ID}_p1_k_" + str(config["k"]) + "_c_" + str(config["mincount"]) + "_cov.h5")
+		cov_h5_p1 = temp("discoRes_{ID}_p1_k_" + str(config["k"]) + "_c_" + str(config["mincount"]) + "_cov.h5"),
 		tmpread_p2= temp("discoRes_{ID}_p2read_files_correspondance.txt"),
 		fasta_p2 = temp("discoRes_{ID}_p2_k_" + str(config["k"]) + "_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_coherent.fa"),
 		un_fasta_p2 = temp("discoRes_{ID}_p2_k_" + str(config["k"]) + "_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_uncoherent.fa"),

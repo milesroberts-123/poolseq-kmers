@@ -1,17 +1,3 @@
-def get_samples(wildcards):
-	# get sample size
-	n = parameters.loc[parameters["ID"] == wildcards.ID, "n"]
-        n = int(n.iloc[0])
-
-	# create list of sample names from slim convention
-	samples = list(range(1, n + 1))
-	samples = ["i" + str(x) for x in samples] 
-
-	# create comma-sep list for bcftools
-	samples = ','.join(samples)
-
-	return samples
-
 rule bcftools_slim_two_pop:
 	input:
 		compvcf = "slim_results/{ID}.vcf.gz",

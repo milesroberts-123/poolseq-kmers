@@ -87,6 +87,10 @@ rule all_two_pops:
 	output:
 		touch("{ID}_p1p2.done")
 
+# helper functions
+include: "rules/common.smk"
+
+# other rules
 include: "rules/ancestral_genome.smk"
 include: "rules/bcftools_discosnp_one_pop.smk"
 include: "rules/bcftools_discosnp_two_pop.smk"

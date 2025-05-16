@@ -1,13 +1,3 @@
-# n is number of individuals
-# multiply by 2 to convert to number of genomes
-def get_pool(wildcards):
-        n = parameters.loc[parameters["ID"] == wildcards.ID, "n"]
-        return 2*int(n.iloc[0])
-
-def get_cov(wildcards):
-        cov = parameters.loc[parameters["ID"] == wildcards.ID, "cov"]
-        return int(cov.iloc[0])
-
 rule hetmers_one_pop:
 	input:
 		"kmc_results/kmer_counts_{ID}.txt"

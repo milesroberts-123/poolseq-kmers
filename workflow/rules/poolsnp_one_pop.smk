@@ -1,6 +1,3 @@
-def get_wd(wildcards):
-	return os.getcwd() + "/"
-
 rule poolsnp_one_pop:
 	input:
 		reffasta = "seqkit_results/ref_{ID}.fasta",
@@ -20,6 +17,8 @@ rule poolsnp_one_pop:
 		time=239
 	benchmark:
 		"benchmarks/poolsnp/{ID}.bench"
+	log:
+		"logs/poolsnp/{ID}.log"
 	shell:
 		"""
 		samtools mpileup -f {input.reffasta} {input.trimbam} > {output.mpileup}
@@ -35,5 +34,5 @@ rule poolsnp_one_pop:
 		miss-frac=0 \
 		badsites=1 \
 		allsites=0 \
-		output={params.wd}{wildcards.ID}_poolsnp_output
+		output={params.wd}{wildcards.ID}_poolsnp_output &> {log}
 		"""

@@ -1,11 +1,3 @@
-def get_L(wildcards):
-        L = parameters.loc[parameters["ID"] == wildcards.ID, "L"]
-        return int(L.iloc[0])
-
-def get_num_genos(wildcards):
-        n = parameters.loc[parameters["ID"] == wildcards.ID, "n"]
-        return 2*int(n.iloc[0])
-
 rule seqkit_two_pop:
 	input:
 		vcffilled= "slim_results/samples_filled_{ID}_p1p2.vcf.gz",
