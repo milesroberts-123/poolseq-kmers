@@ -1,18 +1,17 @@
 library("dplyr") 
 
-replicates = 1:2
-sample_sizes = c(25, 50, 75, 100, 125)
-coverages = c(50, 100, 150, 200, 250)
-sequencers = c("miseq", "hiseq", "nextseq", "novaseq")
-
-population_sizes = c(1000, 2000, 5000)
-mutation_rates = c(5e-9, 1e-8, 2e-8)
-recombination_rates = c(5e-9, 1e-8, 2e-8)
-
-#sample_sizes = c(25, 50, 75, 100)
-#coverages = c(50, 100, 150, 200)
+replicates = 1:3
+sample_sizes = c(25, 50, 75, 100)
+coverages = c(50, 100, 150, 200)
+sequencers = c("miseq")
 #sequencers = c("miseq", "hiseq", "nextseq", "novaseq")
 
+population_sizes = c(1000)
+mutation_rates = c(1e-8)
+recombination_rates = c(1e-8)
+
+shapes = c(4.22, 1e6)
+shuffles = c(TRUE, FALSE)
 chrom_length = 2e6
 
 # create data frame of workflow parameters
@@ -28,12 +27,12 @@ one_pop_params = expand.grid(
   L = chrom_length,
   sequencer = sequencers,
   simtype = "onepop",
-  N1 = 0,
-  N2 = 0,
-  mg1 = 0,
-  mg2 = 0,
-  h = 0,
-  s = 0
+  shape = shapes,
+  shuffle = shuffles,
+  pA = 0.25,
+  pC = 0.25,
+  pG = 0.25,
+  pT = 0.25
 )
 
 # parameters for two population model
@@ -51,6 +50,12 @@ two_pop_params = expand.grid(
   cov = coverages,
   L = chrom_length,
   sequencer = sequencers,
+  shape = shapes,
+  shuffle = shuffles,
+  pA = 0.25,
+  pC = 0.25,
+  pG = 0.25,
+  pT = 0.25,
   simtype = "twopop"
 )
 
@@ -64,7 +69,8 @@ sweep_params = expand.grid(
   N = population_sizes,
   n = sample_sizes,
   h = c(0, 0.5, 1),
-  Nes = c(2, 5, 10, 20, 50, 100),
+  #h = c(0.5),
+  Nes = c(10, 25, 50, 100),
   #s = 0.1,
   sigma = c(0),
   mu = mutation_rates,
@@ -72,21 +78,59 @@ sweep_params = expand.grid(
   cov = coverages,
   L = chrom_length,
   sequencer = sequencers,
+  shape = shapes,
+  shuffle = shuffles,
+  pA = 0.25,
+  pC = 0.25,
+  pG = 0.25,
+  pT = 0.25,
   simtype = "sweep"
 )
 
-# selection coefficient
+# convert Nes to selection coefficient
 sweep_params$s = sweep_params$Nes/sweep_params$N
 
-# combine all parameters into one table
-params = bind_rows(one_pop_params, two_pop_params, sweep_params)
-#params = bind_rows(one_pop_params, two_pop_params)
+# bulk-segregant analysis parameters
+bsa_params = expand.grid(
+  rep = replicates,
+  N = 2000,
+  n = sample_sizes,
+  sigma = c(0),
+  mu = mutation_rates,
+  R = recombination_rates,
+  cov = coverages,
+  L = chrom_length,
+  sequencer = sequencers,
+  shape = shapes,
+  shuffle = shuffles,
+  pA = 0.25,
+  pC = 0.25,
+  pG = 0.25,
+  pT = 0.25,
+  qtl_mean = 0,
+  qtl_sigma = 1,
+  qtl_prop = 0.1,
+  optimum_mean = 0,
+  optimum_sigma = 10,
+  phenotype_cutoff = 0.05,
+  simtype = "bsa"
+)
 
-# add simulation id
-params$ID = 1:nrow(params)
+# combine all parameters into one table
+params = bind_rows(one_pop_params, two_pop_params, sweep_params, bsa_params)
+#params = bind_rows(one_pop_params, two_pop_params)
+#params = bind_rows(one_pop_params, sweep_params)
+#params = bind_rows(sweep_params, bsa_params)
+#params = sweep_params
 
 # replace all NA with 0, so that snakemake stays happy
 params[is.na(params)] = 0
+
+# subset if needed
+params = params[(params$simtype %in% c("sweep", "bsa")),]
+
+# add simulation id
+params$ID = 1:nrow(params)
 
 # save
 write.table(params, "../config/parameters.tsv", sep = "\t", quote = F, row.names = F)

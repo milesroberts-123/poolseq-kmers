@@ -1,15 +1,15 @@
 rule bwa_one_pop:
 	input:
-		reffasta = "ref_{ID}.fasta",
-		read1 = "trimmed_paired_R1_{ID}.fastq",
-		read2 = "trimmed_paired_R2_{ID}.fastq"
+		reffasta = "seqkit_results/ref_{ID}.fasta",
+		read1 = "fastp_results/trimmed_paired_R1_{ID}.fastq",
+		read2 = "fastp_results/trimmed_paired_R2_{ID}.fastq"
 	output:
-		bam = temp("trimmed_{ID}.bam"),
-		amb = temp("ref_{ID}.fasta.amb"),
-		ann = temp("ref_{ID}.fasta.ann"),
-		bwt = temp("ref_{ID}.fasta.bwt"),
-		pac = temp("ref_{ID}.fasta.pac"),
-		sa = temp("ref_{ID}.fasta.sa")
+		bam = temp("bwa_results/{ID}.bam"),
+		amb = temp("seqkit_results/ref_{ID}.fasta.amb"),
+		ann = temp("seqkit_results/ref_{ID}.fasta.ann"),
+		bwt = temp("seqkit_results/ref_{ID}.fasta.bwt"),
+		pac = temp("seqkit_results/ref_{ID}.fasta.pac"),
+		sa = temp("seqkit_results/ref_{ID}.fasta.sa")
 	threads: 2
 	resources:
 		mem_mb_per_cpu=8000,

@@ -1,5 +1,3 @@
-rm(list = ls())
-
 # get file names passed to script as arguments
 print("Parsing arguments...")
 args = commandArgs(trailingOnly=TRUE)
@@ -38,25 +36,6 @@ cosine = function(x,y){
   1 - num/(a*b)
 }
 
-kmer_fst = function(x,y){
-  x = x/sum(x)
-  y = y/sum(y)
-  
-  xsq = x^2
-  ysq = y^2
-  
-  pi_wn = 0.5 * ( (1-sum(xsq)) + (1-sum(ysq)) )
-  
-  pi_bw = 1-sum(x*y)
-  
-  pi_to = 0.5*pi_wn + 0.5*pi_bw
-  
-  fst_nei = 1 - pi_wn/pi_to
-  
-  fst_hud = 1- pi_wn/pi_bw
-  
-  return(c(fst_nei, fst_hud))
-}
 
 print("Reading files into memory...")
 kmerCounts1 = read.table(kmerFile1, header = T, col.names = c("k", "c"), sep = "\t")
@@ -76,15 +55,10 @@ kmerCounts[is.na(kmerCounts)] = 0
 
 # calculate k-mer dissimilarity metrics
 print("Calculating dissimilarity...")
-
-fst_values = kmer_fst(kmerCounts$c.x, kmerCounts$c.y)
-
 results = data.frame(
   jaccard = jaccard(kmerCounts$c.x, kmerCounts$c.y),
   bray_curtis = bray_curtis(kmerCounts$c.x, kmerCounts$c.y),
-  cosine = cosine(kmerCounts$c.x, kmerCounts$c.y),
-  nei_fst = fst_values[1],
-  hudson_fst = fst_values[2]
+  cosine = cosine(kmerCounts$c.x, kmerCounts$c.y)
 )
 
 write.table(results, dissimOutput, row.names = F, quote = F, sep = "\t")

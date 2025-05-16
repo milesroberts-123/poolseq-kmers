@@ -1,7 +1,7 @@
 rule blast:
 	input:
-		ref = "ref_{ID}.fasta",
-		unitigs = "unitigs_renamed_{ID}.fasta"
+		ref = "seqkit_results/ref_{ID}.fasta",
+		unitigs = "unitig_caller_results/unitigs_renamed_{ID}.fasta"
 	output:
 		ndb = temp("ref_{ID}.ndb"),
 		nhr = temp("ref_{ID}.nhr"),
@@ -11,16 +11,20 @@ rule blast:
 		nsq = temp("ref_{ID}.nsq"),
 		ntf = temp("ref_{ID}.ntf"),
 		nto = temp("ref_{ID}.nto"),
-		alignments = "unitig_alignments_{ID}.txt"
+		alignments = "blast_results/{ID}.txt"
 	conda:
 		"../envs/blast.yaml"
 	threads: 1
 	resources:
 		mem_mb_per_cpu=8000,
 		time=239
+	params:
+		blastEvalue = config["blastEvalue"]
+	log:
+		"logs/blast/{ID}.log"
 	shell:
 		"""
-		makeblastdb -in {input.ref} -title $(basename {input.ref} .fasta) -dbtype nucl -out $(basename {input.ref} .fasta)
+		makeblastdb -in {input.ref} -title $(basename {input.ref} .fasta) -dbtype nucl -out $(basename {input.ref} .fasta) &>> {log}
 
-		blastn -query {input.unitigs} -db $(basename {input.ref} .fasta) -out {output.alignments} -max_target_seqs 1 -evalue 1e-10 -outfmt 6
+		blastn -query {input.unitigs} -db $(basename {input.ref} .fasta) -out {output.alignments} -max_target_seqs 1 -evalue {params.blastEvalue} -outfmt 6 &>> {log}
 		"""

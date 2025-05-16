@@ -1,11 +1,11 @@
 rule varscan_two_pop:
 	input:
-		reffasta = "ref_{ID}_p1.fasta",
-		trimbam_p2 = "trimmed_{ID}_p1.bam",
-		trimbam_p1 = "trimmed_{ID}_p2.bam"
+		reffasta = "seqkit_results/ref_{ID}_p1.fasta",
+		trimbam_p2 = "bwa_results/{ID}_p1.bam",
+		trimbam_p1 = "bwa_results/{ID}_p2.bam"
 	output:
-		cp1 = "calls_{ID}_p1.tsv",
-		cp2 = "calls_{ID}_p2.tsv"
+		cp1 = "varscan_results/{ID}_p1.tsv",
+		cp2 = "varscan_results/{ID}_p2.tsv"
 	threads: 1
 	resources:
 		mem_mb_per_cpu=8000,

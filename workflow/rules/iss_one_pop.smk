@@ -16,7 +16,7 @@ def get_sequencer(wildcards):
 
 rule iss_one_pop:
 	input:
-		"samples_{ID}.fasta"
+		"seqkit_results/samples_{ID}.fasta"
 		#p1="samples_{ID}_p1.fasta",
 		#p2="samples_{ID}_p2.fasta"
 	output:
@@ -24,9 +24,9 @@ rule iss_one_pop:
 		#temp("reads_{ID}_p1_R2.fastq"),
 		#temp("reads_{ID}_p2_R1.fastq"),
 		#temp("reads_{ID}_p2_R2.fastq")
-		temp("reads_{ID}_R1.fastq"),
-		temp("reads_{ID}_R2.fastq")
-	threads: 8
+		temp("iss_results/reads_{ID}_R1.fastq"),
+		temp("iss_results/reads_{ID}_R2.fastq")
+	threads: 4
 	resources:
 		mem_mb_per_cpu=2000,
 		time=239
@@ -59,5 +59,5 @@ rule iss_one_pop:
 		fi
 
 		# simulate reads
-		iss generate -g {input} --cpus {threads} --model {params.sequencer} -n $nreads --abundance uniform --output reads_{wildcards.ID} &> {log}
+		iss generate -g {input} --cpus {threads} --model {params.sequencer} -n $nreads --abundance uniform --output iss_results/reads_{wildcards.ID} &> {log}
 		"""

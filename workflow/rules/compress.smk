@@ -1,9 +1,9 @@
 rule compress:
 	input:
-		"slim_{ID}.vcf",
+		"slim_results/{ID}.vcf",
 	output:
-		temp("slim_{ID}.vcf.gz"),
-		temp("slim_{ID}.vcf.gz.tbi")
+		temp("slim_results/{ID}.vcf.gz"),
+		temp("slim_results/{ID}.vcf.gz.tbi")
 	threads: 1
 	resources:
 		mem_mb_per_cpu=8000,
