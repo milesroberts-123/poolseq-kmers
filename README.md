@@ -1,58 +1,30 @@
 # poolseq-kmers
 
-trying out approaches to analyzing k-mers in poolseq data
+Author: Miles Roberts
 
-## IDEAS
+Simulation workflow to investigate the utility of k-mers, het-mers, and k-unitigs for pool-seq data analysis
 
-I'm thinking that I can identify pairs of k-mers that differ at their central bp as putative snps, then use the relative coverage between the k-mers to estimate minor allele frequencies.
+## Inputs
 
-If I can get a site frequency spectrum (could compare k-mers to ancestral/outgroup k-mers to determine which is derived and which is ancestral)
+### config/config.yaml
 
-What about when individuals do not contribute equally to the genome pool?
+see `config.schema.yaml`
 
-What about when the genome sequence is not repetitive? I could vary the shannon entropy of the sequences I use
+### config/parameters.tsv
 
-## workflow
+see `parameters.schema.yaml`
 
-* generate ancestral sequence
+## Outputs
 
-* neutral forward-time simulation in slim
+## Usage
 
-* generate sequencing reads with insilicoseq
+### Run whole workflow on slurm cluster
 
-* count k-mers with kmc
+### Run workflow in batches
 
-* use smudgeplot to get k-mers that differ at central base pair
+## Notes
 
-* calculate minor allele frequencies based on minor k-mer coverage
-
-* map k-mer coverages back to actual sequences using seqkit
-
-## parameters
-
-* type of ancestral sequence
-
-* forward simulation parameters
-
-* number of individuals per pool, error model, coverage, variation in individual contribution
-
-* coverage cutoff for k-mers
-
-## notes
-
-Dang, smudgeplot is going through a big update right now, which is just my luck. 
-
-### 2024-12-21
-
-Trying to debug the workflow, but it's very complex with lots of paths. I'll just debug chunks of the workflow at a time
-
-A snippet for debugging:
-
-```
-snakemake --cluster "sbatch --time={resources.time} --cpus-per-task={threads} --mem-per-cpu={resources.mem_mb_per_cpu} --partition=josephsnodes --account=josephsnodes" --resources load=1 --jobs 950 --cores 950 --use-conda --rerun-incomplete --rerun-triggers mtime --scheduler greedy --keep-incomplete calls_2600_p1.tsv kmerpairs_2600_p1_coverages.tsv kmerpairs_2600_p1_sequences.tsv discoRes_ad_2600_p1.txt slim_allele_freqs_2600_p1.txt 2600_p1_poolsnp_output.vcf.gz calls_2600_p2.tsv kmerpairs_2600_p2_coverages.tsv kmerpairs_2600_p2_sequences.tsv discoRes_ad_2600_p2.txt slim_allele_freqs_2600_p2.txt 2600_p2_poolsnp_output.vcf.gz
-```
-
-## 2025-05-08
+### Building docker container
 
 https://github.com/snakemake/snakemake/issues/2602
 
@@ -65,7 +37,7 @@ sudo docker tag poolseq-kmers milesroberts/poolseq-kmers
 sudo docker push milesroberts/poolseq-kmers
 ```
 
-## to do
+## To do
 
 ### higher priority
 
