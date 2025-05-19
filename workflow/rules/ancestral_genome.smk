@@ -22,4 +22,16 @@ rule ancestral_genome:
 		mem_mb_per_cpu=8000,
 		time=239
 	shell:
-		"Rscript scripts/random_genome.R {params.pA} {params.pC} {params.pG} {params.pT} {params.shape} {params.k} {params.L} {wildcards.ID} {params.shuffleKmers} &> {log}"
+		"""
+		if [ -d /.singularity.d ]; then
+			echo Singularity detected! Using conda env in container
+			conda init
+			source ~/.bashrc
+			conda activate /conda-envs/3c74495c6c8f8b13c8f5e41bfa52b11d
+		fi
+
+		# check for singularity
+		#./scripts/check_for_singularity.sh /conda-envs/3c74495c6c8f8b13c8f5e41bfa52b11d &>> {log}
+
+		Rscript scripts/random_genome.R {params.pA} {params.pC} {params.pG} {params.pT} {params.shape} {params.k} {params.L} {wildcards.ID} {params.shuffleKmers} &>> {log}
+		"""

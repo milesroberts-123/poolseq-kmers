@@ -2,7 +2,9 @@
 
 Author: Miles Roberts
 
-Simulation workflow to investigate the utility of k-mers, het-mers, and k-unitigs for pool-seq data analysis
+Simulation workflow to investigate the utility of k-mers, het-mers, and k-unitigs for pool-seq data analysis built with snakemake (v 7.25.0)
+
+## Table of Contents
 
 ## Inputs
 
@@ -18,9 +20,19 @@ see `parameters.schema.yaml`
 
 ## Usage
 
-### Run whole workflow on slurm cluster
+Examples commands are in resources/01_snakemake.sh
+
+### Run whole workflow with conda envs on slurm cluster
 
 ### Run workflow in batches
+
+### Run workflow with singularity
+
+Need to pass `--use-singularity` to snakemake and also your snakemake working directory with `--singularity-args "--bind <SNAKEMAKE_WORKING_DIRECTORY>"`
+
+```
+snakemake --cores 1 --use-singularity --singularity-args "--bind ~/Josephs_Lab_Projects/poolseq-kmers/workflow"
+```
 
 ## Notes
 
@@ -88,6 +100,8 @@ sudo docker push milesroberts/poolseq-kmers
 - [x] write workflow schema for parameters.tsv
 
 - [x] resolve workflow lints `snakemake --lint`
+
+- [ ] figure out singularity
 
 - [ ] integration tests
 
