@@ -18,3 +18,9 @@ maxcount: 10000
 
 # e-value for blast
 blastEvalue: 0.0000000001
+
+# conda environments in container (only needed if you use singularity)
+
+## R.yaml 
+
+## poolsnp.yaml

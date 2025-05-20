@@ -6,17 +6,29 @@ Simulation workflow to investigate the utility of k-mers, het-mers, and k-unitig
 
 ## Table of Contents
 
+## Overview 
+
 ## Inputs
 
-### config/config.yaml
+See config/README.md for a complete description of workflow inputs. In short, you need two files:
 
-see `config.schema.yaml`
+* config/config.yaml:
 
-### config/parameters.tsv
-
-see `parameters.schema.yaml`
+* config/parameters.tsv:
 
 ## Outputs
+
+For each simulation, this workflow outputs:
+
+* SNP calls from Varscan
+
+* SNP calls from PoolSNP
+
+* SNP calls from discosnp
+
+* Het-mers from smudgeplot
+
+* Het-mers from hetmers
 
 ## Usage
 
@@ -101,7 +113,9 @@ sudo docker push milesroberts/poolseq-kmers
 
 - [x] resolve workflow lints `snakemake --lint`
 
-- [ ] figure out singularity
+- [x] figure out singularity
+
+- [ ] upgrade to latest snakemake version
 
 - [ ] integration tests
 
