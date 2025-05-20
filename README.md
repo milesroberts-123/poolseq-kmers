@@ -36,7 +36,29 @@ Examples commands are in resources/01_snakemake.sh
 
 ### Run whole workflow with conda envs on slurm cluster
 
+`snakemake --cluster "sbatch --time={resources.time} --cpus-per-task={threads} --mem-per-cpu={resources.mem_mb_per_cpu} --partition=josephsnodes --account=josephsnodes --output=logs/slurm/%j.out --error=logs/slurm/%j.out" --jobs 950 --cores 950 --use-conda --rerun-incomplete --rerun-triggers mtime --scheduler greedy --retries 1 --keep-going`
+
 ### Run workflow in batches
+
+```
+for num in {1..50}
+do
+  snakemake --cluster "sbatch --time={resources.time} --cpus-per-task={threads} --mem-per-cpu={resources.mem_mb_per_cpu} --partition=josephsnodes --account=josephsnodes --output=logs/slurm/%j.out --error=logs/slurm/%j.out" --jobs 975 --cores 975 --use-conda --rerun-incomplete --rerun-triggers mtime --scheduler greedy --retries 1 --keep-going --batch all=$num/50
+done
+```
+
+Collapse logs into one archive to minimize number of files
+
+```
+# create initial archive
+tar -cvf logs.tar logs/
+
+# add more files
+tar -uvf logs.tar logs/
+
+# compress at the very end
+gzip logs.tar
+```
 
 ### Run workflow with singularity
 
