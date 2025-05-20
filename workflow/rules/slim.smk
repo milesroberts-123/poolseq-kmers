@@ -1,57 +1,57 @@
 rule slim:
-	input:
-		"ancestral_genome_results/{ID}.fasta"
-	output:
-		temp("slim_results/{ID}.vcf"),
-		temp("slim_results/{ID}.fasta")
-	log:
-		"logs/slim/{ID}.log"
-	params:
-		simtype=get_simtype,
-		sigma=get_sigma,
-		N=get_N,
-		N1=get_N1,
-		N2=get_N2,
-		mg1=get_mg1,
-		mg2=get_mg2,
-		n=get_n,
-		h=get_h,
-		s=get_s,
-		mu=get_mu,
-		R=get_R,
-		tau=get_tau,
-		qtl_mean=get_qtl_mean,
-		qtl_sigma=get_qtl_sigma,
-		qtl_prop=get_qtl_prop,
-		optimum_mean=get_optimum_mean,
-		optimum_sigma=get_optimum_sigma,
-		phenotype_cutoff=get_phenotype_cutoff
-	threads: 1
-	resources:
-		mem_mb_per_cpu=8000,
-		time=239
-	conda:
-		"../envs/slim.yaml"
-	shell:
-		"""
-		if [ -f "/.singularity.d" ]; then
-			echo Singularity dectected! Activing conda env in container...
-			mamba activate /conda-envs/5d8d7dec5540d725ad3e6cb69c16b0a2
-		fi
+    input:
+        "ancestral_genome_results/{ID}.fasta"
+    output:
+        temp("slim_results/{ID}.vcf"),
+        temp("slim_results/{ID}.fasta")
+    log:
+        "logs/slim/{ID}.log"
+    params:
+        simtype=get_simtype,
+        sigma=get_sigma,
+        N=get_N,
+        N1=get_N1,
+        N2=get_N2,
+        mg1=get_mg1,
+        mg2=get_mg2,
+        n=get_n,
+        h=get_h,
+        s=get_s,
+        mu=get_mu,
+        R=get_R,
+        tau=get_tau,
+        qtl_mean=get_qtl_mean,
+        qtl_sigma=get_qtl_sigma,
+        qtl_prop=get_qtl_prop,
+        optimum_mean=get_optimum_mean,
+        optimum_sigma=get_optimum_sigma,
+        phenotype_cutoff=get_phenotype_cutoff
+    threads: 1
+    resources:
+        mem_mb_per_cpu=8000,
+        time=239
+    conda:
+        "../envs/slim.yaml"
+    shell:
+        """
+        if [ -f "/.singularity.d" ]; then
+            echo Singularity dectected! Activing conda env in container...
+            mamba activate /conda-envs/5d8d7dec5540d725ad3e6cb69c16b0a2
+        fi
 
-		if [ "{params.simtype}" == "onepop" ]; then
-			slim -d ID={wildcards.ID} -d sigma={params.sigma} -d N={params.N} -d mu={params.mu} -d R={params.R} -d n={params.n} scripts/neutral.slim &> {log}
-		fi
+        if [ "{params.simtype}" == "onepop" ]; then
+            slim -d ID={wildcards.ID} -d sigma={params.sigma} -d N={params.N} -d mu={params.mu} -d R={params.R} -d n={params.n} scripts/neutral.slim &> {log}
+        fi
 
-		if [ "{params.simtype}" == "twopop" ]; then
-			slim -d ID={wildcards.ID} -d sigma={params.sigma} -d N1={params.N1} -d N2={params.N2} -d mg1={params.mg1} -d mg2={params.mg2} -d mu={params.mu} -d R={params.R} -d n={params.n} -d tau={params.tau} scripts/two_pop.slim &> {log}
-		fi
+        if [ "{params.simtype}" == "twopop" ]; then
+            slim -d ID={wildcards.ID} -d sigma={params.sigma} -d N1={params.N1} -d N2={params.N2} -d mg1={params.mg1} -d mg2={params.mg2} -d mu={params.mu} -d R={params.R} -d n={params.n} -d tau={params.tau} scripts/two_pop.slim &> {log}
+        fi
 
-		if [ "{params.simtype}" == "bsa" ]; then
-			slim -d ID={wildcards.ID} -d N={params.N} -d mu={params.mu} -d R={params.R} -d n={params.n} -d qtl_mean={params.qtl_mean} -d qtl_sigma={params.qtl_sigma} -d qtl_prop={params.qtl_prop} -d optimum_mean={params.optimum_mean} -d optimum_sigma={params.optimum_sigma} -d phenotype_cutoff={params.phenotype_cutoff} scripts/bsa.slim &> {log}
-		fi
+        if [ "{params.simtype}" == "bsa" ]; then
+            slim -d ID={wildcards.ID} -d N={params.N} -d mu={params.mu} -d R={params.R} -d n={params.n} -d qtl_mean={params.qtl_mean} -d qtl_sigma={params.qtl_sigma} -d qtl_prop={params.qtl_prop} -d optimum_mean={params.optimum_mean} -d optimum_sigma={params.optimum_sigma} -d phenotype_cutoff={params.phenotype_cutoff} scripts/bsa.slim &> {log}
+        fi
 
-		if [ "{params.simtype}" == "sweep" ]; then
-			slim -d ID={wildcards.ID} -d h={params.h} -d s={params.s} -d sigma={params.sigma} -d N={params.N} -d mu={params.mu} -d R={params.R} -d n={params.n} scripts/sweep.slim &> {log}
-		fi
-		"""
+        if [ "{params.simtype}" == "sweep" ]; then
+            slim -d ID={wildcards.ID} -d h={params.h} -d s={params.s} -d sigma={params.sigma} -d N={params.N} -d mu={params.mu} -d R={params.R} -d n={params.n} scripts/sweep.slim &> {log}
+        fi
+        """

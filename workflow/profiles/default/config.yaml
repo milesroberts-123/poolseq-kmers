@@ -1,0 +1,9 @@
+executor: slurm
+jobs: 975
+cores: 975
+
+default-resources:
+    slurm_account: "josephsnodes"
+    slurm_partition: "josephsnodes"
+    mem_mb_per_cpu: 8000 # take a sensible default for your cluster
+    runtime: "119m"

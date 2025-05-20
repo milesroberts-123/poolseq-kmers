@@ -6,7 +6,23 @@ Simulation workflow to investigate the utility of k-mers, het-mers, and k-unitig
 
 ## Table of Contents
 
-## Overview 
+## Installation 
+
+Create a new mamba environment with snakemake and the slurm plugin. If you are not running the workflow on a SLURM cluster, you can install a different pluggin
+
+```
+mamba create -y -n snakemake snakemake snakemake-executor-plugin-slurm
+
+mamba activate snakemake
+```
+
+Now grab the workflow from GitHub
+
+```
+
+```
+
+Finally, if you are running snakemake on a slurm cluster, go to `workflow/profiles/default/config.yaml` and change the slurm account, slurm partition, and default resources to match your system.
 
 ## Inputs
 
@@ -60,12 +76,14 @@ tar -uvf logs.tar logs/
 gzip logs.tar
 ```
 
-### Run workflow with singularity
+### Run workflow with singularity including all conda environments pre-installed
+
+Instead of downloading and building all of the conda environments, you can just download a container with all of the conda environments pre-installed.
 
 Need to pass `--use-singularity` to snakemake and also your snakemake working directory with `--singularity-args "--bind <SNAKEMAKE_WORKING_DIRECTORY>"`
 
 ```
-snakemake --cores 1 --use-singularity --singularity-args "--bind ~/Josephs_Lab_Projects/poolseq-kmers/workflow"
+snakemake --sdm conda apptainer --singularity-args "--bind ~/Josephs_Lab_Projects/poolseq-kmers/workflow" --cores 1
 ```
 
 ## Notes
@@ -82,6 +100,10 @@ sudo docker login -u milesroberts
 sudo docker tag poolseq-kmers milesroberts/poolseq-kmers
 sudo docker push milesroberts/poolseq-kmers
 ```
+
+### Adding rule-specific resources to profile
+
+https://github.com/snakemake/snakemake-executor-plugin-slurm/blob/main/docs/further.md
 
 ## To do
 
@@ -137,7 +159,11 @@ sudo docker push milesroberts/poolseq-kmers
 
 - [x] figure out singularity
 
-- [ ] upgrade to latest snakemake version
+- [x] upgrade to latest snakemake version
+
+- [x] add slurm profile
+
+- [ ] add rule-specific resources to profile
 
 - [ ] integration tests
 

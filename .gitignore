@@ -8,4 +8,5 @@
 **.log
 **.fasta
 **.vcf
-!config/ref
+**.vcf.gz
+**.vcf.gz.tbi

@@ -20,7 +20,7 @@ one_pop_params = parameters[(parameters["simtype"] == "onepop") | (parameters["s
 two_pop_params = parameters[(parameters["simtype"] == "twopop") | (parameters["simtype"] == "bsa")]
 
 wildcard_constraints:
-	ID="\d+"
+	ID="\\d+"
 
 #rule all:
 #	input:
