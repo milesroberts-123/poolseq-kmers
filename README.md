@@ -2,7 +2,7 @@
 
 Author: Miles Roberts
 
-Simulation workflow to investigate the utility of k-mers, het-mers, and k-unitigs for pool-seq data analysis built with snakemake (v 7.25.0)
+Simulation workflow to investigate the utility of k-mers, het-mers, and k-unitigs for pool-seq data analysis built with snakemake (v 9.3.3) and run with the snakemake slurm plugin (v 1.3.6).
 
 ## Table of Contents
 
@@ -104,6 +104,11 @@ sudo docker push milesroberts/poolseq-kmers
 ### Adding rule-specific resources to profile
 
 https://github.com/snakemake/snakemake-executor-plugin-slurm/blob/main/docs/further.md
+
+
+### Visualize DAG
+
+`snakemake --dag | dot -Tpdf > dag.pdf`
 
 ## To do
 
