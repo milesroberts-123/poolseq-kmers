@@ -6,9 +6,23 @@ Simulation workflow to investigate the utility of k-mers, het-mers, and k-unitig
 
 ## Table of Contents
 
-## Installation 
+* Setup
 
-Create a new mamba environment with snakemake and the slurm plugin. If you are not running the workflow on a SLURM cluster, you can install a different pluggin
+* Inputs
+
+* Outputs
+
+* Running the workflow
+
+* Statistical analysis and figure creation
+
+## Setup
+
+1. Install mamba
+
+2. Create a mamba environment with snakemake and any plugins you need
+
+This is how to make new mamba environment named snakemake with snakemake and the slurm plugin installed. If you are not running the workflow on a SLURM cluster, you can install a different pluggin
 
 ```
 mamba create -y -n snakemake snakemake snakemake-executor-plugin-slurm snakedeploy
@@ -16,21 +30,17 @@ mamba create -y -n snakemake snakemake snakemake-executor-plugin-slurm snakedepl
 mamba activate snakemake
 ```
 
-Now grab the workflow from GitHub
+3. Download the workflow from github
 
-```
-
-```
-
-Finally, if you are running snakemake on a slurm cluster, go to `workflow/profiles/default/config.yaml` and change the slurm account, slurm partition, and default resources to match your system.
+4. Check the snakemake profile for the proper executer. The default profile runs snakemake on a slurm cluster (`workflow/profiles/default/config.yaml`), but you should still change the slurm account, slurm partition, and default resources to match your system.
 
 ## Inputs
 
 See config/README.md for a complete description of workflow inputs. In short, you need two files:
 
-* config/config.yaml:
+* config/config.yaml: describes parameters that are held constant for every simulation in the workflow
 
-* config/parameters.tsv:
+* config/parameters.tsv: is a table of parameters that vary between simulations. Each simulation corresponds to a different row, and each parameter is a column. Each simulation should have a column `ID` that is an integer used as a unique identifier.
 
 ## Outputs
 
@@ -171,7 +181,7 @@ https://github.com/snakemake/snakemake-executor-plugin-slurm/blob/main/docs/furt
 
 - [x] add rule-specific resources to profile
 
-- [ ] [Add workflow hub requirements](https://snakemake.readthedocs.io/en/stable/snakefiles/deployment.html#uploading-workflows-to-workflowhub)
+- [x] [Add workflow hub requirements](https://snakemake.readthedocs.io/en/stable/snakefiles/deployment.html#uploading-workflows-to-workflowhub)
 
 - [ ] integration tests
 
