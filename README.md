@@ -6,6 +6,8 @@ Simulation workflow to investigate the utility of k-mers, het-mers, and k-unitig
 
 ## Table of Contents
 
+* Overview
+
 * Setup
 
 * Inputs
@@ -15,6 +17,8 @@ Simulation workflow to investigate the utility of k-mers, het-mers, and k-unitig
 * Running the workflow
 
 * Statistical analysis and figure creation
+
+## Overview
 
 ## Setup
 
@@ -96,7 +100,7 @@ Need to pass `--use-singularity` to snakemake and also your snakemake working di
 snakemake --sdm conda apptainer --singularity-args "--bind ~/Josephs_Lab_Projects/poolseq-kmers/workflow" --cores 1
 ```
 
-### Run workflow workflow in batches with singularity on slurm cluster
+### Run workflow in batches with singularity on slurm cluster
 
 ## Notes
 
