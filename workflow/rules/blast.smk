@@ -14,10 +14,6 @@ rule blast:
         alignments = "blast_results/{ID}.txt"
     conda:
         "../envs/blast.yaml"
-    threads: 1
-    resources:
-        mem_mb_per_cpu=8000,
-        time=239
     params:
         blastEvalue = config["blastEvalue"]
     log:

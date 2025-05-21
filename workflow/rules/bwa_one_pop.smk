@@ -10,10 +10,6 @@ rule bwa_one_pop:
         bwt = temp("seqkit_results/ref_{ID}.fasta.bwt"),
         pac = temp("seqkit_results/ref_{ID}.fasta.pac"),
         sa = temp("seqkit_results/ref_{ID}.fasta.sa")
-    threads: 2
-    resources:
-        mem_mb_per_cpu=8000,
-        time=239
     conda:
         "../envs/bwa.yaml"
     log: 

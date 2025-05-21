@@ -6,10 +6,6 @@ rule varscan_two_pop:
     output:
         cp1 = "varscan_results/{ID}_p1.tsv",
         cp2 = "varscan_results/{ID}_p2.tsv"
-    threads: 1
-    resources:
-        mem_mb_per_cpu=8000,
-        time=239
     conda:
         "../envs/varscan.yaml"
     log: 

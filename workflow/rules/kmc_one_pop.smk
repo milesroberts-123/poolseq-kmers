@@ -20,10 +20,6 @@ rule kmc_one_pop:
         union_R1_R2_u1_suf=temp("union_R1_R2_u1_{ID}.kmc_suf"),
         union_R1_R2_u1_u2_pre=temp("union_R1_R2_u1_u2_{ID}.kmc_pre"),
         union_R1_R2_u1_u2_suf=temp("union_R1_R2_u1_u2_{ID}.kmc_suf"),
-    threads: 1
-    resources:
-        mem_mb_per_cpu=8000,
-        time=239
     conda:
         "../envs/kmc.yaml"
     log: 

@@ -8,10 +8,6 @@ rule unitig_caller:
         tmp_fasta = temp("unitig_caller_results/kmer_seqs_{ID}.fa")
     conda:
         "../envs/unitig-caller.yaml"
-    threads: 1
-    resources:
-        mem_mb_per_cpu=8000,
-        time=239
     params:
         rtab_prefix = "unitig_caller_results/unitigs_{ID}"
     benchmark:

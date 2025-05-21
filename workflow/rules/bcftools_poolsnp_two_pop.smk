@@ -7,10 +7,6 @@ rule bcftools_poolsnp_two_pop:
         tbi_p2 = temp("{ID}_p2_poolsnp_output.vcf.gz.tbi"),
         final_p1 = "poolsnp_results/{ID}_p1.txt",
         final_p2 = "poolsnp_results/{ID}_p2.txt"
-    threads: 1
-    resources:
-        mem_mb_per_cpu=8000,
-        time=239
     conda:
         "../envs/bcftools.yaml"
     log:

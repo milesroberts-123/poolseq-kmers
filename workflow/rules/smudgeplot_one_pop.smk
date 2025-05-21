@@ -4,10 +4,6 @@ rule smudgeplot_one_pop:
     output:
         "smudgeplot_results/{ID}_coverages.tsv",
         "smudgeplot_results/{ID}_sequences.tsv"
-    threads: 1
-    resources:
-        mem_mb_per_cpu=8000,
-        time=239
     conda:
         "../envs/smudgeplot.yaml"
     log: 

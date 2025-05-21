@@ -7,10 +7,6 @@ rule smudgeplot_two_pop:
         "smudgeplot_results/{ID}_p1_sequences.tsv",
         "smudgeplot_results/{ID}_p2_coverages.tsv",
         "smudgeplot_results/{ID}_p2_sequences.tsv"
-    threads: 1
-    resources:
-        mem_mb_per_cpu=8000,
-        time=239
     conda:
         "../envs/smudgeplot.yaml"
     log: 

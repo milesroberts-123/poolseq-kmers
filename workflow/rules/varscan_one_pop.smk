@@ -4,10 +4,6 @@ rule varscan_one_pop:
         trimbam = "bwa_results/{ID}.bam"
     output:
         "varscan_results/{ID}.tsv"
-    threads: 1
-    resources:
-        mem_mb_per_cpu=8000,
-        time=239
     conda:
         "../envs/varscan.yaml"
     log: 

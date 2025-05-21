@@ -13,10 +13,6 @@ rule hetmers_two_pop:
         "hetmers_results/{ID}_p2_bayes_states.csv",
         "hetmers_results/{ID}_p2_hashes.csv",
         "hetmers_results/{ID}_p2_seqs.csv"
-    threads: 1
-    resources:
-        mem_mb_per_cpu=8000,
-        time=239
     log: 
         "logs/hetmers/{ID}.log"
     benchmark:

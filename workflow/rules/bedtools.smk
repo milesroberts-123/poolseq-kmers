@@ -6,10 +6,6 @@ rule bedtools:
     output:
         masked_ref = "ref_masked_{ID}.fasta",
         shuf_bed = temp("shuf_{ID}.bed")
-    threads: 1
-    resources:
-        mem_mb_per_cpu=8000,
-        time=239
     conda:
         "../envs/bedtools.yaml"
     log: 

@@ -6,10 +6,6 @@ rule bcftools_slim_one_pop:
         samplevcf = temp("slim_results/samples_{ID}.vcf.gz"),
         allelefreq = "slim_results/allele_freqs_{ID}.txt",
         filledvcf = temp("slim_results/samples_filled_{ID}.vcf.gz")
-    threads: 1
-    resources:
-        mem_mb_per_cpu=8000,
-        time=239
     conda:
         "../envs/bcftools.yaml"
     log:

@@ -5,10 +5,6 @@ rule bcftools_poolsnp_one_pop:
     output:
         tbi = temp("{ID}_poolsnp_output.vcf.gz.tbi"),
         final = "poolsnp_results/{ID}.txt"
-    threads: 1
-    resources:
-        mem_mb_per_cpu=8000,
-        time=239
     conda:
         "../envs/bcftools.yaml"
     log:

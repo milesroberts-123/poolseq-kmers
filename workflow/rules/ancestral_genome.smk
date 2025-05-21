@@ -17,10 +17,6 @@ rule ancestral_genome:
         shuffleKmers=get_shuffle
     conda:
         "../envs/R.yaml"
-    threads: 1
-    resources:
-        mem_mb_per_cpu=8000,
-        time=239
     shell:
         """
         #if [ -d /.singularity.d ]; then

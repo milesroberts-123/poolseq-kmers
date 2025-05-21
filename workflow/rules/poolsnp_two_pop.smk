@@ -17,9 +17,6 @@ rule poolsnp_two_pop:
         mincount = config["mincount"]
     conda:
         "../envs/poolsnp.yaml"
-    resources:
-        mem_mb_per_cpu=8000,
-        time=239
     log:
         "logs/poolsnp/{ID}.log"
     shell:

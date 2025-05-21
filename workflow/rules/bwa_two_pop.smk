@@ -13,10 +13,6 @@ rule bwa_two_pop:
         bwt = temp("seqkit_results/ref_{ID}_p1.fasta.bwt"),
         pac = temp("seqkit_results/ref_{ID}_p1.fasta.pac"),
         sa = temp("seqkit_results/ref_{ID}_p1.fasta.sa")
-    threads: 2
-    resources:
-        mem_mb_per_cpu=8000,
-        time=239
     conda:
         "../envs/bwa.yaml"
     log: 

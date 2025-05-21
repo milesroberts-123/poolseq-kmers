@@ -11,7 +11,7 @@ Simulation workflow to investigate the utility of k-mers, het-mers, and k-unitig
 Create a new mamba environment with snakemake and the slurm plugin. If you are not running the workflow on a SLURM cluster, you can install a different pluggin
 
 ```
-mamba create -y -n snakemake snakemake snakemake-executor-plugin-slurm
+mamba create -y -n snakemake snakemake snakemake-executor-plugin-slurm snakedeploy
 
 mamba activate snakemake
 ```
@@ -48,13 +48,13 @@ For each simulation, this workflow outputs:
 
 ## Usage
 
-Examples commands are in resources/01_snakemake.sh
+Examples commands are in `resources/01_snakemake.bash`
 
 ### Run whole workflow with conda envs on slurm cluster
 
 `snakemake --cluster "sbatch --time={resources.time} --cpus-per-task={threads} --mem-per-cpu={resources.mem_mb_per_cpu} --partition=josephsnodes --account=josephsnodes --output=logs/slurm/%j.out --error=logs/slurm/%j.out" --jobs 950 --cores 950 --use-conda --rerun-incomplete --rerun-triggers mtime --scheduler greedy --retries 1 --keep-going`
 
-### Run workflow in batches
+### Run workflow in batches with conda envs on slurm cluster
 
 ```
 for num in {1..50}
@@ -63,7 +63,7 @@ do
 done
 ```
 
-Collapse logs into one archive to minimize number of files
+*Tip:* Collapse logs folder into one archive to minimize number of files on your system
 
 ```
 # create initial archive
@@ -76,7 +76,7 @@ tar -uvf logs.tar logs/
 gzip logs.tar
 ```
 
-### Run workflow with singularity including all conda environments pre-installed
+### Run workflow whole workflow at once with singularity on slurm cluster
 
 Instead of downloading and building all of the conda environments, you can just download a container with all of the conda environments pre-installed.
 
@@ -85,6 +85,8 @@ Need to pass `--use-singularity` to snakemake and also your snakemake working di
 ```
 snakemake --sdm conda apptainer --singularity-args "--bind ~/Josephs_Lab_Projects/poolseq-kmers/workflow" --cores 1
 ```
+
+### Run workflow workflow in batches with singularity on slurm cluster
 
 ## Notes
 
@@ -104,7 +106,6 @@ sudo docker push milesroberts/poolseq-kmers
 ### Adding rule-specific resources to profile
 
 https://github.com/snakemake/snakemake-executor-plugin-slurm/blob/main/docs/further.md
-
 
 ### Visualize DAG
 
@@ -168,7 +169,9 @@ https://github.com/snakemake/snakemake-executor-plugin-slurm/blob/main/docs/furt
 
 - [x] add slurm profile
 
-- [ ] add rule-specific resources to profile
+- [x] add rule-specific resources to profile
+
+- [ ] [Add workflow hub requirements](https://snakemake.readthedocs.io/en/stable/snakefiles/deployment.html#uploading-workflows-to-workflowhub)
 
 - [ ] integration tests
 

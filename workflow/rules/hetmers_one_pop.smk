@@ -7,10 +7,6 @@ rule hetmers_one_pop:
         "hetmers_results/{ID}_bayes_states.csv",
         "hetmers_results/{ID}_hashes.csv",
         "hetmers_results/{ID}_seqs.csv"
-    threads: 1
-    resources:
-        mem_mb_per_cpu=8000,
-        time=239
     log: 
         "logs/hetmers/{ID}.log"
     benchmark:
@@ -34,4 +30,4 @@ rule hetmers_one_pop:
         mv {wildcards.ID}_bayes_states.csv hetmers_results/
         mv {wildcards.ID}_hashes.csv hetmers_results/
         mv {wildcards.ID}_seqs.csv hetmers_results/
-                """
+        """

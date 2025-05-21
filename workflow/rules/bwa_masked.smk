@@ -11,9 +11,6 @@ rule bwa_masked:
         pac = temp("ref_masked_{ID}.fasta.pac"),
         sa = temp("ref_masked_{ID}.fasta.sa")
     threads: 2
-    resources:
-        mem_mb_per_cpu=8000,
-        time=239
     conda:
         "../envs/bwa.yaml"
     log: 

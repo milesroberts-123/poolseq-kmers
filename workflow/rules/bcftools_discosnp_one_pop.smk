@@ -8,10 +8,6 @@ rule bcftools_discosnp_one_pop:
         bgzip = temp("discoRes_sorted_{ID}.vcf.gz"),
         tbi = temp("discoRes_sorted_{ID}.vcf.gz.tbi"),
         final = "disco_results/{ID}.txt"
-    threads: 1
-    resources:
-        mem_mb_per_cpu=8000,
-        time=239
     conda:
         "../envs/bcftools.yaml"
     log:

@@ -27,10 +27,6 @@ rule fastp_two_pop:
         jsonR1R2_p2 = "fastp_results/{ID}_R1R2_p2.json",
         jsonU1_p2 = "fastp_results/{ID}_U1_p2.json",
         jsonU2_p2 = "fastp_results/{ID}_U2_p2.json",
-    threads: 1
-    resources:
-        mem_mb_per_cpu=8000,
-        time=239
     conda:
         "../envs/fastp.yaml"
     log: 

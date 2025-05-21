@@ -9,10 +9,6 @@ rule seqkit_two_pop:
         reffasta = "seqkit_results/ref_{ID}_p1.fasta",
         poskey = "seqkit_results/center_kmer_pairs_{ID}_p1p2.txt",
         snppos = temp("seqkit_results/snp_positions_{ID}_p1p2.txt")
-    threads: 1
-    resources:
-        mem_mb_per_cpu=8000,
-        time=239
     params:
         L=get_L,
         n=get_num_genos

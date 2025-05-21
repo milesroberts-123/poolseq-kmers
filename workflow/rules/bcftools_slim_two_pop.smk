@@ -11,10 +11,6 @@ rule bcftools_slim_two_pop:
         filledvcf_p1 = temp("slim_results/samples_filled_{ID}_p1.vcf.gz"),
         filledvcf_p2 = temp("slim_results/samples_filled_{ID}_p2.vcf.gz"),
         filledvcf_p1p2 = temp("slim_results/samples_filled_{ID}_p1p2.vcf.gz")
-    threads: 1
-    resources:
-        mem_mb_per_cpu=8000,
-        time=239
     conda:
         "../envs/bcftools.yaml"
     log:

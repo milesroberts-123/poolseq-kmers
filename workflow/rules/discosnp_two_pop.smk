@@ -33,11 +33,6 @@ rule discosnp_two_pop:
         igv_vcf_p2 = temp("discoRes_{ID}_p2_k_" + str(config["k"]) + "_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_coherent_for_IGV.vcf"),
         sam_p2 = temp("discoRes_{ID}_p2_k_" + str(config["k"]) + "_c_" + str(config["mincount"]) + "_D_100_P_3_b_0_coherentBWA_MEM.sam"),
         cov_h5_p2 = temp("discoRes_{ID}_p2_k_" + str(config["k"]) + "_c_" + str(config["mincount"]) + "_cov.h5")
-    threads: 1
-    resources:
-        mem_mb_per_cpu=16000,
-        time=239,
-        #load = 1
     conda:
         "../envs/discosnp.yaml"
     log: 

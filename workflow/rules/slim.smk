@@ -26,18 +26,14 @@ rule slim:
         optimum_mean=get_optimum_mean,
         optimum_sigma=get_optimum_sigma,
         phenotype_cutoff=get_phenotype_cutoff
-    threads: 1
-    resources:
-        mem_mb_per_cpu=8000,
-        time=239
     conda:
         "../envs/slim.yaml"
     shell:
         """
-        if [ -f "/.singularity.d" ]; then
-            echo Singularity dectected! Activing conda env in container...
-            mamba activate /conda-envs/5d8d7dec5540d725ad3e6cb69c16b0a2
-        fi
+        #if [ -d /.singularity.d ]; then
+        #    echo Singularity dectected! Activing conda env in container...
+        #    mamba activate /conda-envs/5d8d7dec5540d725ad3e6cb69c16b0a2
+        #fi
 
         if [ "{params.simtype}" == "onepop" ]; then
             slim -d ID={wildcards.ID} -d sigma={params.sigma} -d N={params.N} -d mu={params.mu} -d R={params.R} -d n={params.n} scripts/neutral.slim &> {log}
