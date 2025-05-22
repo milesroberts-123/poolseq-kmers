@@ -187,9 +187,13 @@ https://github.com/snakemake/snakemake-executor-plugin-slurm/blob/main/docs/furt
 
 - [x] [Add workflow hub requirements](https://snakemake.readthedocs.io/en/stable/snakefiles/deployment.html#uploading-workflows-to-workflowhub)
 
+- [x] add local profile
+
 - [ ] integration tests
 
 - [ ] github actions
+
+- [ ] snakemake reports
 
 - [ ] write hetmers binary to calculate fst
 
