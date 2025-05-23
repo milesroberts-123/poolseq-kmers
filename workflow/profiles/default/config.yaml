@@ -11,7 +11,7 @@ default-resources:
     runtime: "239m"
 
 # rules to execute locally, because they're too fast to bother with cluster submission
-localrules: all_one_pops, all_two_pops
+#localrules: all_one_pops, all_two_pops
 
 # here only rules, which require different (more) resources:
 set-resources:
