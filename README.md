@@ -102,6 +102,10 @@ snakemake --sdm conda apptainer --singularity-args "--bind ~/Josephs_Lab_Project
 
 ### Run workflow in batches with singularity on slurm cluster
 
+### Run workflow on local machine
+
+`snakemake --profile profiles/local`
+
 ## Notes
 
 ### Building docker container
@@ -124,6 +128,16 @@ https://github.com/snakemake/snakemake-executor-plugin-slurm/blob/main/docs/furt
 ### Visualize DAG
 
 `snakemake --dag | dot -Tpdf > dag.pdf`
+
+### Snakemake reports
+
+Could be a good idea to move my notebook into scripts, which will generate figures that get compiled into a snakemake report. In my mind, this is more easily reproducibile than having someone configure a notebook. However, you can't really explore the data this way beyond whatever figures you predetermine.
+
+Another option is to just add my notebook as a snakemake rule:
+
+https://nbis-reproducible-research.readthedocs.io/en/course_2104/rmarkdown/#r-markdown-and-snakemake
+
+This could be nicer because R markdown will give me more control over what the report.html looks like.
 
 ## To do
 
@@ -189,17 +203,19 @@ https://github.com/snakemake/snakemake-executor-plugin-slurm/blob/main/docs/furt
 
 - [x] add local profile
 
+- [ ] unit tests
+
 - [ ] integration tests
 
 - [ ] github actions
-
-- [ ] snakemake reports
 
 - [ ] write hetmers binary to calculate fst
 
 - [ ] generalize bayes theorem to negative binomial distribution
 
 ### lower priority
+
+- [ ] snakemake reports
 
 - [ ] add in ploidyfrost
 
