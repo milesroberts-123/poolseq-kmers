@@ -203,7 +203,11 @@ This could be nicer because R markdown will give me more control over what the r
 
 - [x] add local profile
 
-- [ ] try calculating fst in R with hetmers from individual pools and combined pools -> this will pilot my idea before I try coding it into rust
+- [x] try calculating fst in R with hetmers from individual pools and combined pools -> this will pilot my idea before I try coding it into rust
+
+- [x] use lookup functions
+
+- [ ] [Try rewriting discosnp as a shadow rule](https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#shadow-rules)
 
 - [ ] add R notebook to snakemake
 
