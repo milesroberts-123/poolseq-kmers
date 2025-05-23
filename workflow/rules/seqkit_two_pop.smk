@@ -10,8 +10,8 @@ rule seqkit_two_pop:
         poskey = "seqkit_results/center_kmer_pairs_{ID}_p1p2.txt",
         snppos = temp("seqkit_results/snp_positions_{ID}_p1p2.txt")
     params:
-        L=get_L,
-        n=get_num_genos
+        L=config["L"],
+        n=lookup(query="ID == '{ID}'", within=parameters, cols="n")
     conda:
         "../envs/seqkit.yaml"
     log: 

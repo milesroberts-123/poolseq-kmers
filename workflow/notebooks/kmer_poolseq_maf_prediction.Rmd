@@ -24,7 +24,7 @@ library(MASS)
 library(reshape)
 library(ggpubr)
 
-library(fitdistrplus)
+# library(fitdistrplus)
 
 library(rjson)
 

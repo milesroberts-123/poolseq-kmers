@@ -26,7 +26,7 @@ rule hetmers_two_pop:
     params:
         mincount = config["mincount"],
         pool = get_pool,
-        cov = get_cov
+        cov = lookup(query="ID == '{ID}'", within=parameters, cols="cov")
     shell:
         """
         # create directory

@@ -7,14 +7,14 @@ rule ancestral_genome:
     log:
         "logs/ancestral_genome/{ID}.log"
     params:
-        pA=get_pA,
-        pC=get_pC,
-        pG=get_pG,
-        pT=get_pT,
-        shape=get_shape,
-        L=get_L,
+        pA=config["pA"],
+        pC=config["pC"],
+        pG=config["pG"],
+        pT=config["pT"],
+        shape=lookup(query="ID == '{ID}'", within=parameters, cols="shape"),
+        L=config["L"],
         k=config["k"],
-        shuffleKmers=get_shuffle
+        shuffleKmers=lookup(query="ID == '{ID}'", within=parameters, cols="shuffle")
     conda:
         "../envs/R.yaml"
     shell:

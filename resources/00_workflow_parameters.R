@@ -12,7 +12,7 @@ recombination_rates = c(1e-8)
 
 shapes = c(4.22, 1e6)
 shuffles = c(TRUE, FALSE)
-chrom_length = 2e6
+#chrom_length = 2e6
 
 # create data frame of workflow parameters
 one_pop_params = expand.grid(
@@ -24,15 +24,15 @@ one_pop_params = expand.grid(
   mu = mutation_rates,
   R = recombination_rates,
   cov = coverages,
-  L = chrom_length,
+  #L = chrom_length,
   sequencer = sequencers,
   simtype = "onepop",
   shape = shapes,
   shuffle = shuffles,
-  pA = 0.25,
-  pC = 0.25,
-  pG = 0.25,
-  pT = 0.25
+  #pA = 0.25,
+  #pC = 0.25,
+  #pG = 0.25,
+  #pT = 0.25
 )
 
 # parameters for two population model
@@ -48,14 +48,14 @@ two_pop_params = expand.grid(
   mu = mutation_rates,
   R = recombination_rates,
   cov = coverages,
-  L = chrom_length,
+  #L = chrom_length,
   sequencer = sequencers,
   shape = shapes,
   shuffle = shuffles,
-  pA = 0.25,
-  pC = 0.25,
-  pG = 0.25,
-  pT = 0.25,
+  #pA = 0.25,
+  #pC = 0.25,
+  #pG = 0.25,
+  #pT = 0.25,
   simtype = "twopop"
 )
 
@@ -76,14 +76,14 @@ sweep_params = expand.grid(
   mu = mutation_rates,
   R = recombination_rates,
   cov = coverages,
-  L = chrom_length,
+  #L = chrom_length,
   sequencer = sequencers,
   shape = shapes,
   shuffle = shuffles,
-  pA = 0.25,
-  pC = 0.25,
-  pG = 0.25,
-  pT = 0.25,
+  #pA = 0.25,
+  #pC = 0.25,
+  #pG = 0.25,
+  #pT = 0.25,
   simtype = "sweep"
 )
 
@@ -99,14 +99,14 @@ bsa_params = expand.grid(
   mu = mutation_rates,
   R = recombination_rates,
   cov = coverages,
-  L = chrom_length,
+  #L = chrom_length,
   sequencer = sequencers,
   shape = shapes,
   shuffle = shuffles,
-  pA = 0.25,
-  pC = 0.25,
-  pG = 0.25,
-  pT = 0.25,
+  #pA = 0.25,
+  #pC = 0.25,
+  #pG = 0.25,
+  #pT = 0.25,
   qtl_mean = 0,
   qtl_sigma = 1,
   qtl_prop = 0.1,

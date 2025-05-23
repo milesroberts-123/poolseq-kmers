@@ -57,10 +57,11 @@ wildcard_constraints:
 #    output:
 #        "report.html"
 #    params:
-#        outdir = "results",
 #        wd = get_wd
 #    conda:
-#	"../envs/r_markdown.yaml"
+#        "../envs/r_markdown.yaml"
+#    log:
+#        "logs/r_markdown.log"
 #    shell:
 #        """
 #        Rscript -e 'parameters <- list(root_directory = "{params.wd}");

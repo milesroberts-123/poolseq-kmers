@@ -22,9 +22,6 @@ properties:
   cov:
     type: number
     description: total sequencing coverage
-  L:
-    type: integer
-    description: genome length
   sequencer:
     type: string
     description: type sequencing instrument to simulate
@@ -37,26 +34,6 @@ properties:
   shuffle:
     type: boolean
     description: whether k-mers should be shuffled to make ancestral genome
-  pA:
-    type: number
-    description: probability of sampling A
-    minimum: 0
-    maximum: 1
-  pC:
-    type: number
-    description: probability of sampling C
-    minimum: 0
-    maximum: 1
-  pG:
-    type: number
-    description: probability of sampling G
-    minimum: 0
-    maximum: 1
-  pT:
-    type: number
-    description: probability of sampling T
-    minimum: 0
-    maximum: 1
   N1:
     type: integer
     description: number of individuals in population 1 after split

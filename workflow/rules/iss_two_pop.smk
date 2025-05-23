@@ -12,9 +12,9 @@ rule iss_two_pop:
     log:
         "logs/iss/{ID}.log"
     params:
-        L = get_L,
-        cov = get_cov,
-        sequencer = get_sequencer
+        L = config["L"],
+        cov = lookup(query="ID == '{ID}'", within=parameters, cols="cov"),
+        sequencer = lookup(query="ID == '{ID}'", within=parameters, cols="sequencer")
     shell:
         """
         # read length = 300 bp

@@ -7,25 +7,25 @@ rule slim:
     log:
         "logs/slim/{ID}.log"
     params:
-        simtype=get_simtype,
-        sigma=get_sigma,
-        N=get_N,
-        N1=get_N1,
-        N2=get_N2,
-        mg1=get_mg1,
-        mg2=get_mg2,
-        n=get_n,
-        h=get_h,
-        s=get_s,
-        mu=get_mu,
-        R=get_R,
-        tau=get_tau,
-        qtl_mean=get_qtl_mean,
-        qtl_sigma=get_qtl_sigma,
-        qtl_prop=get_qtl_prop,
-        optimum_mean=get_optimum_mean,
-        optimum_sigma=get_optimum_sigma,
-        phenotype_cutoff=get_phenotype_cutoff
+        simtype = lookup(query="ID == '{ID}'", within=parameters, cols="simtype"),
+        sigma=lookup(query="ID == '{ID}'", within=parameters, cols="sigma"),
+        N=lookup(query="ID == '{ID}'", within=parameters, cols="N"),
+        N1=lookup(query="ID == '{ID}'", within=parameters, cols="N1"),
+        N2=lookup(query="ID == '{ID}'", within=parameters, cols="N2"),
+        mg1=lookup(query="ID == '{ID}'", within=parameters, cols="mg1"),
+        mg2=lookup(query="ID == '{ID}'", within=parameters, cols="mg2"),
+        n=lookup(query="ID == '{ID}'", within=parameters, cols="n"),
+        h=lookup(query="ID == '{ID}'", within=parameters, cols="h"),
+        s=lookup(query="ID == '{ID}'", within=parameters, cols="s"),
+        mu=lookup(query="ID == '{ID}'", within=parameters, cols="mu"),
+        R=lookup(query="ID == '{ID}'", within=parameters, cols="R"),
+        tau=lookup(query="ID == '{ID}'", within=parameters, cols="tau"),
+        qtl_mean=lookup(query="ID == '{ID}'", within=parameters, cols="qtl_mean"),
+        qtl_sigma=lookup(query="ID == '{ID}'", within=parameters, cols="qtl_sigma"),
+        qtl_prop=lookup(query="ID == '{ID}'", within=parameters, cols="qtl_prop"),
+        optimum_mean=lookup(query="ID == '{ID}'", within=parameters, cols="optimum_mean"),
+        optimum_sigma=lookup(query="ID == '{ID}'", within=parameters, cols="optimum_sigma"),
+        phenotype_cutoff=lookup(query="ID == '{ID}'", within=parameters, cols="phenotype_cutoff")
     conda:
         "../envs/slim.yaml"
     shell:

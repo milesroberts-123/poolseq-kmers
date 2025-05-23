@@ -5,6 +5,30 @@ properties:
     type: integer
     description: k-mer length/minimum read trim length
     default: 31
+  L:
+    type: integer
+    description: genome length
+    default: 2000000
+  pA:
+    type: number
+    description: probability of sampling A
+    minimum: 0
+    maximum: 1
+  pC:
+    type: number
+    description: probability of sampling C
+    minimum: 0
+    maximum: 1
+  pG:
+    type: number
+    description: probability of sampling G
+    minimum: 0
+    maximum: 1
+  pT:
+    type: number
+    description: probability of sampling T
+    minimum: 0
+    maximum: 1
   unqualLimit:
     type: integer
     description: unqualified_percent_limit for fastp, how many percents of bases are allowed to be unqualified in terms of quality score
