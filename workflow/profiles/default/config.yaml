@@ -3,7 +3,6 @@ jobs: 975
 cores: 975
 
 # use sensible defaults for your cluster
-
 default-resources:
     slurm_account: "josephsnodes"
     slurm_partition: "josephsnodes"
@@ -11,14 +10,19 @@ default-resources:
     cpus_per_task: 1
     runtime: "239m"
 
-# here only rules, which require different (more) resources:
-#set-resources:
-#    rule_a:
-#        runtime: "2h"
+# rules to execute locally, because they're too fast to bother with cluster submission
+localrules: all_one_pops, all_two_pops
 
-#    rule_b:
-#        mem_mb_per_cpu: 3600
-#        runtime: "5h"
+# here only rules, which require different (more) resources:
+set-resources:
+    bwa_one_pop:
+        cpus_per_task: 2
+    bwa_two_pop:
+        cpus_per_task: 2
+    iss_one_pop:
+        cpus_per_task: 4
+    iss_two_pop:
+        cpus_per_task: 4
 
 # parallelization with threads needs to be defined separately:
 set-threads:

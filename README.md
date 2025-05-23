@@ -203,6 +203,10 @@ This could be nicer because R markdown will give me more control over what the r
 
 - [x] add local profile
 
+- [ ] try calculating fst in R with hetmers from individual pools and combined pools -> this will pilot my idea before I try coding it into rust
+
+- [ ] add R notebook to snakemake
+
 - [ ] unit tests
 
 - [ ] integration tests
@@ -211,9 +215,9 @@ This could be nicer because R markdown will give me more control over what the r
 
 - [ ] write hetmers binary to calculate fst
 
-- [ ] generalize bayes theorem to negative binomial distribution
-
 ### lower priority
+
+- [ ] generalize bayes theorem to negative binomial distribution
 
 - [ ] snakemake reports
 

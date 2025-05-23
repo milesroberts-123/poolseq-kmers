@@ -50,6 +50,26 @@ wildcard_constraints:
 #		expand("blast_results/{ID}.txt", ID=one_pop_params.index.get_level_values("ID")),
 #		expand("hetmers_results/{ID}_counts.csv", ID=one_pop_params.index.get_level_values("ID")),
 
+rule report:
+    input:
+        expand("{ID}.done", ID=one_pop_params.index.get_level_values("ID")),
+	expand("{ID}_p1p2.done", ID=two_pop_params.index.get_level_values("ID")),
+    output:
+        "report.html"
+    params:
+        outdir = "results",
+        wd = get_wd
+    conda:
+	"../envs/r_markdown.yaml"
+    shell:
+        """
+        Rscript -e 'parameters <- list(root_directory = "{params.wd}");
+                    rmarkdown::render("notebooks/kmer_poolseq_maf_prediction.Rmd",
+                                      params      = parameters,
+                                      output_dir  = "{params.wd}",
+                                      output_file = "{output}")'
+        """
+
 rule all:
 	input:
 		expand("{ID}.done", ID=one_pop_params.index.get_level_values("ID")),
