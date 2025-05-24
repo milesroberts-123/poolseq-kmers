@@ -1,29 +1,25 @@
 rule bcftools_poolsnp_masked:
-	input:
-		ref = "ref_masked_{ID}.fasta",
-		vcf = "{ID}_masked_poolsnp_output.vcf.gz",
-	output:
-		tbi = temp("{ID}_masked_poolsnp_output.vcf.gz.tbi"),
-		final = "poolsnp_final_masked_{ID}.txt"
-	threads: 1
-	resources:
-		mem_mb_per_cpu=8000,
-		time=239
-	conda:
-		"../envs/bcftools.yaml"
-	log:
-		"logs/bcftools_poolsnp_masked/{ID}.log"
-	shell:
-		"""
-		# unpack gzip
-		gunzip {input.vcf}
+    input:
+        ref="ref_masked_{ID}.fasta",
+        vcf="{ID}_masked_poolsnp_output.vcf.gz",
+    output:
+        tbi=temp("{ID}_masked_poolsnp_output.vcf.gz.tbi"),
+        final="poolsnp_final_masked_{ID}.txt",
+    conda:
+        "../envs/bcftools.yaml"
+    log:
+        "logs/bcftools_poolsnp_masked/{ID}.log",
+    shell:
+        """
+        # unpack gzip
+        gunzip {input.vcf}
 
-		# recompress with bgzip
-		bgzip $(basename {input.vcf} .gz)
+        # recompress with bgzip
+        bgzip $(basename {input.vcf} .gz)
 
-		# index vcf
-		tabix {input.vcf}
+        # index vcf
+        tabix {input.vcf}
 
-		# output allele depths
-		bcftools view -m2 -M2 -v snps {input.vcf} | bcftools query -f '%CHROM %POS %REF %ALT [ %AD] [ %DP]\n' | sed 's:,:\t:g' > {output.final}		
-		"""
+        # output allele depths
+        bcftools view -m2 -M2 -v snps {input.vcf} | bcftools query -f '%CHROM %POS %REF %ALT [ %AD] [ %DP]\n' | sed 's:,:\t:g' > {output.final}     
+        """

@@ -1,6 +1,18 @@
 # k-mer length/minimum read trim length
 k: 31
 
+# genome length
+L: 2000000
+
+# multinomial probabilities for generating genome
+pA: 0.25
+
+pC: 0.25
+
+pG: 0.25
+
+pT: 0.25
+
 # unqualified_percent_limit for fastp: how many percents of bases are allowed to be unqualified in terms of quality score
 unqualLimit: 40
 
@@ -14,7 +26,13 @@ windowLength: 1
 mincount: 5
 
 # maximum k-mer count recorded
-maxcount: 10000
+maxcount: 1000000
 
 # e-value for blast
 blastEvalue: 0.0000000001
+
+# conda environments in container (only needed if you use singularity)
+
+## R.yaml 
+
+## poolsnp.yaml

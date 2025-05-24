@@ -24,7 +24,7 @@ library(MASS)
 library(reshape)
 library(ggpubr)
 
-library(fitdistrplus)
+# library(fitdistrplus)
 
 library(rjson)
 
@@ -1489,6 +1489,13 @@ plot_unitigs_shape_breakdown = ggplot(plotdata_unitigs, aes(x = sc, color = as.f
   geom_vline(xintercept = 2e6/2, lty = 2, lwd = 1) +
   labs(x = "Center of longest unitig", color = "Nes", title = "Shape parameter breakdown")
 
+plot_unitigs_h_breakdown = ggplot(plotdata_unitigs, aes(x = sc, color = as.factor(Nes))) +
+  geom_density() +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) +
+  facet_grid(shape + h ~ .) +
+  geom_vline(xintercept = 2e6/2, lty = 2, lwd = 1) +
+  labs(x = "Center of longest unitig", color = "Nes", title = "Shape parameter breakdown")
 
 ggarrange(plot_unitigs_all_sims, plot_unitigs_cov_breakdown, plot_unitigs_n_breakdown, nrow = 1, ncol = 3, labels = c("A", "B", "C"), common.legend = T, widths = c(1.5, 1, 1))
 

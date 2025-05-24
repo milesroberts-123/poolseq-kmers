@@ -1,58 +1,114 @@
 # poolseq-kmers
 
-trying out approaches to analyzing k-mers in poolseq data
+Author: Miles Roberts
 
-## IDEAS
+Simulation workflow to investigate the utility of k-mers, het-mers, and k-unitigs for pool-seq data analysis built with snakemake (v 9.3.3) and run with the snakemake slurm plugin (v 1.3.6) and snakedeploy (v 0.11.0)
 
-I'm thinking that I can identify pairs of k-mers that differ at their central bp as putative snps, then use the relative coverage between the k-mers to estimate minor allele frequencies.
+## Table of Contents
 
-If I can get a site frequency spectrum (could compare k-mers to ancestral/outgroup k-mers to determine which is derived and which is ancestral)
+* Overview
 
-What about when individuals do not contribute equally to the genome pool?
+* Setup
 
-What about when the genome sequence is not repetitive? I could vary the shannon entropy of the sequences I use
+* Inputs
 
-## workflow
+* Outputs
 
-* generate ancestral sequence
+* Running the workflow
 
-* neutral forward-time simulation in slim
+* Statistical analysis and figure creation
 
-* generate sequencing reads with insilicoseq
+## Overview
 
-* count k-mers with kmc
+## Setup
 
-* use smudgeplot to get k-mers that differ at central base pair
+1. Install mamba
 
-* calculate minor allele frequencies based on minor k-mer coverage
+2. Create a mamba environment with snakemake and any plugins you need
 
-* map k-mer coverages back to actual sequences using seqkit
-
-## parameters
-
-* type of ancestral sequence
-
-* forward simulation parameters
-
-* number of individuals per pool, error model, coverage, variation in individual contribution
-
-* coverage cutoff for k-mers
-
-## notes
-
-Dang, smudgeplot is going through a big update right now, which is just my luck. 
-
-### 2024-12-21
-
-Trying to debug the workflow, but it's very complex with lots of paths. I'll just debug chunks of the workflow at a time
-
-A snippet for debugging:
+This is how to make new mamba environment named snakemake with snakemake and the slurm plugin installed. If you are not running the workflow on a SLURM cluster, you can install a different pluggin
 
 ```
-snakemake --cluster "sbatch --time={resources.time} --cpus-per-task={threads} --mem-per-cpu={resources.mem_mb_per_cpu} --partition=josephsnodes --account=josephsnodes" --resources load=1 --jobs 950 --cores 950 --use-conda --rerun-incomplete --rerun-triggers mtime --scheduler greedy --keep-incomplete calls_2600_p1.tsv kmerpairs_2600_p1_coverages.tsv kmerpairs_2600_p1_sequences.tsv discoRes_ad_2600_p1.txt slim_allele_freqs_2600_p1.txt 2600_p1_poolsnp_output.vcf.gz calls_2600_p2.tsv kmerpairs_2600_p2_coverages.tsv kmerpairs_2600_p2_sequences.tsv discoRes_ad_2600_p2.txt slim_allele_freqs_2600_p2.txt 2600_p2_poolsnp_output.vcf.gz
+mamba create -y -n snakemake snakemake snakemake-executor-plugin-slurm snakedeploy
+
+mamba activate snakemake
 ```
 
-## 2025-05-08
+3. Download the workflow from github
+
+4. Check the snakemake profile for the proper executer. The default profile runs snakemake on a slurm cluster (`workflow/profiles/default/config.yaml`), but you should still change the slurm account, slurm partition, and default resources to match your system.
+
+## Inputs
+
+See config/README.md for a complete description of workflow inputs. In short, you need two files:
+
+* config/config.yaml: describes parameters that are held constant for every simulation in the workflow
+
+* config/parameters.tsv: is a table of parameters that vary between simulations. Each simulation corresponds to a different row, and each parameter is a column. Each simulation should have a column `ID` that is an integer used as a unique identifier.
+
+## Outputs
+
+For each simulation, this workflow outputs:
+
+* SNP calls from Varscan
+
+* SNP calls from PoolSNP
+
+* SNP calls from discosnp
+
+* Het-mers from smudgeplot
+
+* Het-mers from hetmers
+
+## Usage
+
+Examples commands are in `resources/01_snakemake.bash`
+
+### Run whole workflow with conda envs on slurm cluster
+
+`snakemake --cluster "sbatch --time={resources.time} --cpus-per-task={threads} --mem-per-cpu={resources.mem_mb_per_cpu} --partition=josephsnodes --account=josephsnodes --output=logs/slurm/%j.out --error=logs/slurm/%j.out" --jobs 950 --cores 950 --use-conda --rerun-incomplete --rerun-triggers mtime --scheduler greedy --retries 1 --keep-going`
+
+### Run workflow in batches with conda envs on slurm cluster
+
+```
+for num in {1..50}
+do
+  snakemake --cluster "sbatch --time={resources.time} --cpus-per-task={threads} --mem-per-cpu={resources.mem_mb_per_cpu} --partition=josephsnodes --account=josephsnodes --output=logs/slurm/%j.out --error=logs/slurm/%j.out" --jobs 975 --cores 975 --use-conda --rerun-incomplete --rerun-triggers mtime --scheduler greedy --retries 1 --keep-going --batch all=$num/50
+done
+```
+
+*Tip:* Collapse logs folder into one archive to minimize number of files on your system
+
+```
+# create initial archive
+tar -cvf logs.tar logs/
+
+# add more files
+tar -uvf logs.tar logs/
+
+# compress at the very end
+gzip logs.tar
+```
+
+### Run workflow whole workflow at once with singularity on slurm cluster
+
+Instead of downloading and building all of the conda environments, you can just download a container with all of the conda environments pre-installed.
+
+Need to pass `--use-singularity` to snakemake and also your snakemake working directory with `--singularity-args "--bind <SNAKEMAKE_WORKING_DIRECTORY>"`
+
+```
+snakemake --sdm conda apptainer --singularity-args "--bind ~/Josephs_Lab_Projects/poolseq-kmers/workflow" --cores 1
+```
+
+### Run workflow in batches with singularity on slurm cluster
+
+### Run workflow on local machine
+
+`snakemake --profile profiles/local`
+
+## Notes
+
+### Building docker container
 
 https://github.com/snakemake/snakemake/issues/2602
 
@@ -65,7 +121,25 @@ sudo docker tag poolseq-kmers milesroberts/poolseq-kmers
 sudo docker push milesroberts/poolseq-kmers
 ```
 
-## to do
+### Adding rule-specific resources to profile
+
+https://github.com/snakemake/snakemake-executor-plugin-slurm/blob/main/docs/further.md
+
+### Visualize DAG
+
+`snakemake --dag | dot -Tpdf > dag.pdf`
+
+### Snakemake reports
+
+Could be a good idea to move my notebook into scripts, which will generate figures that get compiled into a snakemake report. In my mind, this is more easily reproducibile than having someone configure a notebook. However, you can't really explore the data this way beyond whatever figures you predetermine.
+
+Another option is to just add my notebook as a snakemake rule:
+
+https://nbis-reproducible-research.readthedocs.io/en/course_2104/rmarkdown/#r-markdown-and-snakemake
+
+This could be nicer because R markdown will give me more control over what the report.html looks like.
+
+## To do
 
 ### higher priority
 
@@ -115,7 +189,37 @@ sudo docker push milesroberts/poolseq-kmers
 
 - [x] write workflow schema for parameters.tsv
 
-- [ ] resolve workflow lints `snakemake --lint`
+- [x] resolve workflow lints `snakemake --lint`
+
+- [x] figure out singularity
+
+- [x] upgrade to latest snakemake version
+
+- [x] add slurm profile
+
+- [x] add rule-specific resources to profile
+
+- [x] [Add workflow hub requirements](https://snakemake.readthedocs.io/en/stable/snakefiles/deployment.html#uploading-workflows-to-workflowhub)
+
+- [x] add local profile
+
+- [x] try calculating fst in R with hetmers from individual pools and combined pools -> this will pilot my idea before I try coding it into rust
+
+- [x] use lookup functions
+
+- [x] split seqkit rules into two rules
+
+- [x] snakefmt
+
+- [x] add local rules
+
+- [x] parameter space coding
+
+- [ ] [Try rewriting discosnp as a shadow rule](https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#shadow-rules)
+
+- [ ] add R notebook to snakemake
+
+- [ ] unit tests
 
 - [ ] integration tests
 
@@ -123,9 +227,11 @@ sudo docker push milesroberts/poolseq-kmers
 
 - [ ] write hetmers binary to calculate fst
 
+### lower priority
+
 - [ ] generalize bayes theorem to negative binomial distribution
 
-### lower priority
+- [ ] snakemake reports
 
 - [ ] add in ploidyfrost
 

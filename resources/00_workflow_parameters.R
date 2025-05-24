@@ -1,8 +1,8 @@
 library("dplyr") 
 
 replicates = 1:3
-sample_sizes = c(25, 50, 75, 100)
-coverages = c(50, 100, 150, 200)
+sample_sizes = c(50, 75, 100)
+coverages = c(100, 150, 200)
 sequencers = c("miseq")
 #sequencers = c("miseq", "hiseq", "nextseq", "novaseq")
 
@@ -12,7 +12,7 @@ recombination_rates = c(1e-8)
 
 shapes = c(4.22, 1e6)
 shuffles = c(TRUE, FALSE)
-chrom_length = 2e6
+#chrom_length = 2e6
 
 # create data frame of workflow parameters
 one_pop_params = expand.grid(
@@ -24,15 +24,15 @@ one_pop_params = expand.grid(
   mu = mutation_rates,
   R = recombination_rates,
   cov = coverages,
-  L = chrom_length,
+  #L = chrom_length,
   sequencer = sequencers,
   simtype = "onepop",
   shape = shapes,
   shuffle = shuffles,
-  pA = 0.25,
-  pC = 0.25,
-  pG = 0.25,
-  pT = 0.25
+  #pA = 0.25,
+  #pC = 0.25,
+  #pG = 0.25,
+  #pT = 0.25
 )
 
 # parameters for two population model
@@ -48,14 +48,14 @@ two_pop_params = expand.grid(
   mu = mutation_rates,
   R = recombination_rates,
   cov = coverages,
-  L = chrom_length,
+  #L = chrom_length,
   sequencer = sequencers,
   shape = shapes,
   shuffle = shuffles,
-  pA = 0.25,
-  pC = 0.25,
-  pG = 0.25,
-  pT = 0.25,
+  #pA = 0.25,
+  #pC = 0.25,
+  #pG = 0.25,
+  #pT = 0.25,
   simtype = "twopop"
 )
 
@@ -76,14 +76,14 @@ sweep_params = expand.grid(
   mu = mutation_rates,
   R = recombination_rates,
   cov = coverages,
-  L = chrom_length,
+  #L = chrom_length,
   sequencer = sequencers,
   shape = shapes,
   shuffle = shuffles,
-  pA = 0.25,
-  pC = 0.25,
-  pG = 0.25,
-  pT = 0.25,
+  #pA = 0.25,
+  #pC = 0.25,
+  #pG = 0.25,
+  #pT = 0.25,
   simtype = "sweep"
 )
 
@@ -99,14 +99,14 @@ bsa_params = expand.grid(
   mu = mutation_rates,
   R = recombination_rates,
   cov = coverages,
-  L = chrom_length,
+  #L = chrom_length,
   sequencer = sequencers,
   shape = shapes,
   shuffle = shuffles,
-  pA = 0.25,
-  pC = 0.25,
-  pG = 0.25,
-  pT = 0.25,
+  #pA = 0.25,
+  #pC = 0.25,
+  #pG = 0.25,
+  #pT = 0.25,
   qtl_mean = 0,
   qtl_sigma = 1,
   qtl_prop = 0.1,
@@ -127,7 +127,7 @@ params = bind_rows(one_pop_params, two_pop_params, sweep_params, bsa_params)
 params[is.na(params)] = 0
 
 # subset if needed
-params = params[(params$simtype %in% c("sweep", "bsa")),]
+#params = params[(params$simtype %in% c("sweep", "bsa")),]
 
 # add simulation id
 params$ID = 1:nrow(params)
