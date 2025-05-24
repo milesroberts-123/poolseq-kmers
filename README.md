@@ -211,6 +211,10 @@ This could be nicer because R markdown will give me more control over what the r
 
 - [x] snakefmt
 
+- [x] add local rules
+
+- [x] parameter space coding
+
 - [ ] [Try rewriting discosnp as a shadow rule](https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#shadow-rules)
 
 - [ ] add R notebook to snakemake

@@ -2,7 +2,7 @@
 import pandas as pd
 import os
 from snakemake.utils import validate
-
+from snakemake.utils import Paramspace
 
 # configuration
 configfile: "../config/config.yaml"
@@ -20,6 +20,11 @@ parameters = pd.read_table(
     "../config/parameters.tsv", sep="\t", dtype={"ID": str}
 ).set_index(["ID"], drop=False)
 validate(parameters, "../config/parameters.schema.yaml")
+
+
+# declare a dataframe to be a paramspace
+parameters = Paramspace(parameters)
+
 
 # split into paired-end and single-end
 one_pop_params = parameters[
