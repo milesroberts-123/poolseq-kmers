@@ -18,15 +18,15 @@ rule hetmers_two_pop:
         "hetmers_results/{ID}_p1p2_empirical_freqs.csv",
         "hetmers_results/{ID}_p1p2_bayes_states.csv",
         "hetmers_results/{ID}_p1p2_hashes.csv",
-        "hetmers_results/{ID}_p1p2_seqs.csv"
-    log: 
-        "logs/hetmers/{ID}.log"
+        "hetmers_results/{ID}_p1p2_seqs.csv",
+    log:
+        "logs/hetmers/{ID}.log",
     benchmark:
         "benchmarks/hetmers/{ID}.bench"
     params:
-        mincount = config["mincount"],
-        pool = get_pool,
-        cov = lookup(query="ID == '{ID}'", within=parameters, cols="cov")
+        mincount=config["mincount"],
+        pool=get_pool,
+        cov=lookup(query="ID == '{ID}'", within=parameters, cols="cov"),
     shell:
         """
         # create directory

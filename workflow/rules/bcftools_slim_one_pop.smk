@@ -1,15 +1,15 @@
 rule bcftools_slim_one_pop:
     input:
-        compvcf = "slim_results/{ID}.vcf.gz",
-        vcfidx = "slim_results/{ID}.vcf.gz.tbi",
+        compvcf="slim_results/{ID}.vcf.gz",
+        vcfidx="slim_results/{ID}.vcf.gz.tbi",
     output:
-        samplevcf = temp("slim_results/samples_{ID}.vcf.gz"),
-        allelefreq = "slim_results/allele_freqs_{ID}.txt",
-        filledvcf = temp("slim_results/samples_filled_{ID}.vcf.gz")
+        samplevcf=temp("slim_results/samples_{ID}.vcf.gz"),
+        allelefreq="slim_results/allele_freqs_{ID}.txt",
+        filledvcf=temp("slim_results/samples_filled_{ID}.vcf.gz"),
     conda:
         "../envs/bcftools.yaml"
     log:
-        "logs/bcftools_slim/{ID}.log"
+        "logs/bcftools_slim/{ID}.log",
     shell:
         """
         # remove reference

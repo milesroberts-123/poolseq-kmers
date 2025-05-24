@@ -1,15 +1,15 @@
 rule bedtools:
     input:
-        fasta = "ref_{ID}.fasta",
+        fasta="ref_{ID}.fasta",
         genome="../config/ref.genome",
-        bed = "../config/mask.bed"
+        bed="../config/mask.bed",
     output:
-        masked_ref = "ref_masked_{ID}.fasta",
-        shuf_bed = temp("shuf_{ID}.bed")
+        masked_ref="ref_masked_{ID}.fasta",
+        shuf_bed=temp("shuf_{ID}.bed"),
     conda:
         "../envs/bedtools.yaml"
-    log: 
-        "logs/bedtools/{ID}.log"
+    log:
+        "logs/bedtools/{ID}.log",
     shell:
         """
         # randomly place masks along genome

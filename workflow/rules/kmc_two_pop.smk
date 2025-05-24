@@ -1,13 +1,13 @@
 rule kmc_two_pop:
     input:
-                pread1_p1 = "fastp_results/trimmed_paired_R1_{ID}_p1.fastq",
-                pread2_p1 = "fastp_results/trimmed_paired_R2_{ID}_p1.fastq",
-                uread1_p1 = "fastp_results/trimmed_unpaired_R1_{ID}_p1.fastq",
-                uread2_p1 = "fastp_results/trimmed_unpaired_R2_{ID}_p1.fastq",
-                pread1_p2 = "fastp_results/trimmed_paired_R1_{ID}_p2.fastq",
-                pread2_p2 = "fastp_results/trimmed_paired_R2_{ID}_p2.fastq",
-                uread1_p2 = "fastp_results/trimmed_unpaired_R1_{ID}_p2.fastq",
-                uread2_p2 = "fastp_results/trimmed_unpaired_R2_{ID}_p2.fastq"
+        pread1_p1="fastp_results/trimmed_paired_R1_{ID}_p1.fastq",
+        pread2_p1="fastp_results/trimmed_paired_R2_{ID}_p1.fastq",
+        uread1_p1="fastp_results/trimmed_unpaired_R1_{ID}_p1.fastq",
+        uread2_p1="fastp_results/trimmed_unpaired_R2_{ID}_p1.fastq",
+        pread1_p2="fastp_results/trimmed_paired_R1_{ID}_p2.fastq",
+        pread2_p2="fastp_results/trimmed_paired_R2_{ID}_p2.fastq",
+        uread1_p2="fastp_results/trimmed_unpaired_R1_{ID}_p2.fastq",
+        uread2_p2="fastp_results/trimmed_unpaired_R2_{ID}_p2.fastq",
     output:
         p1=temp("kmc_results/kmer_counts_{ID}_p1.txt"),
         p2=temp("kmc_results/kmer_counts_{ID}_p2.txt"),
@@ -44,12 +44,12 @@ rule kmc_two_pop:
         union_R1_R2_u1_u2_p1p2_suf=temp("union_R1_R2_u1_u2_{ID}_p1p2.kmc_suf"),
     conda:
         "../envs/kmc.yaml"
-    log: 
-        "logs/kmc/{ID}.log"
+    log:
+        "logs/kmc/{ID}.log",
     params:
-        mincount = config["mincount"],
-        maxcount = config["maxcount"],
-        k = config["k"]
+        mincount=config["mincount"],
+        maxcount=config["maxcount"],
+        k=config["k"],
     shell:
         """
         # create directory

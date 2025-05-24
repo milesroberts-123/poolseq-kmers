@@ -1,17 +1,17 @@
 rule seqkit_get_ref_two_pop:
     input:
-        slimfasta = "slim_results/{ID}.fasta"
+        slimfasta="slim_results/{ID}.fasta",
     output:
-        tempsamplefasta = temp("seqkit_results/samples_{ID}_p1p2.fasta"),
-        p1 = "seqkit_results/samples_{ID}_p1.fasta",
-        p2 = "seqkit_results/samples_{ID}_p2.fasta",
-        reffasta = "seqkit_results/ref_{ID}_p1.fasta",
+        tempsamplefasta=temp("seqkit_results/samples_{ID}_p1p2.fasta"),
+        p1="seqkit_results/samples_{ID}_p1.fasta",
+        p2="seqkit_results/samples_{ID}_p2.fasta",
+        reffasta="seqkit_results/ref_{ID}_p1.fasta",
     params:
-        n=lookup(query="ID == '{ID}'", within=parameters, cols="n")
+        n=lookup(query="ID == '{ID}'", within=parameters, cols="n"),
     conda:
         "../envs/seqkit.yaml"
-    log: 
-        "logs/seqkit/{ID}.log"
+    log:
+        "logs/seqkit/{ID}.log",
     shell:
         """
         # create file with reference genome removed

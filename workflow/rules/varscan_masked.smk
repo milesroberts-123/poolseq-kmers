@@ -1,13 +1,13 @@
 rule varscan_masked:
     input:
-        reffasta = "ref_masked_{ID}.fasta",
-        trimbam = "trimmed_masked_{ID}.bam"
+        reffasta="ref_masked_{ID}.fasta",
+        trimbam="trimmed_masked_{ID}.bam",
     output:
-        "calls_masked_{ID}.tsv"
+        "calls_masked_{ID}.tsv",
     conda:
         "../envs/varscan.yaml"
-    log: 
-        "logs/varscan_masked/{ID}.log"
+    log:
+        "logs/varscan_masked/{ID}.log",
     benchmark:
         "benchmarks/varscan_masked/{ID}.bench"
     shell:

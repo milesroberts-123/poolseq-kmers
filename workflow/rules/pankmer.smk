@@ -1,16 +1,16 @@
 rule pankmer:
     input:
-        reffasta = "ref_{ID}.fasta",
-        pread1 = temp("trimmed_paired_R1_{ID}.fastq"),
-        pread2 = temp("trimmed_paired_R2_{ID}.fastq"),
-        uread1 = temp("trimmed_unpaired_R1_{ID}.fastq"),
-        uread2 = temp("trimmed_unpaired_R2_{ID}.fastq")
+        reffasta="ref_{ID}.fasta",
+        pread1=temp("trimmed_paired_R1_{ID}.fastq"),
+        pread2=temp("trimmed_paired_R2_{ID}.fastq"),
+        uread1=temp("trimmed_unpaired_R1_{ID}.fastq"),
+        uread2=temp("trimmed_unpaired_R2_{ID}.fastq"),
     output:
         reads_index="reads_index_{ID}.tar",
         table="anchor_values_{ID}.tsv",
-        plot="anchor_plot_{ID}.svg"
+        plot="anchor_plot_{ID}.svg",
     conda:
-        "../envs/pankmer.yaml"      
+        "../envs/pankmer.yaml"
     shell:
         """
         # create pankmer index

@@ -1,13 +1,13 @@
 rule smudgeplot_one_pop:
     input:
-        "kmc_results/kmer_counts_{ID}.txt"
+        "kmc_results/kmer_counts_{ID}.txt",
     output:
         "smudgeplot_results/{ID}_coverages.tsv",
-        "smudgeplot_results/{ID}_sequences.tsv"
+        "smudgeplot_results/{ID}_sequences.tsv",
     conda:
         "../envs/smudgeplot.yaml"
-    log: 
-        "logs/smudgeplot/{ID}.log"
+    log:
+        "logs/smudgeplot/{ID}.log",
     benchmark:
         "benchmarks/smudgeplot/{ID}.bench"
     shell:

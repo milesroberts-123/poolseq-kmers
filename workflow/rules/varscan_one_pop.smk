@@ -1,13 +1,13 @@
 rule varscan_one_pop:
     input:
-        reffasta = "seqkit_results/ref_{ID}.fasta",
-        trimbam = "bwa_results/{ID}.bam"
+        reffasta="seqkit_results/ref_{ID}.fasta",
+        trimbam="bwa_results/{ID}.bam",
     output:
-        "varscan_results/{ID}.tsv"
+        "varscan_results/{ID}.tsv",
     conda:
         "../envs/varscan.yaml"
-    log: 
-        "logs/varscan/{ID}.log"
+    log:
+        "logs/varscan/{ID}.log",
     benchmark:
         "benchmarks/varscan/{ID}.bench"
     shell:

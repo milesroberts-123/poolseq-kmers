@@ -1,11 +1,10 @@
 rule ancestral_genome:
     input:
-        "../config/parameters.tsv"
+        "../config/parameters.tsv",
     output:
         "ancestral_genome_results/{ID}.fasta",
-        #"power_law_{ID}.jpg"
     log:
-        "logs/ancestral_genome/{ID}.log"
+        "logs/ancestral_genome/{ID}.log",
     params:
         pA=config["pA"],
         pC=config["pC"],
@@ -14,7 +13,7 @@ rule ancestral_genome:
         shape=lookup(query="ID == '{ID}'", within=parameters, cols="shape"),
         L=config["L"],
         k=config["k"],
-        shuffleKmers=lookup(query="ID == '{ID}'", within=parameters, cols="shuffle")
+        shuffleKmers=lookup(query="ID == '{ID}'", within=parameters, cols="shuffle"),
     conda:
         "../envs/R.yaml"
     shell:

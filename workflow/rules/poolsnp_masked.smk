@@ -1,37 +1,40 @@
 def get_samples(wildcards):
     # get sample size
-        n = parameters.loc[parameters["ID"] == wildcards.ID, "n"]
+    n = parameters.loc[parameters["ID"] == wildcards.ID, "n"]
     n = int(n.iloc[0])
 
     # create list of sample names from slim convention
     samples = list(range(1, n + 1))
-    samples = ["i" + str(x) for x in samples] 
+    samples = ["i" + str(x) for x in samples]
 
     # create comma-sep list for bcftools
-    samples = ','.join(samples)
+    samples = ",".join(samples)
 
-        return samples
+    return samples
+
 
 def get_wd(wildcards):
     return os.getcwd() + "/"
 
-#def get_prefix(wildcards):
-#   return os.getcwd() + "/" + str(wildcards.ID) + "_poolsnp_output" 
+
+# def get_prefix(wildcards):
+#   return os.getcwd() + "/" + str(wildcards.ID) + "_poolsnp_output"
+
 
 rule poolsnp_masked:
     input:
-        reffasta = "ref_masked_{ID}.fasta",
-        trimbam = "trimmed_masked_{ID}.bam"
+        reffasta="ref_masked_{ID}.fasta",
+        trimbam="trimmed_masked_{ID}.bam",
     output:
-        vcf = "{ID}_masked_poolsnp_output.vcf.gz",
+        vcf="{ID}_masked_poolsnp_output.vcf.gz",
         #cov = "{ID}_poolsnp_output-cov-0.98.txt",
-        bs = "{ID}_masked_poolsnp_output_BS.txt.gz",
-        mpileup = temp("{ID}_masked.mpileup")
+        bs="{ID}_masked_poolsnp_output_BS.txt.gz",
+        mpileup=temp("{ID}_masked.mpileup"),
     params:
         #names = get_names,
-        wd = get_wd,
+        wd=get_wd,
         #prefix = get_prefix
-        mincount = config["mincount"]
+        mincount=config["mincount"],
     conda:
         "../envs/poolsnp.yaml"
     benchmark:

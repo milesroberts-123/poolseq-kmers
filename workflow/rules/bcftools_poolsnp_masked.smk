@@ -1,14 +1,14 @@
 rule bcftools_poolsnp_masked:
     input:
-        ref = "ref_masked_{ID}.fasta",
-        vcf = "{ID}_masked_poolsnp_output.vcf.gz",
+        ref="ref_masked_{ID}.fasta",
+        vcf="{ID}_masked_poolsnp_output.vcf.gz",
     output:
-        tbi = temp("{ID}_masked_poolsnp_output.vcf.gz.tbi"),
-        final = "poolsnp_final_masked_{ID}.txt"
+        tbi=temp("{ID}_masked_poolsnp_output.vcf.gz.tbi"),
+        final="poolsnp_final_masked_{ID}.txt",
     conda:
         "../envs/bcftools.yaml"
     log:
-        "logs/bcftools_poolsnp_masked/{ID}.log"
+        "logs/bcftools_poolsnp_masked/{ID}.log",
     shell:
         """
         # unpack gzip

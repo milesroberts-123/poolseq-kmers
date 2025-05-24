@@ -1,20 +1,20 @@
 rule bcftools_slim_two_pop:
     input:
-        compvcf = "slim_results/{ID}.vcf.gz",
-        vcfidx = "slim_results/{ID}.vcf.gz.tbi",
+        compvcf="slim_results/{ID}.vcf.gz",
+        vcfidx="slim_results/{ID}.vcf.gz.tbi",
     output:
-        samplevcf_p1p2 = temp("slim_results/samples_{ID}_p1p2.vcf.gz"),
-        samplevcf_p1 = temp("slim_results/samples_{ID}_p1.vcf.gz"),
-        samplevcf_p2 = temp("slim_results/samples_{ID}_p2.vcf.gz"),
-        allelefreq_p1 = "slim_results/allele_freqs_{ID}_p1.txt",
-        allelefreq_p2 = "slim_results/allele_freqs_{ID}_p2.txt",
-        filledvcf_p1 = temp("slim_results/samples_filled_{ID}_p1.vcf.gz"),
-        filledvcf_p2 = temp("slim_results/samples_filled_{ID}_p2.vcf.gz"),
-        filledvcf_p1p2 = temp("slim_results/samples_filled_{ID}_p1p2.vcf.gz")
+        samplevcf_p1p2=temp("slim_results/samples_{ID}_p1p2.vcf.gz"),
+        samplevcf_p1=temp("slim_results/samples_{ID}_p1.vcf.gz"),
+        samplevcf_p2=temp("slim_results/samples_{ID}_p2.vcf.gz"),
+        allelefreq_p1="slim_results/allele_freqs_{ID}_p1.txt",
+        allelefreq_p2="slim_results/allele_freqs_{ID}_p2.txt",
+        filledvcf_p1=temp("slim_results/samples_filled_{ID}_p1.vcf.gz"),
+        filledvcf_p2=temp("slim_results/samples_filled_{ID}_p2.vcf.gz"),
+        filledvcf_p1p2=temp("slim_results/samples_filled_{ID}_p1p2.vcf.gz"),
     conda:
         "../envs/bcftools.yaml"
     log:
-        "logs/bcftools_slim/{ID}.log"
+        "logs/bcftools_slim/{ID}.log",
     params:
         samples=get_samples,
     shell:

@@ -1,21 +1,21 @@
 rule poolsnp_one_pop:
     input:
-        reffasta = "seqkit_results/ref_{ID}.fasta",
-        trimbam = "bwa_results/{ID}.bam"
+        reffasta="seqkit_results/ref_{ID}.fasta",
+        trimbam="bwa_results/{ID}.bam",
     output:
-        vcf = temp("{ID}_poolsnp_output.vcf.gz"),
-        cov = temp("{ID}_poolsnp_output-cov-0.9999.txt"),
-        bs = temp("{ID}_poolsnp_output_BS.txt.gz"),
-        mpileup = temp("{ID}.mpileup")
+        vcf=temp("{ID}_poolsnp_output.vcf.gz"),
+        cov=temp("{ID}_poolsnp_output-cov-0.9999.txt"),
+        bs=temp("{ID}_poolsnp_output_BS.txt.gz"),
+        mpileup=temp("{ID}.mpileup"),
     params:
-        wd = get_wd,
-        mincount = config["mincount"]
+        wd=get_wd,
+        mincount=config["mincount"],
     conda:
         "../envs/poolsnp.yaml"
     benchmark:
         "benchmarks/poolsnp/{ID}.bench"
     log:
-        "logs/poolsnp/{ID}.log"
+        "logs/poolsnp/{ID}.log",
     shell:
         """
         samtools mpileup -f {input.reffasta} {input.trimbam} > {output.mpileup}

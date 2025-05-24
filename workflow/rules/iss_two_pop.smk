@@ -1,20 +1,20 @@
 rule iss_two_pop:
     input:
         p1="seqkit_results/samples_{ID}_p1.fasta",
-        p2="seqkit_results/samples_{ID}_p2.fasta"
+        p2="seqkit_results/samples_{ID}_p2.fasta",
     output:
         temp("iss_results/reads_{ID}_p1_R1.fastq"),
         temp("iss_results/reads_{ID}_p1_R2.fastq"),
         temp("iss_results/reads_{ID}_p2_R1.fastq"),
-        temp("iss_results/reads_{ID}_p2_R2.fastq")
+        temp("iss_results/reads_{ID}_p2_R2.fastq"),
     conda:
         "../envs/iss.yaml"
     log:
-        "logs/iss/{ID}.log"
+        "logs/iss/{ID}.log",
     params:
-        L = config["L"],
-        cov = lookup(query="ID == '{ID}'", within=parameters, cols="cov"),
-        sequencer = lookup(query="ID == '{ID}'", within=parameters, cols="sequencer")
+        L=config["L"],
+        cov=lookup(query="ID == '{ID}'", within=parameters, cols="cov"),
+        sequencer=lookup(query="ID == '{ID}'", within=parameters, cols="sequencer"),
     shell:
         """
         # read length = 300 bp

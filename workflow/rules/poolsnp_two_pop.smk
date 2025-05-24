@@ -1,24 +1,24 @@
 rule poolsnp_two_pop:
     input:
-        reffasta = "seqkit_results/ref_{ID}_p1.fasta",
-        trimbam_p1 = "bwa_results/{ID}_p1.bam",
-        trimbam_p2 = "bwa_results/{ID}_p2.bam"
+        reffasta="seqkit_results/ref_{ID}_p1.fasta",
+        trimbam_p1="bwa_results/{ID}_p1.bam",
+        trimbam_p2="bwa_results/{ID}_p2.bam",
     output:
-        vcf_p1 = temp("{ID}_p1_poolsnp_output.vcf.gz"),
-        cov_p1 = temp("{ID}_p1_poolsnp_output-cov-0.9999.txt"),
-        bs_p1 = temp("{ID}_p1_poolsnp_output_BS.txt.gz"),
-        mpileup_p1 = temp("{ID}_p1.mpileup"),
-        vcf_p2 = temp("{ID}_p2_poolsnp_output.vcf.gz"),
-        cov_p2 = temp("{ID}_p2_poolsnp_output-cov-0.9999.txt"),
-        bs_p2 = temp("{ID}_p2_poolsnp_output_BS.txt.gz"),
-        mpileup_p2 = temp("{ID}_p2.mpileup")
+        vcf_p1=temp("{ID}_p1_poolsnp_output.vcf.gz"),
+        cov_p1=temp("{ID}_p1_poolsnp_output-cov-0.9999.txt"),
+        bs_p1=temp("{ID}_p1_poolsnp_output_BS.txt.gz"),
+        mpileup_p1=temp("{ID}_p1.mpileup"),
+        vcf_p2=temp("{ID}_p2_poolsnp_output.vcf.gz"),
+        cov_p2=temp("{ID}_p2_poolsnp_output-cov-0.9999.txt"),
+        bs_p2=temp("{ID}_p2_poolsnp_output_BS.txt.gz"),
+        mpileup_p2=temp("{ID}_p2.mpileup"),
     params:
-        wd = get_wd,
-        mincount = config["mincount"]
+        wd=get_wd,
+        mincount=config["mincount"],
     conda:
         "../envs/poolsnp.yaml"
     log:
-        "logs/poolsnp/{ID}.log"
+        "logs/poolsnp/{ID}.log",
     shell:
         """
         samtools mpileup -f {input.reffasta} {input.trimbam_p1} > {output.mpileup_p1}

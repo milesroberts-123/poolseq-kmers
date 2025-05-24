@@ -1,13 +1,13 @@
 rule slim:
     input:
-        "ancestral_genome_results/{ID}.fasta"
+        "ancestral_genome_results/{ID}.fasta",
     output:
         temp("slim_results/{ID}.vcf"),
-        temp("slim_results/{ID}.fasta")
+        temp("slim_results/{ID}.fasta"),
     log:
-        "logs/slim/{ID}.log"
+        "logs/slim/{ID}.log",
     params:
-        simtype = lookup(query="ID == '{ID}'", within=parameters, cols="simtype"),
+        simtype=lookup(query="ID == '{ID}'", within=parameters, cols="simtype"),
         sigma=lookup(query="ID == '{ID}'", within=parameters, cols="sigma"),
         N=lookup(query="ID == '{ID}'", within=parameters, cols="N"),
         N1=lookup(query="ID == '{ID}'", within=parameters, cols="N1"),
@@ -23,9 +23,15 @@ rule slim:
         qtl_mean=lookup(query="ID == '{ID}'", within=parameters, cols="qtl_mean"),
         qtl_sigma=lookup(query="ID == '{ID}'", within=parameters, cols="qtl_sigma"),
         qtl_prop=lookup(query="ID == '{ID}'", within=parameters, cols="qtl_prop"),
-        optimum_mean=lookup(query="ID == '{ID}'", within=parameters, cols="optimum_mean"),
-        optimum_sigma=lookup(query="ID == '{ID}'", within=parameters, cols="optimum_sigma"),
-        phenotype_cutoff=lookup(query="ID == '{ID}'", within=parameters, cols="phenotype_cutoff")
+        optimum_mean=lookup(
+            query="ID == '{ID}'", within=parameters, cols="optimum_mean"
+        ),
+        optimum_sigma=lookup(
+            query="ID == '{ID}'", within=parameters, cols="optimum_sigma"
+        ),
+        phenotype_cutoff=lookup(
+            query="ID == '{ID}'", within=parameters, cols="phenotype_cutoff"
+        ),
     conda:
         "../envs/slim.yaml"
     shell:

@@ -1,14 +1,14 @@
 rule bcftools_poolsnp_one_pop:
     input:
         #ref = "seqkit_results/ref_{ID}.fasta",
-        vcf = "{ID}_poolsnp_output.vcf.gz",
+        vcf="{ID}_poolsnp_output.vcf.gz",
     output:
-        tbi = temp("{ID}_poolsnp_output.vcf.gz.tbi"),
-        final = "poolsnp_results/{ID}.txt"
+        tbi=temp("{ID}_poolsnp_output.vcf.gz.tbi"),
+        final="poolsnp_results/{ID}.txt",
     conda:
         "../envs/bcftools.yaml"
     log:
-        "logs/bcftools_poolsnp/{ID}.log"
+        "logs/bcftools_poolsnp/{ID}.log",
     shell:
         """
         # unpack gzip

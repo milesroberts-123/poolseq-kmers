@@ -1,28 +1,28 @@
 rule fastp_one_pop:
     input:
-        read1 = "iss_results/reads_{ID}_R1.fastq",
-        read2 = "iss_results/reads_{ID}_R2.fastq"
+        read1="iss_results/reads_{ID}_R1.fastq",
+        read2="iss_results/reads_{ID}_R2.fastq",
     output:
-        dpread1 = temp("fastp_results/dedup_paired_R1_{ID}.fastq"),
-        dpread2 = temp("fastp_results/dedup_paired_R2_{ID}.fastq"),
-        duread1 = temp("fastp_results/dedup_unpaired_R1_{ID}.fastq"),
-        duread2 = temp("fastp_results/dedup_unpaired_R2_{ID}.fastq"),
-        pread1 = temp("fastp_results/trimmed_paired_R1_{ID}.fastq"),
-        pread2 = temp("fastp_results/trimmed_paired_R2_{ID}.fastq"),
-        uread1 = temp("fastp_results/trimmed_unpaired_R1_{ID}.fastq"),
-        uread2 = temp("fastp_results/trimmed_unpaired_R2_{ID}.fastq"),
-        jsonR1R2 = "fastp_results/{ID}_R1R2.json",
-        jsonU1 = "fastp_results/{ID}_U1.json",
-        jsonU2 = "fastp_results/{ID}_U2.json"
+        dpread1=temp("fastp_results/dedup_paired_R1_{ID}.fastq"),
+        dpread2=temp("fastp_results/dedup_paired_R2_{ID}.fastq"),
+        duread1=temp("fastp_results/dedup_unpaired_R1_{ID}.fastq"),
+        duread2=temp("fastp_results/dedup_unpaired_R2_{ID}.fastq"),
+        pread1=temp("fastp_results/trimmed_paired_R1_{ID}.fastq"),
+        pread2=temp("fastp_results/trimmed_paired_R2_{ID}.fastq"),
+        uread1=temp("fastp_results/trimmed_unpaired_R1_{ID}.fastq"),
+        uread2=temp("fastp_results/trimmed_unpaired_R2_{ID}.fastq"),
+        jsonR1R2="fastp_results/{ID}_R1R2.json",
+        jsonU1="fastp_results/{ID}_U1.json",
+        jsonU2="fastp_results/{ID}_U2.json",
     conda:
         "../envs/fastp.yaml"
-    log: 
-        "logs/fastp/{ID}.log"
+    log:
+        "logs/fastp/{ID}.log",
     params:
-        unqualLimit = config["unqualLimit"],
-        k = config["k"],
-        qualThresh = config["qualThresh"],
-        windowLength = config["windowLength"],
+        unqualLimit=config["unqualLimit"],
+        k=config["k"],
+        qualThresh=config["qualThresh"],
+        windowLength=config["windowLength"],
     shell:
         """
         # remove duplicates, do read correction, drop low quality reads

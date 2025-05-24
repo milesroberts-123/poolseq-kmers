@@ -1,41 +1,41 @@
 rule fastp_two_pop:
     input:
-        read1_p1 = "iss_results/reads_{ID}_p1_R1.fastq",
-        read2_p1 = "iss_results/reads_{ID}_p1_R2.fastq",
-        read1_p2 = "iss_results/reads_{ID}_p2_R1.fastq",
-        read2_p2 = "iss_results/reads_{ID}_p2_R2.fastq"
+        read1_p1="iss_results/reads_{ID}_p1_R1.fastq",
+        read2_p1="iss_results/reads_{ID}_p1_R2.fastq",
+        read1_p2="iss_results/reads_{ID}_p2_R1.fastq",
+        read2_p2="iss_results/reads_{ID}_p2_R2.fastq",
     output:
-        dpread1_p1 = temp("fastp_results/dedup_paired_R1_{ID}_p1.fastq"),
-        dpread2_p1 = temp("fastp_results/dedup_paired_R2_{ID}_p1.fastq"),
-        duread1_p1 = temp("fastp_results/dedup_unpaired_R1_{ID}_p1.fastq"),
-        duread2_p1 = temp("fastp_results/dedup_unpaired_R2_{ID}_p1.fastq"),
-        dpread1_p2 = temp("fastp_results/dedup_paired_R1_{ID}_p2.fastq"),
-        dpread2_p2 = temp("fastp_results/dedup_paired_R2_{ID}_p2.fastq"),
-        duread1_p2 = temp("fastp_results/dedup_unpaired_R1_{ID}_p2.fastq"),
-        duread2_p2 = temp("fastp_results/dedup_unpaired_R2_{ID}_p2.fastq"),
-        pread1_p1 = temp("fastp_results/trimmed_paired_R1_{ID}_p1.fastq"),
-        pread2_p1 = temp("fastp_results/trimmed_paired_R2_{ID}_p1.fastq"),
-        uread1_p1 = temp("fastp_results/trimmed_unpaired_R1_{ID}_p1.fastq"),
-        uread2_p1 = temp("fastp_results/trimmed_unpaired_R2_{ID}_p1.fastq"),
-        pread1_p2 = temp("fastp_results/trimmed_paired_R1_{ID}_p2.fastq"),
-        pread2_p2 = temp("fastp_results/trimmed_paired_R2_{ID}_p2.fastq"),
-        uread1_p2 = temp("fastp_results/trimmed_unpaired_R1_{ID}_p2.fastq"),
-        uread2_p2 = temp("fastp_results/trimmed_unpaired_R2_{ID}_p2.fastq"),
-        jsonR1R2_p1 = "fastp_results/{ID}_R1R2_p1.json",
-        jsonU1_p1 = "fastp_results/{ID}_U1_p1.json",
-        jsonU2_p1 = "fastp_results/{ID}_U2_p1.json",
-        jsonR1R2_p2 = "fastp_results/{ID}_R1R2_p2.json",
-        jsonU1_p2 = "fastp_results/{ID}_U1_p2.json",
-        jsonU2_p2 = "fastp_results/{ID}_U2_p2.json",
+        dpread1_p1=temp("fastp_results/dedup_paired_R1_{ID}_p1.fastq"),
+        dpread2_p1=temp("fastp_results/dedup_paired_R2_{ID}_p1.fastq"),
+        duread1_p1=temp("fastp_results/dedup_unpaired_R1_{ID}_p1.fastq"),
+        duread2_p1=temp("fastp_results/dedup_unpaired_R2_{ID}_p1.fastq"),
+        dpread1_p2=temp("fastp_results/dedup_paired_R1_{ID}_p2.fastq"),
+        dpread2_p2=temp("fastp_results/dedup_paired_R2_{ID}_p2.fastq"),
+        duread1_p2=temp("fastp_results/dedup_unpaired_R1_{ID}_p2.fastq"),
+        duread2_p2=temp("fastp_results/dedup_unpaired_R2_{ID}_p2.fastq"),
+        pread1_p1=temp("fastp_results/trimmed_paired_R1_{ID}_p1.fastq"),
+        pread2_p1=temp("fastp_results/trimmed_paired_R2_{ID}_p1.fastq"),
+        uread1_p1=temp("fastp_results/trimmed_unpaired_R1_{ID}_p1.fastq"),
+        uread2_p1=temp("fastp_results/trimmed_unpaired_R2_{ID}_p1.fastq"),
+        pread1_p2=temp("fastp_results/trimmed_paired_R1_{ID}_p2.fastq"),
+        pread2_p2=temp("fastp_results/trimmed_paired_R2_{ID}_p2.fastq"),
+        uread1_p2=temp("fastp_results/trimmed_unpaired_R1_{ID}_p2.fastq"),
+        uread2_p2=temp("fastp_results/trimmed_unpaired_R2_{ID}_p2.fastq"),
+        jsonR1R2_p1="fastp_results/{ID}_R1R2_p1.json",
+        jsonU1_p1="fastp_results/{ID}_U1_p1.json",
+        jsonU2_p1="fastp_results/{ID}_U2_p1.json",
+        jsonR1R2_p2="fastp_results/{ID}_R1R2_p2.json",
+        jsonU1_p2="fastp_results/{ID}_U1_p2.json",
+        jsonU2_p2="fastp_results/{ID}_U2_p2.json",
     conda:
         "../envs/fastp.yaml"
-    log: 
-        "logs/fastp/{ID}.log"
+    log:
+        "logs/fastp/{ID}.log",
     params:
-        unqualLimit = config["unqualLimit"],
-        k = config["k"],
-        qualThresh = config["qualThresh"],
-        windowLength = config["windowLength"],
+        unqualLimit=config["unqualLimit"],
+        k=config["k"],
+        qualThresh=config["qualThresh"],
+        windowLength=config["windowLength"],
     shell:
         """
         # population one

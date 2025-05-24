@@ -1,9 +1,9 @@
 rule kmc_one_pop:
     input:
-                pread1 = "fastp_results/trimmed_paired_R1_{ID}.fastq",
-                pread2 = "fastp_results/trimmed_paired_R2_{ID}.fastq",
-                uread1 = "fastp_results/trimmed_unpaired_R1_{ID}.fastq",
-                uread2 = "fastp_results/trimmed_unpaired_R2_{ID}.fastq"
+        pread1="fastp_results/trimmed_paired_R1_{ID}.fastq",
+        pread2="fastp_results/trimmed_paired_R2_{ID}.fastq",
+        uread1="fastp_results/trimmed_unpaired_R1_{ID}.fastq",
+        uread2="fastp_results/trimmed_unpaired_R2_{ID}.fastq",
     output:
         counts=temp("kmc_results/kmer_counts_{ID}.txt"),
         tmp_R1_pre=temp("tmp_R1_{ID}.kmc_pre"),
@@ -22,14 +22,14 @@ rule kmc_one_pop:
         union_R1_R2_u1_u2_suf=temp("union_R1_R2_u1_u2_{ID}.kmc_suf"),
     conda:
         "../envs/kmc.yaml"
-    log: 
-        "logs/kmc/{ID}.log"
+    log:
+        "logs/kmc/{ID}.log",
     benchmark:
         "benchmarks/kmc/{ID}.bench"
     params:
-        mincount = config["mincount"],
-        maxcount = config["maxcount"],
-        k = config["k"]
+        mincount=config["mincount"],
+        maxcount=config["maxcount"],
+        k=config["k"],
     shell:
         """
         # create directory

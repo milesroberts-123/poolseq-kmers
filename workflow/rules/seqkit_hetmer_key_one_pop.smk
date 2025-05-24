@@ -1,16 +1,16 @@
 rule seqkit_hetmer_key_one_pop:
     input:
-        vcffilled= "slim_results/samples_filled_{ID}.vcf.gz",
-        samplefasta = "seqkit_results/samples_{ID}.fasta"
+        vcffilled="slim_results/samples_filled_{ID}.vcf.gz",
+        samplefasta="seqkit_results/samples_{ID}.fasta",
     output:
-        poskey = "seqkit_results/center_kmer_pairs_{ID}.txt",
-        snppos = temp("seqkit_results/snp_positions_{ID}.txt")
+        poskey="seqkit_results/center_kmer_pairs_{ID}.txt",
+        snppos=temp("seqkit_results/snp_positions_{ID}.txt"),
     params:
-        L=config["L"]
+        L=config["L"],
     conda:
         "../envs/seqkit.yaml"
-    log: 
-        "logs/seqkit_hetmer_key/{ID}.log"
+    log:
+        "logs/seqkit_hetmer_key/{ID}.log",
     shell:
         """        
         # get list of snp positions

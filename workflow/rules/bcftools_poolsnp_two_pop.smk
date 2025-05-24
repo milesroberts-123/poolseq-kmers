@@ -1,16 +1,16 @@
 rule bcftools_poolsnp_two_pop:
     input:
-        vcf_p1 = "{ID}_p1_poolsnp_output.vcf.gz",
-        vcf_p2 = "{ID}_p2_poolsnp_output.vcf.gz"
+        vcf_p1="{ID}_p1_poolsnp_output.vcf.gz",
+        vcf_p2="{ID}_p2_poolsnp_output.vcf.gz",
     output:
-        tbi_p1 = temp("{ID}_p1_poolsnp_output.vcf.gz.tbi"),
-        tbi_p2 = temp("{ID}_p2_poolsnp_output.vcf.gz.tbi"),
-        final_p1 = "poolsnp_results/{ID}_p1.txt",
-        final_p2 = "poolsnp_results/{ID}_p2.txt"
+        tbi_p1=temp("{ID}_p1_poolsnp_output.vcf.gz.tbi"),
+        tbi_p2=temp("{ID}_p2_poolsnp_output.vcf.gz.tbi"),
+        final_p1="poolsnp_results/{ID}_p1.txt",
+        final_p2="poolsnp_results/{ID}_p2.txt",
     conda:
         "../envs/bcftools.yaml"
     log:
-        "logs/bcftools_poolsnp/{ID}.log"
+        "logs/bcftools_poolsnp/{ID}.log",
     shell:
         """
         # unpack gzip
