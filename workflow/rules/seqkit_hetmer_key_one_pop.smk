@@ -1,27 +1,18 @@
-rule seqkit_one_pop:
+rule seqkit_hetmer_key_one_pop:
     input:
         vcffilled= "slim_results/samples_filled_{ID}.vcf.gz",
-        slimfasta = "slim_results/{ID}.fasta"
+        samplefasta = "seqkit_results/samples_{ID}.fasta"
     output:
-        samplefasta = temp("seqkit_results/samples_{ID}.fasta"),
-        reffasta = temp("seqkit_results/ref_{ID}.fasta"),
         poskey = "seqkit_results/center_kmer_pairs_{ID}.txt",
         snppos = temp("seqkit_results/snp_positions_{ID}.txt")
     params:
-        L=config["L"],
-        n=lookup(query="ID == '{ID}'", within=parameters, cols="n")
+        L=config["L"]
     conda:
         "../envs/seqkit.yaml"
     log: 
-        "logs/seqkit/{ID}.log"
+        "logs/seqkit_hetmer_key/{ID}.log"
     shell:
-        """
-        # create file with reference genome removed
-        seqkit grep -v -n -p 1 -p 2 {input.slimfasta} > {output.samplefasta}
-
-        # get a haploid reference genome
-        seqkit grep -n -p 1 {input.slimfasta} > {output.reffasta}
-        
+        """        
         # get list of snp positions
         zcat {input.vcffilled} | grep -v "^#" | cut -f 2 > {output.snppos}
 
@@ -52,6 +43,6 @@ rule seqkit_one_pop:
             fi
             
             # extract k-mers
-            cat {output.samplefasta} | seqkit subseq -r $(echo $center_start):$(echo $center_end) | grep -v "^>" | sort -u | tr '\n' ' ' | echo $i $(cat -) >> {output.poskey}
+            cat {input.samplefasta} | seqkit subseq -r $(echo $center_start):$(echo $center_end) | grep -v "^>" | sort -u | tr '\n' ' ' | echo $i $(cat -) >> {output.poskey}
         done
         """

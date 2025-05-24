@@ -1,35 +1,18 @@
-rule seqkit_two_pop:
+rule seqkit_hetmer_key_two_pop:
     input:
+        tempsamplefasta = "seqkit_results/samples_{ID}_p1p2.fasta",
         vcffilled= "slim_results/samples_filled_{ID}_p1p2.vcf.gz",
-        slimfasta = "slim_results/{ID}.fasta"
     output:
-        tempsamplefasta = temp("seqkit_results/samples_{ID}_p1p2.fasta"),
-        p1 = "seqkit_results/samples_{ID}_p1.fasta",
-        p2 = "seqkit_results/samples_{ID}_p2.fasta",
-        reffasta = "seqkit_results/ref_{ID}_p1.fasta",
         poskey = "seqkit_results/center_kmer_pairs_{ID}_p1p2.txt",
         snppos = temp("seqkit_results/snp_positions_{ID}_p1p2.txt")
     params:
         L=config["L"],
-        n=lookup(query="ID == '{ID}'", within=parameters, cols="n")
     conda:
         "../envs/seqkit.yaml"
     log: 
         "logs/seqkit/{ID}.log"
     shell:
         """
-        # create file with reference genome removed
-        seqkit grep -v -n -p 1 -p 2 {input.slimfasta} > {output.tempsamplefasta}
-
-        # get a haploid reference genome
-        seqkit grep -n -p 1 {input.slimfasta} > {output.reffasta}
-
-        # get first n individuals (population 1)
-        seqkit head -n {params.n} {output.tempsamplefasta} > {output.p1}
-
-        # get last n individuals (population 2)
-        seqkit range -r -{params.n}:-1 {output.tempsamplefasta} > {output.p2}
-        
         # get list of snp positions
         zcat {input.vcffilled} | grep -v "^#" | cut -f 2 > {output.snppos}
 
@@ -60,6 +43,6 @@ rule seqkit_two_pop:
             fi
             
             # extract k-mers
-            cat {output.tempsamplefasta} | seqkit subseq -r $(echo $center_start):$(echo $center_end) | grep -v "^>" | sort -u | tr '\n' ' ' | echo $i $(cat -) >> {output.poskey}
+            cat {input.tempsamplefasta} | seqkit subseq -r $(echo $center_start):$(echo $center_end) | grep -v "^>" | sort -u | tr '\n' ' ' | echo $i $(cat -) >> {output.poskey}
         done
         """

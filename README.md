@@ -207,6 +207,8 @@ This could be nicer because R markdown will give me more control over what the r
 
 - [x] use lookup functions
 
+- [x] split seqkit rules into two rules
+
 - [ ] [Try rewriting discosnp as a shadow rule](https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#shadow-rules)
 
 - [ ] add R notebook to snakemake
