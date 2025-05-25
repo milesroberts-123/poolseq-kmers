@@ -78,11 +78,11 @@ rule discosnp:
     shell:
         """
         # create temp directory
-        if [ -d "tmp_discosnp_{wildcards.SID}" ]; then
-            rm -r tmp_discosnp_{wildcards.SID}
+        if [ -d "tmp_discosnp_{wildcards.SID}_{wildcards.PID}" ]; then
+            rm -r tmp_discosnp_{wildcards.SID}_{wildcards.PID}
         fi
 
-        mkdir tmp_discosnp_{wildcards.SID}
+        mkdir tmp_discosnp_{wildcards.SID}_{wildcards.PID}
 
         # create file of files
         echo "../{output.fof_reads}" > {output.fof}
@@ -105,7 +105,7 @@ rule discosnp:
         fi
 
         # run discosnp, with results for mapping SNPs to reference
-        cd tmp_discosnp_{wildcards.SID}
+        cd tmp_discosnp_{wildcards.SID}_{wildcards.PID}
 
         run_discoSnp++.sh -r ../{output.fof} -c {params.mincount} -k {params.k} -G ../{input.ref} -p {params.prefix} &> ../{log}
 
@@ -114,5 +114,5 @@ rule discosnp:
 
         # delete temporary directory
         cd ..
-        rm -r tmp_discosnp_{wildcards.SID}
+        rm -r tmp_discosnp_{wildcards.SID}_{wildcards.PID}
         """
