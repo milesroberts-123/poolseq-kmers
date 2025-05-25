@@ -1,19 +1,19 @@
 rule unitig_caller:
     input:
-        "kmc_results/kmer_counts_{ID}.txt",
+        "kmc_results/kmer_counts_{SID}_{PID}.txt",
     output:
-        unitigs_fasta=temp("unitig_caller_results/unitigs_{ID}.fasta"),
-        readfile=temp("unitig_caller_results/reads_for_unitig-caller_{ID}.txt"),
-        unitigs_rtab=temp("unitig_caller_results/unitigs_{ID}.rtab"),
-        tmp_fasta=temp("unitig_caller_results/kmer_seqs_{ID}.fa"),
+        unitigs_fasta=temp("unitig_caller_results/unitigs_{SID}_{PID}.fasta"),
+        readfile=temp("unitig_caller_results/reads_for_unitig-caller_{SID}_{PID}.txt"),
+        unitigs_rtab=temp("unitig_caller_results/unitigs_{SID}_{PID}.rtab"),
+        tmp_fasta=temp("unitig_caller_results/kmer_seqs_{SID}_{PID}.fa"),
     conda:
         "../envs/unitig-caller.yaml"
     params:
-        rtab_prefix="unitig_caller_results/unitigs_{ID}",
+        rtab_prefix="unitig_caller_results/unitigs_{SID}_{PID}",
     benchmark:
-        "benchmarks/unitig_caller/{ID}.bench"
+        "benchmarks/unitig_caller/{SID}_{PID}.bench"
     log:
-        "logs/unitig_caller/{ID}.log",
+        "logs/unitig_caller/{SID}_{PID}.log",
     shell:
         r"""
         # turn k-mer counts into fasta

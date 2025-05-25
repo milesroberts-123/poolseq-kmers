@@ -19,15 +19,15 @@ set-resources:
         cpus_per_task: 2
     bwa_two_pop:
         cpus_per_task: 2
-    iss_one_pop:
+    iss:
         cpus_per_task: 4
-    iss_two_pop:
-        cpus_per_task: 4
+#    iss_two_pop:
+#        cpus_per_task: 4
 
 # parallelization with threads needs to be defined separately:
 # threads and cpus_per_task are supposed to be synonymous for this plugin, but for some reason I need to specify them separately
 set-threads:
     bwa_one_pop: 2
     bwa_two_pop: 2
-    iss_one_pop: 4
-    iss_two_pop: 4
+    iss: 4
+#    iss_two_pop: 4

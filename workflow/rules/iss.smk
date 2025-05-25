@@ -1,17 +1,17 @@
-rule iss_one_pop:
+rule iss:
     input:
-        "seqkit_results/samples_{ID}.fasta",
+        "seqkit_results/samples_{SID}_{PID}.fasta",
     output:
-        temp("iss_results/reads_{ID}_R1.fastq"),
-        temp("iss_results/reads_{ID}_R2.fastq"),
+        temp("iss_results/reads_{SID}_{PID}_R1.fastq"),
+        temp("iss_results/reads_{SID}_{PID}_R2.fastq"),
     conda:
         "../envs/iss.yaml"
     log:
-        "logs/iss/{ID}.log",
+        "logs/iss/{SID}_{PID}.log",
     params:
         L=config["L"],
-        cov=lookup(query="ID == '{ID}'", within=parameters, cols="cov"),
-        sequencer=lookup(query="ID == '{ID}'", within=parameters, cols="sequencer"),
+        cov=lookup(query="ID == '{SID}'", within=parameters, cols="cov"),
+        sequencer=lookup(query="ID == '{SID}'", within=parameters, cols="sequencer"),
     shell:
         """
         # read length = 300 bp
@@ -33,5 +33,5 @@ rule iss_one_pop:
         fi
 
         # simulate reads
-        iss generate -g {input} --cpus {threads} --model {params.sequencer} -n $nreads --abundance uniform --output iss_results/reads_{wildcards.ID} &> {log}
+        iss generate -g {input} --cpus {threads} --model {params.sequencer} -n $nreads --abundance uniform --output iss_results/reads_{wildcards.SID}_{wildcards.PID} &> {log}
         """

@@ -23,7 +23,7 @@ validate(parameters, "../config/parameters.schema.yaml")
 
 
 # declare a dataframe to be a paramspace
-parameters = Paramspace(parameters)
+#parameters = Paramspace(parameters)
 
 
 # split into paired-end and single-end
@@ -68,7 +68,7 @@ wildcard_constraints:
 # 		expand("blast_results/{ID}.txt", ID=one_pop_params.index.get_level_values("ID")),
 # 		expand("hetmers_results/{ID}_counts.csv", ID=one_pop_params.index.get_level_values("ID")),
 
-localrules: all_one_pops, all_two_pops, all
+localrules: all_per_sim, all
 
 # rule report:
 #    input:
@@ -94,87 +94,105 @@ localrules: all_one_pops, all_two_pops, all
 
 rule all:
     input:
-        expand("{ID}.done", ID=one_pop_params.index.get_level_values("ID")),
-        expand("{ID}_p1p2.done", ID=two_pop_params.index.get_level_values("ID")),
+        expand("{SID}_0.done", SID=one_pop_params.index.get_level_values("ID")),
+        expand("{SID}_{PID}.done", SID=two_pop_params.index.get_level_values("ID"), PID=[0,1]),
 
 
-rule all_one_pops:
+rule all_per_sim:
     input:
-        "varscan_results/{ID}.tsv",
-        "smudgeplot_results/{ID}_coverages.tsv",
-        "smudgeplot_results/{ID}_sequences.tsv",
-        "disco_results/{ID}.txt",
-        "slim_results/allele_freqs_{ID}.txt",
-        "poolsnp_results/{ID}.txt",
-        "blast_results/{ID}.txt",
-        "hetmers_results/{ID}_counts.csv",
-        "seqkit_results/center_kmer_pairs_{ID}.txt",
+        "varscan_results/{SID}_{PID}.tsv",
+        "smudgeplot_results/{SID}_{PID}_coverages.tsv",
+        "smudgeplot_results/{SID}_{PID}_sequences.tsv",
+        "disco_results/{SID}_{PID}.txt",
+        "slim_results/allele_freqs_{SID}_{PID}.txt",
+        "poolsnp_results/{SID}_{PID}.txt",
+        "blast_results/{SID}_{PID}.txt",
+        "hetmers_results/{SID}_{PID}_counts.csv",
+        "seqkit_results/center_kmer_pairs_{SID}.txt",
     output:
-        touch("{ID}.done"),
+        touch("{SID}_{PID}.done"),
 
 
-rule all_two_pops:
-    input:
-        "varscan_results/{ID}_p1.tsv",
-        "varscan_results/{ID}_p2.tsv",
-        "smudgeplot_results/{ID}_p1_coverages.tsv",
-        "smudgeplot_results/{ID}_p1_sequences.tsv",
-        "smudgeplot_results/{ID}_p2_coverages.tsv",
-        "smudgeplot_results/{ID}_p2_sequences.tsv",
-        "disco_results/{ID}_p1.txt",
-        "disco_results/{ID}_p2.txt",
-        "slim_results/allele_freqs_{ID}_p1.txt",
-        "slim_results/allele_freqs_{ID}_p2.txt",
-        "poolsnp_results/{ID}_p1.txt",
-        "poolsnp_results/{ID}_p2.txt",
-        "hetmers_results/{ID}_p1_counts.csv",
-        "hetmers_results/{ID}_p2_counts.csv",
-        "seqkit_results/center_kmer_pairs_{ID}_p1p2.txt",
-    output:
-        touch("{ID}_p1p2.done"),
+#rule all_two_pops:
+#    input:
+#        "varscan_results/{ID}_p1.tsv",
+#        "varscan_results/{ID}_p2.tsv",
+#        "smudgeplot_results/{ID}_p1_coverages.tsv",
+#        "smudgeplot_results/{ID}_p1_sequences.tsv",
+#        "smudgeplot_results/{ID}_p2_coverages.tsv",
+#        "smudgeplot_results/{ID}_p2_sequences.tsv",
+#        "disco_results/{ID}_p1.txt",
+#        "disco_results/{ID}_p2.txt",
+#        "slim_results/allele_freqs_{ID}_p1.txt",
+#        "slim_results/allele_freqs_{ID}_p2.txt",
+#        "poolsnp_results/{ID}_p1.txt",
+#        "poolsnp_results/{ID}_p2.txt",
+#        "hetmers_results/{ID}_p1_counts.csv",
+#        "hetmers_results/{ID}_p2_counts.csv",
+#        "seqkit_results/center_kmer_pairs_{ID}_p1p2.txt",
+#    output:
+#        touch("{ID}_p1p2.done"),
 
 
 # helper functions
 include: "rules/common.smk"
 # other rules
 include: "rules/ancestral_genome.smk"
-include: "rules/bcftools_discosnp_one_pop.smk"
-include: "rules/bcftools_discosnp_two_pop.smk"
-include: "rules/bcftools_poolsnp_masked.smk"
-include: "rules/bcftools_poolsnp_one_pop.smk"
-include: "rules/bcftools_poolsnp_two_pop.smk"
-include: "rules/bcftools_slim_one_pop.smk"
-include: "rules/bcftools_slim_two_pop.smk"
+include: "rules/bcftools_discosnp.smk"
+#include: "rules/bcftools_discosnp_one_pop.smk"
+#include: "rules/bcftools_discosnp_two_pop.smk"
+#include: "rules/bcftools_poolsnp_masked.smk"
+include: "rules/bcftools_poolsnp.smk"
+#include: "rules/bcftools_poolsnp_one_pop.smk"
+#include: "rules/bcftools_poolsnp_two_pop.smk"
+#include: "rules/bcftools_slim_one_pop.smk"
+include: "rules/bcftools_remove_ref.smk"
+include: "rules/bcftools_get_samples.smk"
+include: "rules/bcftools_fill_tags.smk"
+#include: "rules/bcftools_slim_two_pop.smk"
 # include: "rules/bedtools.smk"
 include: "rules/blast.smk"
+include: "rules/makeblastdb.smk"
 # include: "rules/bwa_masked.smk"
-include: "rules/bwa_one_pop.smk"
-include: "rules/bwa_two_pop.smk"
+include: "rules/bwa_index.smk"
+include: "rules/bwa_mem.smk"
+#include: "rules/bwa_one_pop.smk"
+#include: "rules/bwa_two_pop.smk"
 # include: "rules/bwa.smk"
 include: "rules/compress.smk"
-include: "rules/discosnp_one_pop.smk"
-include: "rules/discosnp_two_pop.smk"
+include: "rules/discosnp.smk"
+#include: "rules/discosnp_one_pop.smk"
+#include: "rules/discosnp_two_pop.smk"
 # include: "rules/dissimilarity.smk"
-include: "rules/fastp_one_pop.smk"
-include: "rules/fastp_two_pop.smk"
-include: "rules/hetmers_one_pop.smk"
-include: "rules/hetmers_two_pop.smk"
-include: "rules/iss_one_pop.smk"
-include: "rules/iss_two_pop.smk"
-include: "rules/kmc_one_pop.smk"
-include: "rules/kmc_two_pop.smk"
+include: "rules/fastp.smk"
+#include: "rules/fastp_one_pop.smk"
+#include: "rules/fastp_two_pop.smk"
+include: "rules/hetmers.smk"
+#include: "rules/hetmers_one_pop.smk"
+#include: "rules/hetmers_two_pop.smk"
+include: "rules/iss.smk"
+#include: "rules/iss_two_pop.smk"
+include: "rules/kmc.smk"
+#include: "rules/kmc_one_pop.smk"
+#include: "rules/kmc_two_pop.smk"
 # include: "rules/poolsnp_masked.smk"
-include: "rules/poolsnp_one_pop.smk"
-include: "rules/poolsnp_two_pop.smk"
-include: "rules/seqkit_get_ref_one_pop.smk"
-include: "rules/seqkit_hetmer_key_one_pop.smk"
+include: "rules/poolsnp.smk"
+#include: "rules/poolsnp_one_pop.smk"
+#include: "rules/poolsnp_two_pop.smk"
+include: "rules/samtools_faidx.smk"
+include: "rules/seqkit_get_ref.smk"
+include: "rules/seqkit_get_samples.smk"
+#include: "rules/seqkit_get_ref_one_pop.smk"
+include: "rules/seqkit_hetmer_key.smk"
 include: "rules/seqkit_rename.smk"
-include: "rules/seqkit_get_ref_two_pop.smk"
-include: "rules/seqkit_hetmer_key_two_pop.smk"
+#include: "rules/seqkit_get_ref_two_pop.smk"
+#include: "rules/seqkit_hetmer_key_two_pop.smk"
 include: "rules/slim.smk"
-include: "rules/smudgeplot_one_pop.smk"
-include: "rules/smudgeplot_two_pop.smk"
+include: "rules/smudgeplot.smk"
+#include: "rules/smudgeplot_one_pop.smk"
+#include: "rules/smudgeplot_two_pop.smk"
 include: "rules/unitig_caller.smk"
 # include: "rules/varscan_masked.smk"
-include: "rules/varscan_one_pop.smk"
-include: "rules/varscan_two_pop.smk"
+include: "rules/varscan.smk"
+#include: "rules/varscan_one_pop.smk"
+#include: "rules/varscan_two_pop.smk"
