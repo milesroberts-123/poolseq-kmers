@@ -215,9 +215,9 @@ This could be nicer because R markdown will give me more control over what the r
 
 - [x] parameter space coding
 
-- [ ] freebayes
+- [x] change wildcards to something like: {simulation id}_{population id} so that I don't need separate rules for 1 population vs 2 population workflows?
 
-- [ ] change wildcards to something like: {simulation id}_{population id} so that I don't need separate rules for 1 population vs 2 population workflows?
+- [ ] freebayes
 
 - [ ] [Try rewriting discosnp as a shadow rule](https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#shadow-rules)
 

@@ -1,8 +1,8 @@
 library("dplyr") 
 
 replicates = 1:3
-sample_sizes = c(50, 75, 100)
-coverages = c(100, 150, 200)
+sample_sizes = c(50, 100)
+coverages = c(100, 200)
 sequencers = c("miseq")
 #sequencers = c("miseq", "hiseq", "nextseq", "novaseq")
 
@@ -28,7 +28,7 @@ one_pop_params = expand.grid(
   sequencer = sequencers,
   simtype = "onepop",
   shape = shapes,
-  shuffle = shuffles,
+  shuffle = shuffles
   #pA = 0.25,
   #pC = 0.25,
   #pG = 0.25,
@@ -68,8 +68,8 @@ sweep_params = expand.grid(
   #rep = replicates,
   N = population_sizes,
   n = sample_sizes,
-  h = c(0, 0.5, 1),
-  #h = c(0.5),
+  #h = c(0, 0.5, 1),
+  h = c(0.5),
   Nes = c(10, 25, 50, 100),
   #s = 0.1,
   sigma = c(0),
@@ -112,7 +112,7 @@ bsa_params = expand.grid(
   qtl_prop = 0.1,
   optimum_mean = 0,
   optimum_sigma = 10,
-  phenotype_cutoff = 0.05,
+  phenotype_cutoff = 0.1,
   simtype = "bsa"
 )
 

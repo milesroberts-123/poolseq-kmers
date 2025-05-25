@@ -136,6 +136,7 @@ rule all_per_sim:
 
 # helper functions
 include: "rules/common.smk"
+
 # other rules
 include: "rules/ancestral_genome.smk"
 include: "rules/bcftools_discosnp.smk"
