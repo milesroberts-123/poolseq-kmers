@@ -217,19 +217,29 @@ This could be nicer because R markdown will give me more control over what the r
 
 - [x] change wildcards to something like: {simulation id}_{population id} so that I don't need separate rules for 1 population vs 2 population workflows?
 
-- [ ] freebayes
+- [x] [add minimum snakemake version](https://snakemake.readthedocs.io/en/stable/snakefiles/writing_snakefiles.html#depend-on-a-minimum-snakemake-version)
+
+- [x] freebayes
+
+- [ ] add dissimilarity script back in
+
+- [ ] add seeds to iss and slim so that unit tests will always give same answer
+
+- [ ] add more sequencing simulators: dwgsim, mason, or add another sequencer error profile
 
 - [ ] [Try rewriting discosnp as a shadow rule](https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#shadow-rules)
 
 - [ ] add R notebook to snakemake
+
+- [ ] write hetmers binary to calculate fst
+
+- [ ] add time series slim simulation
 
 - [ ] unit tests
 
 - [ ] integration tests
 
 - [ ] github actions
-
-- [ ] write hetmers binary to calculate fst
 
 ### lower priority
 
