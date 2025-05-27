@@ -2,7 +2,7 @@ rule bcftools_freebayes:
     input:
         vcf="freebayes_results/{SID}_{PID}.vcf",
     output:
-        vcfgz=temp("freebayes_resuls/{SID}_{PID}.vcf.gz"),
+        vcfgz=temp("freebayes_results/{SID}_{PID}.vcf.gz"),
         tbi=temp("freebayes_results/{SID}_{PID}.vcf.gz.tbi"),
         final="freebayes_results/{SID}_{PID}.txt",
     conda:
