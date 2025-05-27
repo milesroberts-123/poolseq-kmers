@@ -99,14 +99,13 @@ rule all:
     input:
         expand("{SID}_0.done", SID=one_pop_params.index.get_level_values("ID")),
         expand("{SID}_{PID}.done", SID=two_pop_params.index.get_level_values("ID"), PID=[0,1]),
-        expand("dissimilarity", SID=two_pop_params.index.get_level_values("ID"), PID=[0,1]),
+#        expand("dissimilarity", SID=two_pop_params.index.get_level_values("ID"), PID=[0,1]),
 
 
 rule all_per_sim:
     input:
         "varscan_results/{SID}_{PID}.tsv",
         "smudgeplot_results/{SID}_{PID}_coverages.tsv",
-        "smudgeplot_results/{SID}_{PID}_sequences.tsv",
         "disco_results/{SID}_{PID}.txt",
         "slim_results/allele_freqs_{SID}_{PID}.txt",
         "poolsnp_results/{SID}_{PID}.txt",
