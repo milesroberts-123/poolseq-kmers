@@ -15,7 +15,7 @@ rule bcftools_freebayes:
         bgzip {input.vcf}
 
         # index vcf
-        tabix {input.vcf}
+        tabix {output.vcfgz}
 
         # output allele depths
         bcftools view -m2 -M2 -v snps {output.vcfgz} | bcftools query -f '%CHROM %POS %REF %ALT %NS %AF %AC\n' | sed 's:,:\t:g' > {output.final}     
