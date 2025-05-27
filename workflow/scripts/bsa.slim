@@ -1,5 +1,6 @@
 initialize() {
 	initializeSLiMOptions(nucleotideBased=T);
+	setSeed(SLIMSEED);
 	defineConstant("L", initializeAncestralNucleotides(paste("ancestral_genome_results/" + ID + ".fasta", sep = "")));
 	initializeMutationTypeNuc("m1", 0.5, "f", 0.0);
 	initializeMutationTypeNuc("m2", 0.5, "n", qtl_mean, qtl_sigma);

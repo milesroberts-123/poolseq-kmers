@@ -221,9 +221,11 @@ This could be nicer because R markdown will give me more control over what the r
 
 - [x] freebayes
 
-- [ ] add dissimilarity script back in
+- [x] add seeds to iss and slim so that unit tests will always give same answer
 
-- [ ] add seeds to iss and slim so that unit tests will always give same answer
+- [ ] add job groups?
+
+- [ ] add dissimilarity script back in
 
 - [ ] add more sequencing simulators: dwgsim, mason, or add another sequencer error profile
 

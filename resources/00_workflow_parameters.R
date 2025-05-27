@@ -132,6 +132,10 @@ params[is.na(params)] = 0
 # add simulation id
 params$ID = 1:nrow(params)
 
+# add seeds for random number generator
+params$slimseed = sample(0:(2^32 - 1), replace = T, size = nrow(params))
+params$issseed = sample(0:(2^32 - 1), replace = T, size = nrow(params))
+
 # save
 write.table(params, "../config/parameters.tsv", sep = "\t", quote = F, row.names = F)
 

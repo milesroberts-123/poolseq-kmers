@@ -12,6 +12,7 @@ rule iss:
         L=config["L"],
         cov=lookup(query="ID == '{SID}'", within=parameters, cols="cov"),
         sequencer=lookup(query="ID == '{SID}'", within=parameters, cols="sequencer"),
+        issseed=lookup(query="ID == '{SID}'", within=parameters, cols="issseed")
     shell:
         """
         # read length = 300 bp
@@ -33,5 +34,5 @@ rule iss:
         fi
 
         # simulate reads
-        iss generate -g {input} --cpus {threads} --model {params.sequencer} -n $nreads --abundance uniform --output iss_results/reads_{wildcards.SID}_{wildcards.PID} &> {log}
+        iss generate -g {input} --seed {params.issseed} --cpus {threads} --model {params.sequencer} -n $nreads --abundance uniform --output iss_results/reads_{wildcards.SID}_{wildcards.PID} &> {log}
         """
