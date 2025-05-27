@@ -18,5 +18,5 @@ rule bcftools_freebayes:
         tabix {output.vcfgz}
 
         # output allele depths
-        bcftools view -m2 -M2 -v snps {output.vcfgz} | bcftools query -f '%CHROM %POS %REF %ALT %NS %AF %AC\n' -o {output.final} {output.vcfgz}  
+        bcftools view -m2 -M2 -v snps {output.vcfgz} | bcftools query -f '%CHROM %POS %REF %ALT %NS %AF %AC\n' > {output.final} 
         """
