@@ -42,35 +42,6 @@ two_pop_params = parameters[
 wildcard_constraints:
     ID="\\d+",
 
-
-# rule all:
-# 	input:
-# 		expand("varscan_results/{ID}_p1.tsv", ID=two_pop_params.index.get_level_values("ID")),
-# 		expand("varscan_results/{ID}_p2.tsv", ID=two_pop_params.index.get_level_values("ID")),
-# 		expand("smudgeplot_results/{ID}_p1_coverages.tsv", ID=two_pop_params.index.get_level_values("ID")),
-# 		expand("smudgeplot_results/{ID}_p1_sequences.tsv", ID=two_pop_params.index.get_level_values("ID")),
-# 		expand("smudgeplot_results/{ID}_p2_coverages.tsv", ID=two_pop_params.index.get_level_values("ID")),
-# 		expand("smudgeplot_results/{ID}_p2_sequences.tsv", ID=two_pop_params.index.get_level_values("ID")),
-# 		expand("disco_results/{ID}_p1.txt", ID=two_pop_params.index.get_level_values("ID")),
-# 		expand("disco_results/{ID}_p2.txt", ID=two_pop_params.index.get_level_values("ID")),
-# 		expand("slim_results/allele_freqs_{ID}_p1.txt", ID=two_pop_params.index.get_level_values("ID")),
-# 		expand("slim_results/allele_freqs_{ID}_p2.txt", ID=two_pop_params.index.get_level_values("ID")),
-# 		expand("poolsnp_results/{ID}_p1.txt", ID=two_pop_params.index.get_level_values("ID")),
-# 		expand("poolsnp_results/{ID}_p2.txt", ID=two_pop_params.index.get_level_values("ID")),
-# 		expand("hetmers_results/{ID}_p1_counts.csv", ID=two_pop_params.index.get_level_values("ID")),
-# 		expand("hetmers_results/{ID}_p2_counts.csv", ID=two_pop_params.index.get_level_values("ID")),
-# 		#expand("dissimilarity_{ID}.txt", ID=two_pop_params.index.get_level_values("ID")),
-# 		expand("varscan_results/{ID}.tsv", ID=one_pop_params.index.get_level_values("ID")),
-# 		#expand("calls_masked_{ID}.tsv", ID=one_pop_params.index.get_level_values("ID")),
-# 		expand("smudgeplot_results/{ID}_coverages.tsv", ID=one_pop_params.index.get_level_values("ID")),
-# 		expand("smudgeplot_results/{ID}_sequences.tsv", ID=one_pop_params.index.get_level_values("ID")),
-# 		expand("disco_results/{ID}.txt", ID=one_pop_params.index.get_level_values("ID")),
-# 		expand("slim_results/allele_freqs_{ID}.txt", ID=one_pop_params.index.get_level_values("ID")),
-# 		expand("poolsnp_results/{ID}.txt", ID=one_pop_params.index.get_level_values("ID")),
-# 		#expand("poolsnp_final_masked_{ID}.txt", ID=one_pop_params.index.get_level_values("ID")),
-# 		expand("blast_results/{ID}.txt", ID=one_pop_params.index.get_level_values("ID")),
-# 		expand("hetmers_results/{ID}_counts.csv", ID=one_pop_params.index.get_level_values("ID")),
-
 localrules: all_per_sim, all
 
 # rule report:
@@ -99,8 +70,20 @@ rule all:
     input:
         expand("{SID}_0.done", SID=one_pop_params.index.get_level_values("ID")),
         expand("{SID}_{PID}.done", SID=two_pop_params.index.get_level_values("ID"), PID=[0,1]),
-#        expand("dissimilarity", SID=two_pop_params.index.get_level_values("ID"), PID=[0,1]),
 
+#rule all_per_sim:
+#    input:
+#        branch(
+#            lookup(query="ID == '{SID}'", within=parameters, cols="simtype"),
+#            cases={
+#                "onepop": ["varscan_results/{SID}_{PID}.tsv", "smudgeplot_results/{SID}_{PID}_coverages.tsv", "disco_results/{SID}_{PID}.txt", "slim_results/allele_freqs_{SID}_{PID}.txt", "poolsnp_results/{SID}_{PID}.txt", "freebayes_results/{SID}_{PID}.txt", "blast_results/{SID}_{PID}.txt", "hetmers_results/{SID}_{PID}_counts.csv", "seqkit_results/center_kmer_pairs_{SID}.txt"],
+#                "twopop": ["dissimilarity_results/{SID}.txt", "varscan_results/{SID}_{PID}.tsv", "smudgeplot_results/{SID}_{PID}_coverages.tsv", "disco_results/{SID}_{PID}.txt", "slim_results/allele_freqs_{SID}_{PID}.txt", "poolsnp_results/{SID}_{PID}.txt", "freebayes_results/{SID}_{PID}.txt", "blast_results/{SID}_{PID}.txt", "hetmers_results/{SID}_{PID}_counts.csv", "seqkit_results/center_kmer_pairs_{SID}.txt"],
+#                "sweep": ["varscan_results/{SID}_{PID}.tsv", "smudgeplot_results/{SID}_{PID}_coverages.tsv", "disco_results/{SID}_{PID}.txt", "slim_results/allele_freqs_{SID}_{PID}.txt", "poolsnp_results/{SID}_{PID}.txt", "freebayes_results/{SID}_{PID}.txt", "blast_results/{SID}_{PID}.txt", "hetmers_results/{SID}_{PID}_counts.csv", "seqkit_results/center_kmer_pairs_{SID}.txt"],
+#                "bsa": ["dissimilarity_results/{SID}.txt", "varscan_results/{SID}_{PID}.tsv", "smudgeplot_results/{SID}_{PID}_coverages.tsv", "disco_results/{SID}_{PID}.txt", "slim_results/allele_freqs_{SID}_{PID}.txt", "poolsnp_results/{SID}_{PID}.txt", "freebayes_results/{SID}_{PID}.txt", "blast_results/{SID}_{PID}.txt", "hetmers_results/{SID}_{PID}_counts.csv", "seqkit_results/center_kmer_pairs_{SID}.txt"],
+#            }
+#        )      
+#    output:
+#        touch("{SID}_{PID}.done")
 
 rule all_per_sim:
     input:
@@ -112,37 +95,9 @@ rule all_per_sim:
         "freebayes_results/{SID}_{PID}.txt",
         "blast_results/{SID}_{PID}.txt",
         "hetmers_results/{SID}_{PID}_counts.csv",
-        "seqkit_results/center_kmer_pairs_{SID}.txt",
-        #"dissimilarity_results/{SID}.txt",
-        #branch(
-        #    lookup(query="simtype == 'twopop'", within=parameters),
-        #    then="dissimilarity_results/{SID}.txt",
-        #    otherwise=""
-        #)
+        "seqkit_results/center_kmer_pairs_{SID}.txt",   
     output:
-        touch("{SID}_{PID}.done"),
-
-
-#rule all_two_pops:
-#    input:
-#        "varscan_results/{ID}_p1.tsv",
-#        "varscan_results/{ID}_p2.tsv",
-#        "smudgeplot_results/{ID}_p1_coverages.tsv",
-#        "smudgeplot_results/{ID}_p1_sequences.tsv",
-#        "smudgeplot_results/{ID}_p2_coverages.tsv",
-#        "smudgeplot_results/{ID}_p2_sequences.tsv",
-#        "disco_results/{ID}_p1.txt",
-#        "disco_results/{ID}_p2.txt",
-#        "slim_results/allele_freqs_{ID}_p1.txt",
-#        "slim_results/allele_freqs_{ID}_p2.txt",
-#        "poolsnp_results/{ID}_p1.txt",
-#        "poolsnp_results/{ID}_p2.txt",
-#        "hetmers_results/{ID}_p1_counts.csv",
-#        "hetmers_results/{ID}_p2_counts.csv",
-#        "seqkit_results/center_kmer_pairs_{ID}_p1p2.txt",
-#    output:
-#        touch("{ID}_p1p2.done"),
-
+        touch("{SID}_{PID}.done")
 
 # helper functions
 include: "rules/common.smk"

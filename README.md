@@ -24,7 +24,9 @@ Simulation workflow to investigate the utility of k-mers, het-mers, and k-unitig
 
 1. Install mamba
 
-2. Create a mamba environment with snakemake and any plugins you need
+2. Download the workflow from github
+
+3. Create a mamba environment with snakemake and any plugins you need
 
 This is how to make new mamba environment named snakemake with snakemake and the slurm plugin installed. If you are not running the workflow on a SLURM cluster, you can install a different pluggin
 
@@ -33,8 +35,6 @@ mamba create -y -n snakemake snakemake snakemake-executor-plugin-slurm snakedepl
 
 mamba activate snakemake
 ```
-
-3. Download the workflow from github
 
 4. Check the snakemake profile for the proper executer. The default profile runs snakemake on a slurm cluster (`workflow/profiles/default/config.yaml`), but you should still change the slurm account, slurm partition, and default resources to match your system.
 
@@ -102,9 +102,16 @@ snakemake --sdm conda apptainer --singularity-args "--bind ~/Josephs_Lab_Project
 
 ### Run workflow in batches with singularity on slurm cluster
 
+```
+for num in {1..50}
+do
+  snakemake --sdm conda apptainer --singularity-args "--bind /mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow" --rerun-incomplete --rerun-triggers mtime --scheduler greedy --retries 1 --keep-going --batch all=$num/50
+done
+```
+
 ### Run workflow on local machine
 
-`snakemake --profile profiles/local`
+The default snakemake profile is to run on a slurm cluster, but you can take any of the above commands and run snakemake on your local machine by adding `--profile profiles/local` to your snakemake command. Make sure to edit `workflow/profiles/local/config.yaml` to reflect the hardware limits of your local machine.
 
 ## Notes
 
@@ -223,9 +230,15 @@ This could be nicer because R markdown will give me more control over what the r
 
 - [x] add seeds to iss and slim so that unit tests will always give same answer
 
-- [ ] add job groups?
+- [ ] add time series slim simulation
 
-- [ ] add dissimilarity script back in
+- [ ] add dissimilarity script back in. I couldn't figure this out - even when using the branch function.
+
+- [ ] add `bcftools call`?
+
+- [ ] calculate dxy from slim outputs
+
+- [ ] add job groups?
 
 - [ ] add more sequencing simulators: dwgsim, mason, or add another sequencer error profile
 
@@ -234,8 +247,6 @@ This could be nicer because R markdown will give me more control over what the r
 - [ ] add R notebook to snakemake
 
 - [ ] write hetmers binary to calculate fst
-
-- [ ] add time series slim simulation
 
 - [ ] unit tests
 
