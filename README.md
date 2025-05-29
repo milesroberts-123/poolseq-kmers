@@ -2,23 +2,23 @@
 
 Author: Miles Roberts
 
-Simulation workflow to investigate the utility of k-mers, het-mers, and k-unitigs for pool-seq data analysis built with snakemake (v 9.3.3) and run with the snakemake slurm plugin (v 1.3.6) and snakedeploy (v 0.11.0)
-
 ## Table of Contents
 
-* Overview
+[Overview](#overview)
 
-* Setup
+[Setup](#setup)
 
-* Inputs
+[Inputs](#inputs)
 
-* Outputs
+[Outputs](#outputs)
 
-* Running the workflow
+[Running the workflow](#running-the-workflow)
 
-* Statistical analysis and figure creation
+[Statistical analysis and figure creation](#statistical-analysis-and-figure-creation)
 
 ## Overview
+
+Simulation workflow to investigate the utility of k-mers, het-mers, and k-unitigs for pool-seq data analysis built with snakemake (v 9.3.3) and run with the snakemake slurm plugin (v 1.3.6) and snakedeploy (v 0.11.0)
 
 ## Setup
 
@@ -66,14 +66,14 @@ Examples commands are in `resources/01_snakemake.bash`
 
 ### Run whole workflow with conda envs on slurm cluster
 
-`snakemake --cluster "sbatch --time={resources.time} --cpus-per-task={threads} --mem-per-cpu={resources.mem_mb_per_cpu} --partition=josephsnodes --account=josephsnodes --output=logs/slurm/%j.out --error=logs/slurm/%j.out" --jobs 950 --cores 950 --use-conda --rerun-incomplete --rerun-triggers mtime --scheduler greedy --retries 1 --keep-going`
+`snakemake --sdm conda --rerun-incomplete --rerun-triggers mtime --scheduler greedy --retries 1 --keep-going`
 
 ### Run workflow in batches with conda envs on slurm cluster
 
 ```
 for num in {1..50}
 do
-  snakemake --cluster "sbatch --time={resources.time} --cpus-per-task={threads} --mem-per-cpu={resources.mem_mb_per_cpu} --partition=josephsnodes --account=josephsnodes --output=logs/slurm/%j.out --error=logs/slurm/%j.out" --jobs 975 --cores 975 --use-conda --rerun-incomplete --rerun-triggers mtime --scheduler greedy --retries 1 --keep-going --batch all=$num/50
+  snakemake --sdm conda --rerun-incomplete --rerun-triggers mtime --scheduler greedy --retries 1 --keep-going --batch all=$num/50
 done
 ```
 
@@ -230,9 +230,9 @@ This could be nicer because R markdown will give me more control over what the r
 
 - [x] add seeds to iss and slim so that unit tests will always give same answer
 
-- [ ] add time series slim simulation
+- [x] add dissimilarity script back in. I couldn't figure this out - even when using the branch function.
 
-- [ ] add dissimilarity script back in. I couldn't figure this out - even when using the branch function.
+- [ ] add time series slim simulation
 
 - [ ] add `bcftools call`?
 
