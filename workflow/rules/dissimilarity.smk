@@ -19,11 +19,11 @@ rule dissimilarity:
         simtype=lookup(query="ID == '{SID}'", within=parameters, cols="simtype")
     shell:
         """
-        if [ {params.simtype} == "twopop"] || [ {params.simtype} == "bsa"]; then
+        if [ {params.simtype} == "twopop"] || [ {params.simtype} == "bsa" ]; then
             Rscript scripts/dissimilarity.R {input} {output} {threads} &> {log}
         fi
 
-        if [ {params.simtype} == "onepop"] || [ {params.simtype} == "sweep"]; then
+        if [ {params.simtype} == "onepop"] || [ {params.simtype} == "sweep" ]; then
             touch {output}
         fi
         """
