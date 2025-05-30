@@ -1,5 +1,7 @@
 # poolseq-kmers
 
+[![Super-Linter](https://github.com/milesroberts-123/poolseq-kmers/actions/workflows/linter.yml/badge.svg)](https://github.com/marketplace/actions/super-linter)
+
 Author: Miles Roberts
 
 ## Table of Contents
