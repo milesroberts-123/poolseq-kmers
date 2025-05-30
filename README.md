@@ -16,6 +16,8 @@ Author: Miles Roberts
 
 [Statistical analysis and figure creation](#statistical-analysis-and-figure-creation)
 
+[Citations](#citations)
+ 
 ## Overview
 
 Simulation workflow to investigate the utility of k-mers, het-mers, and k-unitigs for pool-seq data analysis built with snakemake (v 9.3.3) and run with the snakemake slurm plugin (v 1.3.6) and snakedeploy (v 0.11.0)
@@ -112,6 +114,8 @@ done
 ### Run workflow on local machine
 
 The default snakemake profile is to run on a slurm cluster, but you can take any of the above commands and run snakemake on your local machine by adding `--profile profiles/local` to your snakemake command. Make sure to edit `workflow/profiles/local/config.yaml` to reflect the hardware limits of your local machine.
+
+## Citations
 
 ## Notes
 
