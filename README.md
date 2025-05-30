@@ -232,6 +232,8 @@ This could be nicer because R markdown will give me more control over what the r
 
 - [x] add dissimilarity script back in. I couldn't figure this out - even when using the branch function.
 
+- [x] [add snakefmt via github actions](https://github.com/snakemake/snakefmt?tab=readme-ov-file#github-actions)
+
 - [ ] add time series slim simulation
 
 - [ ] add `bcftools call`?
