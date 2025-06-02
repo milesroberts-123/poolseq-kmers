@@ -31,3 +31,7 @@ jobs:
         env:
           # To report GitHub Actions status checks
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VALIDATE_SNAKEMAKE_LINT: true
+          VALIDATE_SNAKEMAKE_SNAKEFMT: true
+          VALIDATE_R: true
+          VALIDATE_MARKDOWN: true

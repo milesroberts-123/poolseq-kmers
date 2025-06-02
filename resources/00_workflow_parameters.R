@@ -1,21 +1,21 @@
 library("dplyr") 
 
-replicates = 1:3
-sample_sizes = c(25, 50, 75, 100)
-coverages = c(50, 100, 150, 200)
-#sequencers = c("miseq")
-sequencers = c("miseq", "hiseq", "nextseq", "novaseq")
+replicates <- 1:3
+sample_sizes <- c(25, 50, 75, 100)
+coverages <- c(50, 100, 150, 200)
+#sequencers <- c("miseq")
+sequencers <- c("miseq", "hiseq", "nextseq", "novaseq")
 
-population_sizes = c(1000)
-mutation_rates = c(1e-8)
-recombination_rates = c(1e-8)
+population_sizes <- c(1000)
+mutation_rates <- c(1e-8)
+recombination_rates <- c(1e-8)
 
-shapes = c(4.22, 1e6)
-shuffles = c(TRUE, FALSE)
-#chrom_length = 2e6
+shapes <- c(4.22, 1e6)
+shuffles <- c(TRUE, FALSE)
+#chrom_length <- 2e6
 
 # create data frame of workflow parameters
-one_pop_params = expand.grid(
+one_pop_params <- expand.grid(
   rep = replicates,
   #rep = replicates,
   N = population_sizes,
@@ -35,8 +35,10 @@ one_pop_params = expand.grid(
   #pT = 0.25
 )
 
+#head(one_pop_params)
+
 # parameters for two population model
-two_pop_params = expand.grid(
+two_pop_params <- expand.grid(
   rep = replicates,
   N1 = population_sizes,
   N2 = population_sizes,
@@ -60,10 +62,10 @@ two_pop_params = expand.grid(
 )
 
 # convert tau in units of N generations to generations
-two_pop_params$tau = two_pop_params$tau*(two_pop_params$N1 + two_pop_params$N2)
+two_pop_params$tau <- two_pop_params$tau*(two_pop_params$N1 + two_pop_params$N2)
 
 # selective sweep parameters
-sweep_params = expand.grid(
+sweep_params <- expand.grid(
   rep = replicates,
   #rep = replicates,
   N = population_sizes,
@@ -88,10 +90,10 @@ sweep_params = expand.grid(
 )
 
 # convert Nes to selection coefficient
-sweep_params$s = sweep_params$Nes/sweep_params$N
+sweep_params$s <- sweep_params$Nes/sweep_params$N
 
 # bulk-segregant analysis parameters
-bsa_params = expand.grid(
+bsa_params <- expand.grid(
   rep = replicates,
   N = 2000,
   n = sample_sizes,
@@ -117,40 +119,40 @@ bsa_params = expand.grid(
 )
 
 # combine all parameters into one table
-params = bind_rows(one_pop_params, two_pop_params, sweep_params, bsa_params)
-#params = bind_rows(one_pop_params, two_pop_params)
-#params = bind_rows(one_pop_params, sweep_params)
-#params = bind_rows(sweep_params, bsa_params)
-#params = sweep_params
+params <- bind_rows(one_pop_params, two_pop_params, sweep_params, bsa_params)
+#params <- bind_rows(one_pop_params, two_pop_params)
+#params <- bind_rows(one_pop_params, sweep_params)
+#params <- bind_rows(sweep_params, bsa_params)
+#params <- sweep_params
 
 # replace all NA with 0, so that snakemake stays happy
-params[is.na(params)] = 0
+params[is.na(params)] <- 0
 
 # subset if needed
-#params = params[(params$simtype %in% c("sweep", "bsa")),]
+#params <- params[(params$simtype %in% c("sweep", "bsa")),]
 
 # add simulation id
-params$ID = 1:nrow(params)
+params$ID <- 1:nrow(params)
 
 # add seeds for random number generator
-params$slimseed = sample(0:(2^32 - 1), replace = T, size = nrow(params))
-params$issseed = sample(0:(2^32 - 1), replace = T, size = nrow(params))
+params$slimseed <- sample(0:(2^32 - 1), replace = T, size = nrow(params))
+params$issseed <- sample(0:(2^32 - 1), replace = T, size = nrow(params))
 
 # save
 write.table(params, "../config/parameters.tsv", sep = "\t", quote = F, row.names = F)
 
 # generate deletions in reference genome
-#deletions = rgeom(120000, 0.2)
+#deletions <- rgeom(120000, 0.2)
 #
-#deletions = deletions[(deletions > 0)]
+#deletions <- deletions[(deletions > 0)]
 #
-#ends = cumsum(deletions)
-#starts = c(0, head(ends,-1))
+#ends <- cumsum(deletions)
+#starts <- c(0, head(ends,-1))
 #
-#mybed = data.frame(
-# chrom = 1,
-# starts = starts,
-# ends = ends
+#mybed <- data.frame(
+# chrom <- 1,
+# starts <- starts,
+# ends <- ends
 #)
 #
 #write.table(mybed, "../config/mask.bed", sep = "\t", quote = F, row.names = F, col.names = F)
