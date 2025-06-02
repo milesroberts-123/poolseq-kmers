@@ -70,6 +70,7 @@ rule all:
     input:
         expand("{SID}_0.done", SID=one_pop_params.index.get_level_values("ID")),
         expand("{SID}_{PID}.done", SID=two_pop_params.index.get_level_values("ID"), PID=[0,1]),
+        "multiqc_report.html"
 
 #rule all_per_sim:
 #    input:
@@ -145,6 +146,7 @@ include: "rules/kmc.smk"
 #include: "rules/kmc_one_pop.smk"
 #include: "rules/kmc_two_pop.smk"
 # include: "rules/poolsnp_masked.smk"
+include: "rules/multiqc.smk"
 include: "rules/poolsnp.smk"
 #include: "rules/poolsnp_one_pop.smk"
 #include: "rules/poolsnp_two_pop.smk"
