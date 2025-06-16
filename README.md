@@ -2,6 +2,8 @@
 
 [![Super-Linter](https://github.com/milesroberts-123/poolseq-kmers/actions/workflows/linter.yml/badge.svg)](https://github.com/marketplace/actions/super-linter)
 
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
 Author: Miles Roberts
 
 ## Table of Contents
@@ -239,6 +241,8 @@ This could be nicer because R markdown will give me more control over what the r
 - [x] add dissimilarity script back in. I couldn't figure this out - even when using the branch function.
 
 - [x] [add snakefmt via github actions](https://github.com/snakemake/snakefmt?tab=readme-ov-file#github-actions)
+
+- [ ] add angsd?
 
 - [ ] add time series slim simulation
 
