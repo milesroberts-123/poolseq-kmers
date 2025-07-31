@@ -37,9 +37,9 @@ Simulation workflow to investigate the utility of k-mers, het-mers, and k-unitig
 This is how to make new mamba environment named snakemake with snakemake and the slurm plugin installed. If you are not running the workflow on a SLURM cluster, you can install a different pluggin
 
 ```
-mamba create -y -n snakemake snakemake snakemake-executor-plugin-slurm snakedeploy
+conda create -y -f snakemake-mamba-env.yaml
 
-mamba activate snakemake
+conda activate snakemake
 ```
 
 4. Check the snakemake profile for the proper executer. The default profile runs snakemake on a slurm cluster (`workflow/profiles/default/config.yaml`), but you should still change the slurm account, slurm partition, and default resources to match your system.
