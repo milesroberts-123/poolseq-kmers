@@ -1,26 +1,24 @@
 rule blast:
     input:
-        ref="seqkit_results/ref_{ID}.fasta",
-        unitigs="unitig_caller_results/unitigs_renamed_{ID}.fasta",
+        ref="seqkit_results/ref_{SID}.fasta",
+        ndb="ref_{SID}.ndb",
+        nhr="ref_{SID}.nhr",
+        nin="ref_{SID}.nin",
+        njs="ref_{SID}.njs",
+        not_dbfile="ref_{SID}.not",
+        nsq="ref_{SID}.nsq",
+        ntf="ref_{SID}.ntf",
+        nto="ref_{SID}.nto",
+        unitigs="unitig_caller_results/unitigs_renamed_{SID}_{PID}.fasta",
     output:
-        ndb=temp("ref_{ID}.ndb"),
-        nhr=temp("ref_{ID}.nhr"),
-        nin=temp("ref_{ID}.nin"),
-        njs=temp("ref_{ID}.njs"),
-        not_dbfile=temp("ref_{ID}.not"),
-        nsq=temp("ref_{ID}.nsq"),
-        ntf=temp("ref_{ID}.ntf"),
-        nto=temp("ref_{ID}.nto"),
-        alignments="blast_results/{ID}.txt",
+        alignments="blast_results/{SID}_{PID}.txt",
     conda:
         "../envs/blast.yaml"
     params:
         blastEvalue=config["blastEvalue"],
     log:
-        "logs/blast/{ID}.log",
+        "logs/blast/{SID}_{PID}.log",
     shell:
         """
-        makeblastdb -in {input.ref} -title $(basename {input.ref} .fasta) -dbtype nucl -out $(basename {input.ref} .fasta) &>> {log}
-
         blastn -query {input.unitigs} -db $(basename {input.ref} .fasta) -out {output.alignments} -max_target_seqs 1 -evalue {params.blastEvalue} -outfmt 6 &>> {log}
         """

@@ -1,6 +1,6 @@
 library("dplyr") 
 
-replicates = 1:3
+replicates = 1
 sample_sizes = c(50, 75, 100)
 coverages = c(100, 150, 200)
 sequencers = c("miseq")
@@ -28,7 +28,7 @@ one_pop_params = expand.grid(
   sequencer = sequencers,
   simtype = "onepop",
   shape = shapes,
-  shuffle = shuffles,
+  shuffle = shuffles
   #pA = 0.25,
   #pC = 0.25,
   #pG = 0.25,
@@ -131,6 +131,10 @@ params[is.na(params)] = 0
 
 # add simulation id
 params$ID = 1:nrow(params)
+
+# add initial random seeds
+params$slimseed = sample(1:((2^31)-1), size = nrow(params), replace = F)
+params$issseed = sample(1:((2^31)-1), size = nrow(params), replace = F)
 
 # save
 write.table(params, "../config/parameters.tsv", sep = "\t", quote = F, row.names = F)

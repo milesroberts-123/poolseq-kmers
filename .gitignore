@@ -7,8 +7,16 @@
 **.csv
 **.log
 **.fasta
+**.fa
 **.vcf
 **.vcf.gz
 **.vcf.gz.tbi
 **.stats
 **.nb.html
+**.kmc_pre
+**.kmc_suf
+**.sam
+**.bam
+**.h5
+**.mpileup
+**.html

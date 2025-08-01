@@ -1,8 +1,8 @@
-FROM condaforge/mambaforge:latest
+FROM condaforge/miniforge3:latest
 LABEL io.github.snakemake.containerized="true"
-LABEL io.github.snakemake.conda_env_hash="d76661d8df4428e3da5b09fb8ce068daac1b00c975b6693cef5492e1437ecd57"
+LABEL io.github.snakemake.conda_env_hash="396ed6eb2ae5bb57c4f662874540e90c5999397225e3850fb13f3ac2afc7d072"
 
-# Step 1: Retrieve conda environments
+# Step 2: Retrieve conda environments
 
 # Conda environment:
 #   source: envs/R.yaml
@@ -363,6 +363,74 @@ COPY envs/discosnp.yaml /conda-envs/3975635716462ad8df8ab04bf69fe7de/environment
 #   prefix: /mnt/home/robe1195/anaconda3/envs/fastp
 RUN mkdir -p /conda-envs/d312f6eece184817d7aedaca2303e131
 COPY envs/fastp.yaml /conda-envs/d312f6eece184817d7aedaca2303e131/environment.yaml
+
+# Conda environment:
+#   source: envs/freebayes.yaml
+#   prefix: /conda-envs/e8cc18ea695f8068a63a8cd92b5f1140
+#   name: freebayes
+#   channels:
+#     - conda-forge
+#     - bioconda
+#     - defaults
+#   dependencies:
+#     - _libgcc_mutex=0.1=conda_forge
+#     - _openmp_mutex=4.5=2_gnu
+#     - bzip2=1.0.8=h4bc722e_7
+#     - c-ares=1.34.5=hb9d3cd8_0
+#     - ca-certificates=2025.4.26=hbd8a1cb_0
+#     - fastahack=2016.07.2=h4ac6f70_6
+#     - freebayes=1.3.9=hbefcdb2_3
+#     - htslib=1.21=h566b1c6_1
+#     - keyutils=1.6.1=h166bdaf_0
+#     - krb5=1.21.3=h659f571_0
+#     - ld_impl_linux-64=2.43=h712a8e2_4
+#     - libasprintf=0.24.1=h8e693c7_0
+#     - libcurl=8.13.0=h332b0f4_0
+#     - libdeflate=1.22=hb9d3cd8_0
+#     - libedit=3.1.20250104=pl5321h7949ede_0
+#     - libev=4.33=hd590300_2
+#     - libexpat=2.7.0=h5888daf_0
+#     - libffi=3.4.6=h2dba641_1
+#     - libgcc=15.1.0=h767d61c_2
+#     - libgcc-ng=15.1.0=h69a702a_2
+#     - libgettextpo=0.24.1=h5888daf_0
+#     - libgomp=15.1.0=h767d61c_2
+#     - libidn2=2.3.8=ha4ef2c3_0
+#     - liblzma=5.8.1=hb9d3cd8_1
+#     - liblzma-devel=5.8.1=hb9d3cd8_1
+#     - libmpdec=4.0.0=h4bc722e_0
+#     - libnghttp2=1.64.0=h161d5f1_0
+#     - libsqlite=3.49.2=hee588c1_0
+#     - libssh2=1.11.1=hcf80075_0
+#     - libstdcxx=15.1.0=h8f9b012_2
+#     - libstdcxx-ng=15.1.0=h4852527_2
+#     - libunistring=0.9.10=h7f98852_0
+#     - libuuid=2.38.1=h0b41bf4_0
+#     - libxcrypt=4.4.36=hd590300_1
+#     - libzlib=1.3.1=hb9d3cd8_2
+#     - ncurses=6.5=h2d0b736_3
+#     - openssl=3.5.0=h7b32b05_1
+#     - parallel=20250422=ha770c72_0
+#     - perl=5.32.1=7_hd590300_perl5
+#     - pip=25.1.1=pyh145f28c_0
+#     - python=3.13.3=hf636f53_101_cp313
+#     - python_abi=3.13=7_cp313
+#     - readline=8.2=h8c095d6_2
+#     - samtools=1.21=h96c455f_1
+#     - seqlib=1.2.0=hbefcdb2_0
+#     - tabixpp=1.1.2=hbefcdb2_4
+#     - tk=8.6.13=noxft_h4845f30_101
+#     - tzdata=2025b=h78e105d_0
+#     - vcflib=1.0.14=h34261f4_0
+#     - wget=1.21.4=hda4d442_0
+#     - xz=5.8.1=hbcc6ac9_1
+#     - xz-gpl-tools=5.8.1=hbcc6ac9_1
+#     - xz-tools=5.8.1=hb9d3cd8_1
+#     - zlib=1.3.1=hb9d3cd8_2
+#     - zstd=1.5.7=hb8e6e7a_2
+#   prefix: /mnt/home/robe1195/anaconda3/envs/freebayes
+RUN mkdir -p /conda-envs/e8cc18ea695f8068a63a8cd92b5f1140
+COPY envs/freebayes.yaml /conda-envs/e8cc18ea695f8068a63a8cd92b5f1140/environment.yaml
 
 # Conda environment:
 #   source: envs/iss.yaml
@@ -841,20 +909,21 @@ COPY envs/unitig-caller.yaml /conda-envs/c3426142ab2478501bd2794e9bc90f87/enviro
 RUN mkdir -p /conda-envs/00ac27dafb55868320e892d08cfe5ee2
 COPY envs/varscan.yaml /conda-envs/00ac27dafb55868320e892d08cfe5ee2/environment.yaml
 
-# Step 2: Generate conda environments
+# Step 3: Generate conda environments
 
-RUN mamba env create --prefix /conda-envs/3c74495c6c8f8b13c8f5e41bfa52b11d --file /conda-envs/3c74495c6c8f8b13c8f5e41bfa52b11d/environment.yaml && \
-    mamba env create --prefix /conda-envs/0950501a46653d5a4ebb8880d7116ac1 --file /conda-envs/0950501a46653d5a4ebb8880d7116ac1/environment.yaml && \
-    mamba env create --prefix /conda-envs/bdb938750e65e4dee08a317c9e6fbe39 --file /conda-envs/bdb938750e65e4dee08a317c9e6fbe39/environment.yaml && \
-    mamba env create --prefix /conda-envs/99d0271927f7937d98d4440f823b63a1 --file /conda-envs/99d0271927f7937d98d4440f823b63a1/environment.yaml && \
-    mamba env create --prefix /conda-envs/3975635716462ad8df8ab04bf69fe7de --file /conda-envs/3975635716462ad8df8ab04bf69fe7de/environment.yaml && \
-    mamba env create --prefix /conda-envs/d312f6eece184817d7aedaca2303e131 --file /conda-envs/d312f6eece184817d7aedaca2303e131/environment.yaml && \
-    mamba env create --prefix /conda-envs/2e4ba807a7ac2e611167d2d417e0f994 --file /conda-envs/2e4ba807a7ac2e611167d2d417e0f994/environment.yaml && \
-    mamba env create --prefix /conda-envs/163c323cc09b3de9d2436ff7e1af6d8a --file /conda-envs/163c323cc09b3de9d2436ff7e1af6d8a/environment.yaml && \
-    mamba env create --prefix /conda-envs/34a74f1453a9c99997060d397590a03c --file /conda-envs/34a74f1453a9c99997060d397590a03c/environment.yaml && \
-    mamba env create --prefix /conda-envs/6e9cd389f1fb5d23ad614dc7f172bfe7 --file /conda-envs/6e9cd389f1fb5d23ad614dc7f172bfe7/environment.yaml && \
-    mamba env create --prefix /conda-envs/5d8d7dec5540d725ad3e6cb69c16b0a2 --file /conda-envs/5d8d7dec5540d725ad3e6cb69c16b0a2/environment.yaml && \
-    mamba env create --prefix /conda-envs/ac6e0663d3c2604df3006ff1e3857de9 --file /conda-envs/ac6e0663d3c2604df3006ff1e3857de9/environment.yaml && \
-    mamba env create --prefix /conda-envs/c3426142ab2478501bd2794e9bc90f87 --file /conda-envs/c3426142ab2478501bd2794e9bc90f87/environment.yaml && \
-    mamba env create --prefix /conda-envs/00ac27dafb55868320e892d08cfe5ee2 --file /conda-envs/00ac27dafb55868320e892d08cfe5ee2/environment.yaml && \
-    mamba clean --all -y
+RUN conda env create --prefix /conda-envs/3c74495c6c8f8b13c8f5e41bfa52b11d --file /conda-envs/3c74495c6c8f8b13c8f5e41bfa52b11d/environment.yaml && \
+    conda env create --prefix /conda-envs/0950501a46653d5a4ebb8880d7116ac1 --file /conda-envs/0950501a46653d5a4ebb8880d7116ac1/environment.yaml && \
+    conda env create --prefix /conda-envs/bdb938750e65e4dee08a317c9e6fbe39 --file /conda-envs/bdb938750e65e4dee08a317c9e6fbe39/environment.yaml && \
+    conda env create --prefix /conda-envs/99d0271927f7937d98d4440f823b63a1 --file /conda-envs/99d0271927f7937d98d4440f823b63a1/environment.yaml && \
+    conda env create --prefix /conda-envs/3975635716462ad8df8ab04bf69fe7de --file /conda-envs/3975635716462ad8df8ab04bf69fe7de/environment.yaml && \
+    conda env create --prefix /conda-envs/d312f6eece184817d7aedaca2303e131 --file /conda-envs/d312f6eece184817d7aedaca2303e131/environment.yaml && \
+    conda env create --prefix /conda-envs/e8cc18ea695f8068a63a8cd92b5f1140 --file /conda-envs/e8cc18ea695f8068a63a8cd92b5f1140/environment.yaml && \
+    conda env create --prefix /conda-envs/2e4ba807a7ac2e611167d2d417e0f994 --file /conda-envs/2e4ba807a7ac2e611167d2d417e0f994/environment.yaml && \
+    conda env create --prefix /conda-envs/163c323cc09b3de9d2436ff7e1af6d8a --file /conda-envs/163c323cc09b3de9d2436ff7e1af6d8a/environment.yaml && \
+    conda env create --prefix /conda-envs/34a74f1453a9c99997060d397590a03c --file /conda-envs/34a74f1453a9c99997060d397590a03c/environment.yaml && \
+    conda env create --prefix /conda-envs/6e9cd389f1fb5d23ad614dc7f172bfe7 --file /conda-envs/6e9cd389f1fb5d23ad614dc7f172bfe7/environment.yaml && \
+    conda env create --prefix /conda-envs/5d8d7dec5540d725ad3e6cb69c16b0a2 --file /conda-envs/5d8d7dec5540d725ad3e6cb69c16b0a2/environment.yaml && \
+    conda env create --prefix /conda-envs/ac6e0663d3c2604df3006ff1e3857de9 --file /conda-envs/ac6e0663d3c2604df3006ff1e3857de9/environment.yaml && \
+    conda env create --prefix /conda-envs/c3426142ab2478501bd2794e9bc90f87 --file /conda-envs/c3426142ab2478501bd2794e9bc90f87/environment.yaml && \
+    conda env create --prefix /conda-envs/00ac27dafb55868320e892d08cfe5ee2 --file /conda-envs/00ac27dafb55868320e892d08cfe5ee2/environment.yaml && \
+    conda clean --all -y

@@ -1,40 +1,46 @@
 # poolseq-kmers
 
-Author: Miles Roberts
+[![Super-Linter](https://github.com/milesroberts-123/poolseq-kmers/actions/workflows/linter.yml/badge.svg)](https://github.com/marketplace/actions/super-linter)
 
-Simulation workflow to investigate the utility of k-mers, het-mers, and k-unitigs for pool-seq data analysis built with snakemake (v 9.3.3) and run with the snakemake slurm plugin (v 1.3.6) and snakedeploy (v 0.11.0)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
+Author: Miles Roberts
 
 ## Table of Contents
 
-* Overview
+[Overview](#overview)
 
-* Setup
+[Setup](#setup)
 
-* Inputs
+[Inputs](#inputs)
 
-* Outputs
+[Outputs](#outputs)
 
-* Running the workflow
+[Running the workflow](#running-the-workflow)
 
-* Statistical analysis and figure creation
+[Statistical analysis and figure creation](#statistical-analysis-and-figure-creation)
 
+[Citations](#citations)
+ 
 ## Overview
+
+Simulation workflow to investigate the utility of k-mers, het-mers, and k-unitigs for pool-seq data analysis built with snakemake (v 9.3.3) and run with the snakemake slurm plugin (v 1.3.6) and snakedeploy (v 0.11.0)
 
 ## Setup
 
 1. Install mamba
 
-2. Create a mamba environment with snakemake and any plugins you need
+2. Download the workflow from github
+
+3. Create a mamba environment with snakemake and any plugins you need
 
 This is how to make new mamba environment named snakemake with snakemake and the slurm plugin installed. If you are not running the workflow on a SLURM cluster, you can install a different pluggin
 
 ```
-mamba create -y -n snakemake snakemake snakemake-executor-plugin-slurm snakedeploy
+conda create -y -f snakemake-mamba-env.yaml
 
-mamba activate snakemake
+conda activate snakemake
 ```
-
-3. Download the workflow from github
 
 4. Check the snakemake profile for the proper executer. The default profile runs snakemake on a slurm cluster (`workflow/profiles/default/config.yaml`), but you should still change the slurm account, slurm partition, and default resources to match your system.
 
@@ -66,14 +72,14 @@ Examples commands are in `resources/01_snakemake.bash`
 
 ### Run whole workflow with conda envs on slurm cluster
 
-`snakemake --cluster "sbatch --time={resources.time} --cpus-per-task={threads} --mem-per-cpu={resources.mem_mb_per_cpu} --partition=josephsnodes --account=josephsnodes --output=logs/slurm/%j.out --error=logs/slurm/%j.out" --jobs 950 --cores 950 --use-conda --rerun-incomplete --rerun-triggers mtime --scheduler greedy --retries 1 --keep-going`
+`snakemake --sdm conda --rerun-incomplete --rerun-triggers mtime --scheduler greedy --retries 1 --keep-going`
 
 ### Run workflow in batches with conda envs on slurm cluster
 
 ```
 for num in {1..50}
 do
-  snakemake --cluster "sbatch --time={resources.time} --cpus-per-task={threads} --mem-per-cpu={resources.mem_mb_per_cpu} --partition=josephsnodes --account=josephsnodes --output=logs/slurm/%j.out --error=logs/slurm/%j.out" --jobs 975 --cores 975 --use-conda --rerun-incomplete --rerun-triggers mtime --scheduler greedy --retries 1 --keep-going --batch all=$num/50
+  snakemake --sdm conda --rerun-incomplete --rerun-triggers mtime --scheduler greedy --retries 1 --keep-going --batch all=$num/50
 done
 ```
 
@@ -97,14 +103,23 @@ Instead of downloading and building all of the conda environments, you can just 
 Need to pass `--use-singularity` to snakemake and also your snakemake working directory with `--singularity-args "--bind <SNAKEMAKE_WORKING_DIRECTORY>"`
 
 ```
-snakemake --sdm conda apptainer --singularity-args "--bind ~/Josephs_Lab_Projects/poolseq-kmers/workflow" --cores 1
+snakemake --sdm conda apptainer --singularity-args "--bind ~/Josephs_Lab_Projects/poolseq-kmers/workflow" --rerun-incomplete --rerun-triggers mtime --scheduler greedy --retries 1 --keep-going
 ```
 
 ### Run workflow in batches with singularity on slurm cluster
 
+```
+for num in {1..50}
+do
+  snakemake --sdm conda apptainer --singularity-args "--bind /mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow" --rerun-incomplete --rerun-triggers mtime --scheduler greedy --retries 1 --keep-going --batch all=$num/50
+done
+```
+
 ### Run workflow on local machine
 
-`snakemake --profile profiles/local`
+The default snakemake profile is to run on a slurm cluster, but you can take any of the above commands and run snakemake on your local machine by adding `--profile profiles/local` to your snakemake command. Make sure to edit `workflow/profiles/local/config.yaml` to reflect the hardware limits of your local machine.
+
+## Citations
 
 ## Notes
 
@@ -215,17 +230,41 @@ This could be nicer because R markdown will give me more control over what the r
 
 - [x] parameter space coding
 
+- [x] change wildcards to something like: {simulation id}_{population id} so that I don't need separate rules for 1 population vs 2 population workflows?
+
+- [x] [add minimum snakemake version](https://snakemake.readthedocs.io/en/stable/snakefiles/writing_snakefiles.html#depend-on-a-minimum-snakemake-version)
+
+- [x] freebayes
+
+- [x] add seeds to iss and slim so that unit tests will always give same answer
+
+- [x] add dissimilarity script back in. I couldn't figure this out - even when using the branch function.
+
+- [x] [add snakefmt via github actions](https://github.com/snakemake/snakefmt?tab=readme-ov-file#github-actions)
+
+- [ ] add angsd?
+
+- [ ] add time series slim simulation
+
+- [ ] add `bcftools call`?
+
+- [ ] calculate dxy from slim outputs
+
+- [ ] add job groups?
+
+- [ ] add more sequencing simulators: dwgsim, mason, or add another sequencer error profile
+
 - [ ] [Try rewriting discosnp as a shadow rule](https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#shadow-rules)
 
 - [ ] add R notebook to snakemake
+
+- [ ] write hetmers binary to calculate fst
 
 - [ ] unit tests
 
 - [ ] integration tests
 
 - [ ] github actions
-
-- [ ] write hetmers binary to calculate fst
 
 ### lower priority
 
