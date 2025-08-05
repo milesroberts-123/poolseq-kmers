@@ -5,7 +5,7 @@
 #SBATCH --time=7-00:00:00
 #SBATCH --mem-per-cpu=16G
 #SBATCH --mail-type=ALL
-#SBATCH --mail-user=robe1195@msu.edu
+#SBATCH --mail-user=milesroberts@berkeley.edu
 #SBATCH --partition=josephsnodes
 #SBATCH --account=josephsnodes
 
@@ -45,7 +45,7 @@ snakemake --unlock --cores 1
 
 ## RUN WHOLE WORKFLOW ON SLURM CLUSTER WITH SINGULARITY + CONDA ##
 
-snakemake --sdm conda apptainer --singularity-args "--bind /mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow" --rerun-incomplete --rerun-triggers mtime --scheduler greedy --retries 1 --keep-going
+#snakemake --sdm conda apptainer --singularity-args "--bind /mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow" --rerun-incomplete --rerun-triggers mtime --scheduler greedy --retries 1 --keep-going
 
 ## RUN WORKFLOW IN BATCHES ON SLURM CLUSTER WITH CONDA ##
 
@@ -56,7 +56,8 @@ snakemake --sdm conda apptainer --singularity-args "--bind /mnt/scratch/robe1195
 
 ## RUN WORKFLOW IN BATCHES ON SLURM CLUSTER WITH SINGULARITY + CONDA ##
 
-#for num in {1..50}
-#do
-#  snakemake --sdm conda apptainer --singularity-args "--bind /mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow" --rerun-incomplete --rerun-triggers mtime --scheduler greedy --retries 1 --keep-going --batch all=$num/50
-#done
+batch=10
+for i in $( eval echo {1..$batch} )
+do
+  snakemake --sdm conda apptainer --singularity-args "--bind /global/scratch/users/milesroberts/poolseq-kmers/workflow/" --rerun-incomplete --rerun-triggers mtime --scheduler greedy --retries 1 --keep-going --batch all=$i/$batch
+done
