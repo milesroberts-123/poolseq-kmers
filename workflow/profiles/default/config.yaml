@@ -1,6 +1,6 @@
 executor: slurm
-jobs: 10
-cores: 10
+jobs: 1000
+cores: 1000
 
 # rules to execute locally, because they're too fast to bother with cluster submission
 # localrules: all_one_pops, all_two_pops, all
@@ -27,5 +27,5 @@ set-resources:
 # threads and cpus_per_task are supposed to be synonymous for this plugin, but for some reason I need to specify them separately
 set-threads:
     bwa_mem: 2
-    fastp: 1
+    fastp: 4
     iss: 4

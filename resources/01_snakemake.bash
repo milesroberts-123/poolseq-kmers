@@ -3,11 +3,10 @@
 #SBATCH --cpus-per-task=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --time=7-00:00:00
-#SBATCH --mem-per-cpu=16G
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=milesroberts@berkeley.edu
-#SBATCH --partition=josephsnodes
-#SBATCH --account=josephsnodes
+#SBATCH --partition=savio2_htc
+#SBATCH --account=co_moilab
 
 # output information about how this job is running using bash commands
 echo "This job is running on $HOSTNAME on `date`"
@@ -20,18 +19,13 @@ module load Conda/3
 echo Loading snakemake...
 conda activate snakemake-NEW
 
-# change directory of cache to scratch, can't accumulate files in my home space
-#echo Changing cache directory...
-#export XDG_CACHE_HOME="/mnt/scratch/robe1195/cache"
-#echo $XDG_CACHE_HOME
-
 # go to workflow directory with Snakefile
 echo Changing directory...
 cd ../workflow
 
 # unlock snakemake if previous instance of snakemake failed
 echo Unlocking snakemake...
-snakemake --unlock --cores 1
+snakemake --unlock --cores 1 --batch all=1/100
 
 # submit snakemake to HPCC
 # subtract one job and one core from max to account for this submission command
