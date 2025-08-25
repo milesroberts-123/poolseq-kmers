@@ -3,7 +3,7 @@ library("dplyr")
 replicates = 1:3
 sample_sizes = c(25, 50, 75, 100)
 coverages = c(50, 100, 150, 200)
-sequencers = c("miseq", "hiseq", "nextseq", "novaseq")
+sequencers = c("hiseq")
 
 population_sizes = c(1000)
 mutation_rates = c(1e-8)
@@ -100,7 +100,7 @@ params = bind_rows(one_pop_params, two_pop_params, sweep_params, bsa_params)
 params[is.na(params)] = 0
 
 # subset if needed
-params = params[(params$simtype %in% c("sweep", "onepop")),]
+params = params[(params$simtype %in% c("onepop")),]
 
 # add simulation id
 params$ID = 1:nrow(params)

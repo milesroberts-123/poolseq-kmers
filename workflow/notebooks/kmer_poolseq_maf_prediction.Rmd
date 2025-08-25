@@ -820,10 +820,15 @@ add_mesh(p, x= ~maf/n, y= ~cov, z = ~cutoff, data = results, opacity = 0.3, colo
 
 # process single population metrics
 ```{r}
-params = read.table("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/config/parameters.tsv", header = T)
+params = read.table("/global/scratch/users/milesroberts/poolseq-kmers/config/parameters.tsv", header = T)
 
 #dones = sort(as.numeric(gsub(".txt", "", gsub("discoRes_ad_", "",list.files(path = "/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow", pattern = "discoRes_ad_")))))
 
+# if looking at data before workflow is finished, may need to separate out all simulations that are done
+dones = read.table("/global/scratch/users/milesroberts/poolseq-kmers/workflow/dones.txt")
+dones = dones$V1
+
+# empty frame to store results
 results = NULL
 
 # get list of simulation ids
@@ -835,7 +840,9 @@ results = NULL
 # 
 # simids = c(two_pop_ids, simids)
 
-simids = params$ID[(params$simtype == "onepop")]
+#simids = params$ID[(params$simtype == "onepop")]
+
+simids = params$ID[(params$simtype == "onepop") & (params$ID %in% dones)]
 
 k = 31
 
@@ -845,8 +852,8 @@ G = 2e6
 
 #for(i in dones){
 #for(i in params$ID[(params$simtype == "onepop") | (params$simtype == "sweep")]){
-for(i in 127:512){
-#for(i in simids){
+#for(i in 127:512){
+for(i in simids){
   print(paste("Processing simulation ", i, "...", sep = ""))
   
 # get sequencing coverage data
@@ -868,9 +875,9 @@ for(i in 127:512){
 # nC = n*C # total base coverage
 
 # load pairs of k-mers
-kmer_pairs = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/", "kmerpairs_", i, "_sequences.tsv", sep = ""), col.names = c("k1"))
+kmer_pairs = read.table(paste("/global/scratch/users/milesroberts/poolseq-kmers/workflow/smudgeplot_results/", i, "_0_sequences.tsv", sep = ""), col.names = c("k1"))
 
-kmer_covs = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/kmerpairs_", i, "_coverages.tsv", sep = ""), col.names = c("c1", "c2"))
+kmer_covs = read.table(paste("/global/scratch/users/milesroberts/poolseq-kmers/workflow/smudgeplot_results/", i, "_0_coverages.tsv", sep = ""), col.names = c("c1", "c2"))
 kmer_pairs = cbind(kmer_pairs, kmer_covs)
 
 # choose kmer count cutoff
@@ -916,11 +923,11 @@ kmer_pairs$kmer_maf = pmin(kmer_pairs$c1, kmer_pairs$c2)/(kmer_pairs$c1 + kmer_p
 #   theme_classic()
 
 # load from my hetmers script
-hetmers_seqs = read.csv(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/hetmers_", i, "_seqs.csv", sep = ""), col.names = c("k1", "k2"))
+hetmers_seqs = read.csv(paste("/global/scratch/users/milesroberts/poolseq-kmers/workflow/hetmers_results/", i, "_0_seqs.csv", sep = ""), col.names = c("k1", "k2"))
 
-hetmers_counts = read.csv(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/hetmers_", i, "_counts.csv", sep = ""), col.names = c("c1", "c2"))
+hetmers_counts = read.csv(paste("/global/scratch/users/milesroberts/poolseq-kmers/workflow/hetmers_results/", i, "_0_counts.csv", sep = ""), col.names = c("c1", "c2"))
 
-hetmers_bayes = read.csv(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/hetmers_", i, "_bayes_states.csv", sep = ""), col.names = c("bc"))
+hetmers_bayes = read.csv(paste("/global/scratch/users/milesroberts/poolseq-kmers/workflow/hetmers_results/", i, "_0_bayes_states.csv", sep = ""), col.names = c("bc"))
 
 hetmers = cbind(hetmers_seqs, hetmers_counts, hetmers_bayes)
 
@@ -930,7 +937,7 @@ hetmers$hetmer_maf = pmin(hetmers$c1, hetmers$c2)/(hetmers$c1 + hetmers$c2)
 #hetmers$hetmer_mac_bayes = pmin(hetmers$bc, 2*n - hetmers$bc)
 
 # load in actual allele freqs from simulations
-true_af = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/slim_allele_freqs_", i, ".txt", sep = ""), col.names = c("chrom", "pos", "ref", "alt", "ns", "af", "ac"))
+true_af = read.table(paste("/global/scratch/users/milesroberts/poolseq-kmers/workflow/slim_results/allele_freqs_", i, "_0.txt", sep = ""), col.names = c("chrom", "pos", "ref", "alt", "ns", "af", "ac"))
 
 true_af$ac = as.numeric(true_af$ac)
 
@@ -951,7 +958,7 @@ true_af$snp_mac = pmin(true_af$ac, 2*n - true_af$ac)
 true_af = true_af[(true_af$af < 1) & (true_af$af > 0),]
 
 # load discosnp results, calculate maf
-disco = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/discoRes_ad_", i, ".txt", sep = ""), col.names = c("chrom", "pos", "ref", "alt", "c1", "c2"))
+disco = read.table(paste("/global/scratch/users/milesroberts/poolseq-kmers/workflow/disco_results/", i, "_0.txt", sep = ""), col.names = c("chrom", "pos", "ref", "alt", "c1", "c2"))
 
 disco = disco[(disco$c1 >= thresh) & (disco$c2 >= thresh),]
 
@@ -964,7 +971,7 @@ disco$disco_maf = pmin(disco$c1, disco$c2)/(disco$c1 + disco$c2)
 #   j = i
 # }
 
-pos_kmer_key = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/center_kmer_pairs_", i, ".txt", sep = ""), fill = T, col.names = c("pos", "k1", "k2", "k3", "k4"))
+pos_kmer_key = read.table(paste("/global/scratch/users/milesroberts/poolseq-kmers/workflow/seqkit_results/center_kmer_pairs_", i, ".txt", sep = ""), fill = T, col.names = c("pos", "k1", "k2", "k3", "k4"))
 
 pos_kmer_key$leftk = substr(pos_kmer_key$k1, 1, 15)
 pos_kmer_key$rightk = substr(pos_kmer_key$k1, 17, 31)
@@ -1022,7 +1029,7 @@ compare_maf_hetmer = merge(true_af[,c("pos", "snp_maf", "snp_mac")], pos_hetmers
 #compare_maf_kmer_no_na$kmer_mac = unlist(mapply(posterior_min_kmer_count, x = compare_maf_kmer_no_na$c1, z = compare_maf_kmer_no_na$c1 + compare_maf_kmer_no_na$c2, MoreArgs = list(n = 100, C = 2*0.9, c = 5, alpha = 1, beta = 1)))
 
 # include varscan calls
-varscan = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/calls_", i, ".tsv", sep = ""), header = T)
+varscan = read.table(paste("/global/scratch/users/milesroberts/poolseq-kmers/workflow/varscan_results/", i, "_0.tsv", sep = ""), header = T)
 
 varscan = varscan[(varscan$Reads1 >= thresh) & (varscan$Reads2 >= thresh),]
 
@@ -1031,7 +1038,7 @@ varscan$snp_maf_varscan = pmin(varscan$Reads1, varscan$Reads2)/(varscan$Reads1 +
 names(varscan)[2] = "pos"
 
 # load poolsnp calls
-poolsnp = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/poolsnp_final_", i, ".txt", sep = ""), col.names = c("chrom", "pos", "ref", "alt", "c1", "t"), fill = T, na.strings = "")
+poolsnp = read.table(paste("/global/scratch/users/milesroberts/poolseq-kmers/workflow/poolsnp_results/", i, "_0.txt", sep = ""), col.names = c("chrom", "pos", "ref", "alt", "c1", "t"), fill = T, na.strings = "")
 
 poolsnp = poolsnp[(poolsnp$c1 >= thresh),]
 
@@ -1157,7 +1164,7 @@ rm(compare_maf_kmer, compare_maf_varscan, compare_maf_poolsnp, poolsnp, poolsnp_
 
 pares = merge(params, results, by = "ID")
 
-write.table(pares, paste("/mnt/ufs18/home-010/robe1195/Josephs_Lab_Projects/poolseq-kmers/results/", today, "/performance_metrics.txt",sep = ""), sep = " ")
+write.table(pares, paste("/global/scratch/users/milesroberts/poolseq-kmers/results/", today, "/performance_metrics.txt",sep = ""), sep = " ")
 ```
 
 # site frequency spectrum
@@ -1165,42 +1172,55 @@ write.table(pares, paste("/mnt/ufs18/home-010/robe1195/Josephs_Lab_Projects/pool
 # compare accuracy of allele frequency estimates
 plotdata_af_cor = melt(pares[,c("ID", "cov", "n", "kmer_vs_truth_maf_cor", "hetmer_vs_truth_maf_cor", "disco_vs_truth_maf_cor", "varscan_vs_truth_maf_cor", "poolsnp_vs_truth_maf_cor")], id = c("ID", "cov", "n"))
 
+plotdata_af_cor$variable = gsub("_vs_truth_maf_cor", "", plotdata_af_cor$variable)
+
+plotdata_af_cor$variable[plotdata_af_cor$variable == "kmer"] = "smudgeplot"
+
 ggplot(plotdata_af_cor, aes(x = as.factor(cov), color = variable, y = value)) +
   geom_boxplot() +
-  theme_classic()
+  theme_classic() +
+  labs(x = "Coverage", y = "Cor. bw true and estimated maf", color = "method")
+
+ggsave(paste("../results/", today, "/maf_cor.png"))
 
 # compare diversity estimates
 #melt(pares[,c("ID", "cov", "n", "true_div", "kmer_div", "disco_div", "varscan_div", "poolsnp_div")], id = c("ID", "cov", "n"))
 
 # percent error on diversity
-percent_error = function(truth, measurement){
-  (measurement - truth)/truth * 100
-}
-
-pares$pe_div_kmer = percent_error(pares$true_div, pares$kmer_div)
-
-pares$pe_div_hetmer = percent_error(pares$true_div, pares$hetmer_div)
-
-pares$pe_div_disco = percent_error(pares$true_div, pares$disco_div)
-
-pares$pe_div_varscan = percent_error(pares$true_div, pares$varscan_div)
-
-pares$pe_div_poolsnp = percent_error(pares$true_div, pares$poolsnp_div)
-
-plotdata_div = melt(pares[,c("ID", "cov", "n", "pe_div_kmer", "pe_div_hetmer", "pe_div_disco", "pe_div_varscan", "pe_div_poolsnp")], id = c("ID", "cov", "n"))
-
-plotdata_div$variable = gsub("pe_div", "", plotdata_div$variable)
-
-ggplot(plotdata_div, aes(x = as.factor(cov), y = value, color = as.factor(variable))) +
-  geom_boxplot() +
-  theme_classic()
-
-
-# ggplot(pares, aes(x = log10(true_div), y = log10(kmer_div), color = as.factor(cov))) +
-#   geom_point() +
-#   geom_abline(slope = 1, intercept = 0) +
-#   theme_classic()
+# percent_error = function(truth, measurement){
+#   (measurement - truth)/truth * 100
+# }
 # 
+# pares$pe_div_kmer = percent_error(pares$true_div, pares$kmer_div)
+# 
+# pares$pe_div_hetmer = percent_error(pares$true_div, pares$hetmer_div)
+# 
+# pares$pe_div_disco = percent_error(pares$true_div, pares$disco_div)
+# 
+# pares$pe_div_varscan = percent_error(pares$true_div, pares$varscan_div)
+# 
+# pares$pe_div_poolsnp = percent_error(pares$true_div, pares$poolsnp_div)
+
+plotdata_div = melt(pares[,c("ID", "cov", "n", "true_div","kmer_div", "hetmer_div", "disco_div", "varscan_div", "poolsnp_div")], id = c("ID", "cov", "n", "true_div"))
+
+plotdata_div$variable = gsub("_div", "", plotdata_div$variable)
+
+plotdata_div$variable[plotdata_div$variable == "kmer"] = "smudgeplot"
+
+plotdata_div = plotdata_div[(plotdata_div$variable %in% c("hetmer", "varscan", "poolsnp")),]
+
+# ggplot(plotdata_div, aes(x = as.factor(cov), y = value, color = as.factor(variable))) +
+#   geom_boxplot() +
+#   theme_classic()
+
+ggplot(plotdata_div, aes(x = log10(true_div), y = log10(value), color = as.factor(variable), shape = as.factor(cov))) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0) +
+  theme_classic() +
+  labs(y = "Estimated diversity", x = "True diversity", color = "Method", shape = "Coverage")
+
+ggsave(paste("../results/", today, "/estimated_vs_true_diversity.png"), dpi = 500)
+
 # ggplot(pares, aes(x = log10(true_div), y = log10(hetmer_div), color = as.factor(cov))) +
 #   geom_point() +
 #   geom_abline(slope = 1, intercept = 0) +
@@ -1393,9 +1413,11 @@ plot_max_dist_sweep = ggplot(plotdata, aes(x = n, y = max_dist, color = as.facto
 #   labs(x = "Pool size", y = "Distance between snps at sweep/mean distance", color = "Selection", title = "Ground truth")
 
 # Hypothesis: after a selective sweep, the longest unitigs in a population graph are more likely to be near the sweep site, compared to neutral scenario
-unitig_files = list.files(path = "/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/blast_results", pattern = ".*txt", full.names = T)
+unitig_files = list.files(path = "/global/scratch/users/milesroberts/poolseq-kmers/workflow/blast_results", pattern = ".*txt", full.names = T)
 
-unitig_files_ids = as.numeric(gsub(".txt", "", gsub("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/blast_results/", "", unitig_files)))
+unitig_files = sample(unitig_files, size = 500)
+
+unitig_files_ids = as.numeric(gsub("_0.txt", "", gsub("/global/scratch/users/milesroberts/poolseq-kmers/workflow/blast_results/", "", unitig_files)))
 
 unitig_files = lapply(unitig_files, read.table, col.names = c("qid", "sid", "pid", "alen", "mm", "go", "qs", "qe", "ss", "se", "ev", "bs"))
 
@@ -1485,9 +1507,12 @@ plot_unitigs_shape_breakdown = ggplot(plotdata_unitigs, aes(x = sc, color = as.f
   geom_density() +
   theme_classic() +
   theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) +
-  facet_grid(shape + shuffle ~ .) +
+  #facet_grid(shape + shuffle ~ .) +
+  facet_grid(shape ~ .) +
   geom_vline(xintercept = 2e6/2, lty = 2, lwd = 1) +
   labs(x = "Center of longest unitig", color = "Nes", title = "Shape parameter breakdown")
+
+ggsave(paste("../results/", today, "/unitig_mapping.jpg", sep = ""), plot_unitigs_shape_breakdown, dpi = 400, height = 7, width = 9, unit = "in")
 
 plot_unitigs_h_breakdown = ggplot(plotdata_unitigs, aes(x = sc, color = as.factor(Nes))) +
   geom_density() +

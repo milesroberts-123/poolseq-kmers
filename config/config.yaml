@@ -17,13 +17,13 @@ pT: 0.25
 unqualLimit: 40
 
 # quality score for read trimming
-qualThresh: 30
+qualThresh: 31
 
 # window length for read trimming
 windowLength: 1
 
 # minimum k-mer count threshold
-mincount: 5
+mincount: 3
 
 # maximum k-mer count recorded
 maxcount: 1000000
