@@ -41,6 +41,8 @@ two_pop_params = parameters[
 
 wildcard_constraints:
     ID="\\d+",
+    SID="[a-zA-Z0-9]+",
+    PID="[a-zA-Z0-9]+"
 
 localrules: all_per_sim, all
 

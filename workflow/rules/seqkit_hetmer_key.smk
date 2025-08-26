@@ -1,7 +1,7 @@
 rule seqkit_hetmer_key:
     input:
         vcf="slim_results/samples_{SID}.vcf.gz",
-        fasta="seqkit_results/samples_{SID}.fasta",
+        fasta="seqkit_results/samples_across_pop_{SID}.fasta",
     output:
         poskey="seqkit_results/center_kmer_pairs_{SID}.txt",
         snppos=temp("seqkit_results/snp_positions_{SID}.txt"),
