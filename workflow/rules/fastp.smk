@@ -28,8 +28,4 @@ rule fastp:
         # remove duplicates, do read correction, drop low quality reads
         fastp --thread {threads} -u {params.unqualLimit} -q {params.qualThresh} -l {params.k} --cut_tail --cut_tail_window_size {params.windowLength} --cut_tail_mean_quality {params.qualThresh} --correction -i {input.read1} -I {input.read2} -o {output.pread1} -O {output.pread2} --unpaired1 {output.uread1} --unpaired2 {output.uread2} --json {output.json} &>> {log}
 
-        # trim low quality bases
-        #fastp --thread {threads} -Q -l {params.k} --cut_tail --cut_tail_window_size {params.windowLength} --cut_tail_mean_quality {params.qualThresh} --json {output.jsonR1R2} -i {output.dpread1} -I {output.dpread2} -o {output.pread1} -O {output.pread2} &>> {log}
-        #fastp --thread {threads} -Q -l {params.k} --cut_tail --cut_tail_window_size {params.windowLength} --cut_tail_mean_quality {params.qualThresh} --json {output.jsonU1} -i {output.duread1} -o {output.uread1} &>> {log}
-        #fastp --thread {threads} -Q -l {params.k} --cut_tail --cut_tail_window_size {params.windowLength} --cut_tail_mean_quality {params.qualThresh} --json {output.jsonU2} -i {output.duread2} -o {output.uread2} &>> {log}
         """
