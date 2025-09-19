@@ -820,7 +820,7 @@ add_mesh(p, x= ~maf/n, y= ~cov, z = ~cutoff, data = results, opacity = 0.3, colo
 
 # process single population metrics
 ```{r}
-params = read.table("/global/scratch/users/milesroberts/poolseq-kmers/config/parameters.tsv", header = T)
+params = read.table("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/config/parameters.tsv", header = T)
 
 #dones = sort(as.numeric(gsub(".txt", "", gsub("discoRes_ad_", "",list.files(path = "/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow", pattern = "discoRes_ad_")))))
 
@@ -846,7 +846,7 @@ simids = params$ID[(params$simtype == "onepop") & (params$ID %in% dones)]
 
 k = 31
 
-thresh = 5
+thresh = 3
 
 G = 2e6
 
@@ -875,9 +875,9 @@ for(i in simids){
 # nC = n*C # total base coverage
 
 # load pairs of k-mers
-kmer_pairs = read.table(paste("/global/scratch/users/milesroberts/poolseq-kmers/workflow/smudgeplot_results/", i, "_0_sequences.tsv", sep = ""), col.names = c("k1"))
+kmer_pairs = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/smudgeplot_results/", i, "_0_sequences.tsv", sep = ""), col.names = c("k1"))
 
-kmer_covs = read.table(paste("/global/scratch/users/milesroberts/poolseq-kmers/workflow/smudgeplot_results/", i, "_0_coverages.tsv", sep = ""), col.names = c("c1", "c2"))
+kmer_covs = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/smudgeplot_results/", i, "_0_coverages.tsv", sep = ""), col.names = c("c1", "c2"))
 kmer_pairs = cbind(kmer_pairs, kmer_covs)
 
 # choose kmer count cutoff
@@ -923,21 +923,21 @@ kmer_pairs$kmer_maf = pmin(kmer_pairs$c1, kmer_pairs$c2)/(kmer_pairs$c1 + kmer_p
 #   theme_classic()
 
 # load from my hetmers script
-hetmers_seqs = read.csv(paste("/global/scratch/users/milesroberts/poolseq-kmers/workflow/hetmers_results/", i, "_0_seqs.csv", sep = ""), col.names = c("k1", "k2"))
+hetmers_seqs = read.csv(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/hetmers_results/", i, "_0_seqs.csv", sep = ""), col.names = c("k1", "k2"))
 
-hetmers_counts = read.csv(paste("/global/scratch/users/milesroberts/poolseq-kmers/workflow/hetmers_results/", i, "_0_counts.csv", sep = ""), col.names = c("c1", "c2"))
+hetmers_counts = read.csv(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/hetmers_results/", i, "_0_counts.csv", sep = ""), col.names = c("c1", "c2"))
 
-hetmers_bayes = read.csv(paste("/global/scratch/users/milesroberts/poolseq-kmers/workflow/hetmers_results/", i, "_0_bayes_states.csv", sep = ""), col.names = c("bc"))
+hetmers_bayes = read.csv(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/hetmers_results/", i, "_0_bayes_states.csv", sep = ""), col.names = c("bc"))
 
 hetmers = cbind(hetmers_seqs, hetmers_counts, hetmers_bayes)
 
 # calculate minor allele counts/frequencies
 hetmers$hetmer_maf = pmin(hetmers$c1, hetmers$c2)/(hetmers$c1 + hetmers$c2)
 
-#hetmers$hetmer_mac_bayes = pmin(hetmers$bc, 2*n - hetmers$bc)
+hetmers$hetmer_maf_bayes = pmin(hetmers$bc, 2*n - hetmers$bc)/(2*n)
 
 # load in actual allele freqs from simulations
-true_af = read.table(paste("/global/scratch/users/milesroberts/poolseq-kmers/workflow/slim_results/allele_freqs_", i, "_0.txt", sep = ""), col.names = c("chrom", "pos", "ref", "alt", "ns", "af", "ac"))
+true_af = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/slim_results/allele_freqs_", i, "_0.txt", sep = ""), col.names = c("chrom", "pos", "ref", "alt", "ns", "af", "ac"))
 
 true_af$ac = as.numeric(true_af$ac)
 
@@ -958,7 +958,7 @@ true_af$snp_mac = pmin(true_af$ac, 2*n - true_af$ac)
 true_af = true_af[(true_af$af < 1) & (true_af$af > 0),]
 
 # load discosnp results, calculate maf
-disco = read.table(paste("/global/scratch/users/milesroberts/poolseq-kmers/workflow/disco_results/", i, "_0.txt", sep = ""), col.names = c("chrom", "pos", "ref", "alt", "c1", "c2"))
+disco = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/disco_results/", i, "_0.txt", sep = ""), col.names = c("chrom", "pos", "ref", "alt", "c1", "c2"))
 
 disco = disco[(disco$c1 >= thresh) & (disco$c2 >= thresh),]
 
@@ -971,7 +971,7 @@ disco$disco_maf = pmin(disco$c1, disco$c2)/(disco$c1 + disco$c2)
 #   j = i
 # }
 
-pos_kmer_key = read.table(paste("/global/scratch/users/milesroberts/poolseq-kmers/workflow/seqkit_results/center_kmer_pairs_", i, ".txt", sep = ""), fill = T, col.names = c("pos", "k1", "k2", "k3", "k4"))
+pos_kmer_key = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/seqkit_results/center_kmer_pairs_", i, ".txt", sep = ""), fill = T, col.names = c("pos", "k1", "k2", "k3", "k4"))
 
 pos_kmer_key$leftk = substr(pos_kmer_key$k1, 1, 15)
 pos_kmer_key$rightk = substr(pos_kmer_key$k1, 17, 31)
@@ -1029,7 +1029,7 @@ compare_maf_hetmer = merge(true_af[,c("pos", "snp_maf", "snp_mac")], pos_hetmers
 #compare_maf_kmer_no_na$kmer_mac = unlist(mapply(posterior_min_kmer_count, x = compare_maf_kmer_no_na$c1, z = compare_maf_kmer_no_na$c1 + compare_maf_kmer_no_na$c2, MoreArgs = list(n = 100, C = 2*0.9, c = 5, alpha = 1, beta = 1)))
 
 # include varscan calls
-varscan = read.table(paste("/global/scratch/users/milesroberts/poolseq-kmers/workflow/varscan_results/", i, "_0.tsv", sep = ""), header = T)
+varscan = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/varscan_results/", i, "_0.tsv", sep = ""), header = T)
 
 varscan = varscan[(varscan$Reads1 >= thresh) & (varscan$Reads2 >= thresh),]
 
@@ -1038,17 +1038,27 @@ varscan$snp_maf_varscan = pmin(varscan$Reads1, varscan$Reads2)/(varscan$Reads1 +
 names(varscan)[2] = "pos"
 
 # load poolsnp calls
-poolsnp = read.table(paste("/global/scratch/users/milesroberts/poolseq-kmers/workflow/poolsnp_results/", i, "_0.txt", sep = ""), col.names = c("chrom", "pos", "ref", "alt", "c1", "t"), fill = T, na.strings = "")
+poolsnp = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/poolsnp_results/", i, "_0.txt", sep = ""), col.names = c("chrom", "pos", "ref", "alt", "c1", "t"), fill = T, na.strings = "")
 
 poolsnp = poolsnp[(poolsnp$c1 >= thresh),]
 
 poolsnp$snp_maf_poolsnp = pmin(poolsnp$c1/poolsnp$t, 1 - poolsnp$c1/poolsnp$t)
+
+# include freebayes calls
+freebayes = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/freebayes_results/", i, "_0.txt", sep = ""), col.names = c("chrom", "pos", "ref", "alt", "ns", "af", "ac"), fill = T, na.strings = "")
+
+freebayes$snp_maf_freebayes = pmin(freebayes$af, 1 - freebayes$af)
+
+#freebayes = freebayes[(freebayes$af > 0) & (freebayes$af < 1),]
 
 # compare varscan and ground truth
 compare_maf_varscan = merge(true_af[,c("pos", "snp_maf")], varscan, by = "pos", all.x = T, all.y = T)
 
 # compare poolsnp and ground truth
 compare_maf_poolsnp = merge(true_af[,c("pos", "snp_maf")], poolsnp, by = "pos", all.x = T, all.y = T)
+
+# compare freebayes to ground truth
+compare_maf_freebayes = merge(true_af[,c("pos", "snp_maf")], freebayes, by = "pos", all.x = T, all.y = T)
 
 # compare discosnp and ground truth
 compare_maf_disco = merge(true_af[,c("pos", "snp_maf")], disco, by = "pos", all.x = T, all.y = T)
@@ -1073,9 +1083,13 @@ poolsnp_vs_truth_maf_cor = tryCatch(
   cor.test(compare_maf_poolsnp$snp_maf, compare_maf_poolsnp$snp_maf_poolsnp, method = "pearson")$estimate, 
   error=function(err) NA)
 
+freebayes_vs_truth_maf_cor = cor.test(compare_maf_freebayes$snp_maf, compare_maf_freebayes$snp_maf_freebayes, method = "pearson")$estimate
+
 varscan_rates = calc_rates(true_af$pos, varscan$pos, 1:G)
 
 poolsnp_rates = calc_rates(true_af$pos, poolsnp$pos, 1:G)
+
+freebayes_rates = calc_rates(true_af$pos, freebayes$pos, 1:G)
 
 kmer_rates = calc_rates(true_af$pos, c(pos_kmer_pairs$pos,rep(1e9, times = nrow(kmer_pairs) - nrow(pos_kmer_pairs))), 1:G)
 
@@ -1153,7 +1167,20 @@ result = data.frame(
   poolsnp_tpr = poolsnp_rates[8],
   poolsnp_fpr = poolsnp_rates[9],
   poolsnp_tnr = poolsnp_rates[10],
-  poolsnp_fnr = poolsnp_rates[11]
+  poolsnp_fnr = poolsnp_rates[11],
+  freebayes_div = sum(diversity(freebayes$snp_maf_freebayes))/G,
+  freebayes_vs_truth_maf_cor = freebayes_vs_truth_maf_cor,
+  freebayes_pos = freebayes_rates[1],
+  freebayes_neg = freebayes_rates[2],
+  freebayes_tp = freebayes_rates[3],
+  freebayes_fp = freebayes_rates[4],
+  freebayes_tn = freebayes_rates[5],
+  freebayes_fn = freebayes_rates[6],
+  freebayes_acc = freebayes_rates[7],
+  freebayes_tpr = freebayes_rates[8],
+  freebayes_fpr = freebayes_rates[9],
+  freebayes_tnr = freebayes_rates[10],
+  freebayes_fnr = freebayes_rates[11]
 )
 
 results = rbind(results, result)
@@ -1164,7 +1191,7 @@ rm(compare_maf_kmer, compare_maf_varscan, compare_maf_poolsnp, poolsnp, poolsnp_
 
 pares = merge(params, results, by = "ID")
 
-write.table(pares, paste("/global/scratch/users/milesroberts/poolseq-kmers/results/", today, "/performance_metrics.txt",sep = ""), sep = " ")
+write.table(pares, paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/results/", today, "/performance_metrics.txt",sep = ""), sep = " ")
 ```
 
 # site frequency spectrum
@@ -1207,7 +1234,7 @@ plotdata_div$variable = gsub("_div", "", plotdata_div$variable)
 
 plotdata_div$variable[plotdata_div$variable == "kmer"] = "smudgeplot"
 
-plotdata_div = plotdata_div[(plotdata_div$variable %in% c("hetmer", "varscan", "poolsnp")),]
+plotdata_div = plotdata_div[(plotdata_div$variable %in% c("hetmer", "varscan", "disco")),]
 
 # ggplot(plotdata_div, aes(x = as.factor(cov), y = value, color = as.factor(variable))) +
 #   geom_boxplot() +
@@ -1835,9 +1862,9 @@ for(i in 137:160){
 
 # benchmarks
 ```{r}
-bench_file_names = list.files(path = "/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/benchmarks", recursive = T, full.names = T)
+bench_file_names = list.files(path = "/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks", recursive = T, full.names = T)
 
-bench_file_names = bench_file_names[!grepl("masked", bench_file_names)] # remove benchmarks from masked experiments for now
+#bench_file_names = bench_file_names[!grepl("masked", bench_file_names)] # remove benchmarks from masked experiments for now
 
 bench_files = lapply(bench_file_names, read.table, header = T, sep = "\t")
 
@@ -1846,9 +1873,9 @@ bench_files = do.call("rbind", bench_files)
 #
 bench_files$files = bench_file_names
 
-bench_files$tool = gsub("/.*", "", gsub("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/benchmarks/","",bench_files$files))
+bench_files$tool = gsub("/.*", "", gsub("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks/","",bench_files$files))
 
-bench_files$ID = as.numeric(gsub(".*/|.bench", "", gsub("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/benchmarks/","",bench_files$files)))
+bench_files$ID = as.numeric(gsub(".*/|.bench|_0.bench", "", gsub("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks/","",bench_files$files)))
 
 # merge with workflow parameters
 bench_params = merge(params[(params$simtype == "onepop"),c("ID", "cov", "n")], bench_files, by = "ID")
@@ -1870,7 +1897,8 @@ workflow_summary = function(x, lev_col, resource_col){
   
   results = NULL
   for(lev in levs){
-    bwa = x[(x$tool == "bwa") & (x[,lev_col] == lev),resource_col]
+    
+    bwa_mem = x[(x$tool == "bwa_mem") & (x[,lev_col] == lev),resource_col]
     
     varscan = x[(x$tool == "varscan") & (x[,lev_col] == lev),resource_col]
  
@@ -1888,8 +1916,8 @@ workflow_summary = function(x, lev_col, resource_col){
     
     result = data.frame(
       lev_col = lev,
-      bwa_varscan = bwa+varscan,
-      bwa_poolsnp = bwa+poolsnp,
+      bwa_varscan = bwa_mem+varscan,
+      bwa_poolsnp = bwa_mem+poolsnp,
       kmc_smudgeplot = kmc+smudgeplot,
       kmc_hetmers=kmc+hetmers,
       kmc_unitig_caller = kmc+unitig_caller,
@@ -1911,8 +1939,8 @@ workflow_summary = function(x, lev_col, resource_col){
 bench_summary_cpu_time_by_flow = workflow_summary(bench_summary_cpu_time, "cov", "cpu_time")
 bench_summary_cpu_time_by_flow = melt(bench_summary_cpu_time_by_flow, id = "lev_col")
 
-# bench_summary_max_rss_by_flow = workflow_summary(bench_summary_max_rss, "cov", "max_rss")
-# bench_summary_max_rss_by_flow = melt(bench_summary_max_rss_by_flow, id = "lev_col")
+#bench_summary_max_rss_by_flow = workflow_summary(bench_summary_max_rss, "cov", "max_rss")
+#bench_summary_max_rss_by_flow = melt(bench_summary_max_rss_by_flow, id = "lev_col")
 # 
 # bench_summary_max_vms_by_flow = workflow_summary(bench_summary_max_vms, "cov", "max_vms")
 # bench_summary_max_vms_by_flow = melt(bench_summary_max_vms_by_flow, id = "lev_col")
@@ -1955,7 +1983,7 @@ plot_time = ggplot(bench_summary_cpu_time_by_flow, aes(x = variable, y = value, 
 # memory plots
 bench_summary_max_rss$tool[(bench_summary_max_rss$tool == "unitig_caller")] = "unitig-caller"
 
-bench_summary_max_rss$tool = factor(bench_summary_max_rss$tool, levels = c("bwa", "varscan", "poolsnp", "kmc", "smudgeplot", "hetmers", "unitig-caller", "discosnp"))
+bench_summary_max_rss$tool = factor(bench_summary_max_rss$tool, levels = c("bwa_index", "bwa_mem", "varscan", "poolsnp", "freebayes", "kmc", "smudgeplot", "hetmers", "unitig-caller", "discosnp"))
 
 plot_memory = ggplot(bench_summary_max_rss, aes(x = tool, y = max_rss*1.04858, fill = as.factor(cov))) +
   geom_bar(stat = "identity", position = "dodge") +
