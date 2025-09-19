@@ -8,8 +8,14 @@ rule freqk_index:
         "benchmarks/freqk_index/{SID}_{PID}.bench"
     params:
         k=config["k"]
+    conda:
+        "../envs/bcftools.yaml"
     shell:
         """
+        # index reference genome
+        samtools faidx {input.fasta}
+
+        # index panel of variants
         ./scripts/freqk index --fasta {input.fasta} --vcf {input.vcf} -k {params.k} --output {output}
         """
 
