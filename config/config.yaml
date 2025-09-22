@@ -14,10 +14,10 @@ pG: 0.25
 pT: 0.25
 
 # unqualified_percent_limit for fastp: how many percents of bases are allowed to be unqualified in terms of quality score
-unqualLimit: 30
+unqualLimit: 40
 
 # quality score for read trimming
-qualThresh: 31
+qualThresh: 30
 
 # window length for read trimming
 windowLength: 1
