@@ -242,7 +242,7 @@ This could be nicer because R markdown will give me more control over what the r
 
 - [x] [add snakefmt via github actions](https://github.com/snakemake/snakefmt?tab=readme-ov-file#github-actions)
 
-- [ ] add freqk
+- [x] add freqk
 
 - [ ] add structural variants randomly to samples VCF file output from slim
 
