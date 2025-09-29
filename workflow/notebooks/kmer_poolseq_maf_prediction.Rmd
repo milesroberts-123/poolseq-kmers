@@ -3,16 +3,6 @@ title: "R Notebook"
 output: html_notebook
 ---
 
-# Ideas
-
-* Allele frequencies: identify snps not in reference, identify erroneous snp frequencies by total coverage
-
-* SFS: distribution of allele frequencies, diversity, tajimas' D, demographic inference
-
-* FST
-
-* Selective sweeps
-
 # packages
 
 ```{r}
@@ -1857,6 +1847,85 @@ for(i in 137:160){
   # mean(kmer_pairs_p1p2$hudson[(kmer_pairs_p1p2$hudson > 0)])
   
 }
+
+```
+
+# Allele frequencies of known variants
+```{r}
+
+results = NULL
+
+sims_to_plot = c(1, 4, 7, 10, 13, 25, 37, 49)
+
+for(i in params$ID){
+  print(i)
+  
+  kmer_counts = tryCatch({
+    read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/freqk_results/", i, "_0_freqs.txt", sep = ""), sep = "|")
+  }, error = function(e) {
+    message(paste("Error at iteration", i, ":", e$message))
+    return(NA) # Or some other indicator for error
+  })
+  
+  if (all(is.na(kmer_counts))){
+    next
+  }
+
+  kmer_counts$maf = pmin(kmer_counts$V1, kmer_counts$V2)/(kmer_counts$V1 + kmer_counts$V2)
+
+  slim = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/slim_results/allele_freqs_", i, "_0.txt", sep = ""), sep = " ")
+
+  names(slim)[1:2] =  c("Chrom", "Position")
+  
+  slim$maf = pmin(slim$V6, 1 - slim$V6)
+
+  cor_coeff_freqk = signif(cor.test(kmer_counts$maf, slim$maf)$estimate, digits = 3)
+  
+  #print(cor_coeff)
+  
+  varscan = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/varscan_results/", i, "_0.tsv", sep = ""), header = T)
+  
+  varscan$maf = pmin(varscan$Reads1, varscan$Reads2)/(varscan$Reads1 + varscan$Reads2)
+  
+  slim_varscan = merge(slim, varscan, by = c("Chrom", "Position"))
+  
+  cor_coeff_varscan = signif(cor.test(slim_varscan$maf.x, slim_varscan$maf.y)$estimate, digits = 3)
+  
+  result = data.frame(
+    ID = i,
+    cor_coeff_freqk = cor_coeff_freqk,
+    cor_coeff_varscan = cor_coeff_varscan
+  )
+  
+  results = rbind(results, result)
+  
+  # make a plot of some individual simulations
+  if(i %in% sims_to_plot){
+    plotdata_known_var = data.frame(kmer_maf = kmer_counts$maf, slim_maf = slim$maf)
+
+ggplot(plotdata_known_var, aes(x = slim_maf, y = kmer_maf)) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0, lwd = 2) +
+  theme_minimal() +
+  theme(text = element_text(size = 16, family = "Helvetica")) +
+  labs(x = "True MAF", y = "k-mer counts MAF estiamte", title = paste("r = ", cor_coeff_freqk, sep = ""))
+
+ggsave(paste("../../results/", today, "/", i, ".pdf", sep = ""), width = 7, height = 7)
+  }
+  
+}
+
+
+# compare varscan to freqk
+ggplot(results, aes(x = cor_coeff_varscan, y = cor_coeff_freqk)) +
+  geom_point(shape = 16) +
+  geom_abline(slope = 1, intercept = 0, lwd = 2) +
+  theme_minimal() +
+  theme(text = element_text(size = 16, family = "Helvetica")) +
+  labs(x = "Pearson Corr. of MAF\nVarscan vs SLiM", y = "Pearson Corr. of MAF\nK-mers vs SLiM")
+
+ggsave(paste("../../results/", today, "/", "varscan_vs_freqk.pdf", sep = ""), height = 7, width = 7, device = cairo_pdf)
+
 
 ```
 

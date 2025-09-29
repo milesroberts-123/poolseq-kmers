@@ -2,8 +2,8 @@ library("dplyr")
 
 replicates = 1:3
 sample_sizes = c(25, 50, 75, 100)
-coverages = c(50, 100, 150, 200)
-sequencers = c("hiseq")
+coverages = c(30, 50, 100, 150, 200)
+sequencers = c("nextseq", "novaseq", "miseq", "hiseq")
 
 population_sizes = c(1000)
 mutation_rates = c(1e-8)
