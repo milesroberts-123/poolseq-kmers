@@ -36,5 +36,5 @@ rule freebayes_a_priori:
         n=get_pool
     shell:
         """
-        freebayes -f {input.reffasta} -p {params.n} --use-best-n-alleles 2 ---variant-input {input.vcf} --only-use-input-alleles --pooled-discrete {input.trimbam} 1> {output} 2> {log}
+        freebayes -f {input.reffasta} -p {params.n} --use-best-n-alleles 2 --variant-input {input.vcf} --only-use-input-alleles --pooled-discrete {input.trimbam} 1> {output} 2> {log}
         """
