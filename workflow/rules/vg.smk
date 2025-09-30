@@ -44,7 +44,7 @@ rule vg_surject:
     benchmark:
         "benchmarks/vg_surject/{SID}_{PID}.bam"
     shell:
-        "vg surject -x {input.gbz} --progress -t {threads} -b {input.gam} > {ouput}"
+        "vg surject -x {input.gbz} --progress -t {threads} -b {input.gam} > {output}"
 
 rule samtools_sort:
     input:
