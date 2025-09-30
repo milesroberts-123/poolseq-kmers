@@ -12,7 +12,7 @@ rule vg_autoindex:
     conda:
         "../envs/vg.yaml"
     shell:
-        "vg autoindex -w giraffe -g {input} -p {wildcards.SID}_{wildcards.PID}"
+        "vg autoindex -w giraffe -r {input.fasta} -v {input.vcf} -p {wildcards.SID}_{wildcards.PID}"
 
 rule vg_giraffe:
     input:
