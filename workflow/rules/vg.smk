@@ -23,7 +23,7 @@ rule vg_giraffe:
         read1 = "fastp_results/trimmed_paired_R1_{SID}_{PID}.fastq",
         read2 = "fastp_results/trimmed_paired_R2_{SID}_{PID}.fastq",
     output:
-        "vg_giraffe_results/{SID}_{PID}.gam"
+        temp("vg_giraffe_results/{SID}_{PID}.gam")
     conda:
         "../envs/vg.yaml"
     benchmark:
@@ -38,7 +38,7 @@ rule vg_surject:
         gbz = "{SID}_{PID}.giraffe.gbz",
         gam = "vg_giraffe_results/{SID}_{PID}.gam"
     output:
-        "vg_surject_results/{SID}_{PID}.bam"
+        temp("vg_surject_results/{SID}_{PID}.bam")
     conda:
         "../envs/vg.yaml"
     benchmark:
@@ -50,7 +50,7 @@ rule samtools_sort:
     input:
         "vg_surject_results/{SID}_{PID}.bam"
     output:
-        "vg_surject_results/sorted_{SID}_{PID}.bam"
+        temp("vg_surject_results/sorted_{SID}_{PID}.bam")
     conda:
         "../envs/bcftools.yaml"
     benchmark:
