@@ -30,7 +30,7 @@ rule vg_giraffe:
         "benchmarks/vg_giraffe/{SID}_{PID}.bench"
     shell:
         """
-        vg giraffe -Z {input.gbz} -d {input.dist} -m {input.min} -z {input.zip} -p -f {input.read1} -f {input.read2} > {output}
+        vg giraffe -Z {input.gbz} -d {input.dist} -m {input.min} -z {input.zip} -p -t {threads} -f {input.read1} -f {input.read2} > {output}
         """
 
 rule vg_surject:
