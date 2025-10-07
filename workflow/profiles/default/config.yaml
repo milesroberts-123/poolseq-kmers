@@ -23,6 +23,8 @@ set-resources:
         cpus_per_task: 2
     fastp:
         cpus_per_task: 2
+    freqk_count:
+        cpus_per_task: 2
     vg_surject:
         cpus_per_task: 2
 
@@ -32,4 +34,5 @@ set-threads:
     bwa_mem: 2
     fastp: 2
     iss: 2
+    freqk_count: 2
     vg_surject: 2

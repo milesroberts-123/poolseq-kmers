@@ -1883,18 +1883,81 @@ for(i in params$ID){
   
   #print(cor_coeff)
   
-  varscan = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/varscan_results/", i, "_0.tsv", sep = ""), header = T)
+  #varscan = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/varscan_results/", i, "_0.tsv", sep = ""), header = T)
   
-  varscan$maf = pmin(varscan$Reads1, varscan$Reads2)/(varscan$Reads1 + varscan$Reads2)
+  #varscan$maf = pmin(varscan$Reads1, varscan$Reads2)/(varscan$Reads1 + varscan$Reads2)
   
-  slim_varscan = merge(slim, varscan, by = c("Chrom", "Position"))
+  freebayes = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/freebayes_a_priori_results/", i, "_0.txt", sep = ""), header = F)
   
-  cor_coeff_varscan = signif(cor.test(slim_varscan$maf.x, slim_varscan$maf.y)$estimate, digits = 3)
+  names(freebayes)[c(1:2,6)] = c("Chrom", "Position", "af")
   
+  freebayes$maf = pmin(freebayes$af, 1 - freebayes$af)
+  
+  slim_freebayes = merge(slim, freebayes, by = c("Chrom", "Position"))
+  
+  cor_coeff_freebayes = signif(cor.test(slim_freebayes$maf.x, slim_freebayes$maf.y)$estimate, digits = 3)
+  
+  ## vg giraffe + freebayes
+  vg = tryCatch({
+    read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/freebayes_vg_results/", i, "_0.txt", sep = ""), header = F)
+  }, error = function(e) {
+    message(paste("Error at iteration", i, ":", e$message))
+    return(NA) # Or some other indicator for error
+  })
+  
+  if (all(is.na(vg))){
+    next
+  }
+  
+  # load benchmarks
+  
+  names(vg)[c(1:2,6)] = c("Chrom", "Position", "af")
+  
+  vg$maf = pmin(vg$af, 1 - vg$af)
+  
+  slim_vg = merge(slim, vg, by = c("Chrom", "Position"))
+  
+  cor_coeff_vg = signif(cor.test(slim_vg$maf.x, slim_vg$maf.y)$estimate, digits = 3)
+  
+  ## bwa mem + freebayes
+  bench_bwa_mem = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks/bwa_mem/", i, "_0.bench", sep = ""), header = T)
+  
+  bench_freebayes_a_priori = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks/freebayes_a_priori/", i, "_0.bench", sep = ""), header = T)
+  
+  ## vg giraffe + freebayes
+  bench_vg_index = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks/vg_autoindex/", i, "_0.bench", sep = ""), header = T)
+  
+  bench_vg_giraffe = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks/vg_giraffe/", i, "_0.bench", sep = ""), header = T)
+  
+  bench_vg_surject = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks/vg_surject/", i, "_0.bam", sep = ""), header = T)
+  
+  bench_vg_sort = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks/samtools_sort/", i, "_0.bam", sep = ""), header = T)
+  
+  bench_freebayes_vg = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks/freebayes_vg/", i, "_0.bench", sep = ""), header = T)
+  
+  ## kmer counts
+  bench_freqk_index = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks/freqk_index/", i, "_0.bench", sep = ""), header = T)
+  
+  bench_freqk_dedup = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks/freqk_dedup/", i, "_0.bench", sep = ""), header = T)
+  
+  bench_freqk_count = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks/freqk_count/", i, "_0.bench", sep = ""), header = T)
+  
+  # combine all stats in a frame
   result = data.frame(
     ID = i,
     cor_coeff_freqk = cor_coeff_freqk,
-    cor_coeff_varscan = cor_coeff_varscan
+    #cor_coeff_freebayes = cor_coeff_freebayes,
+    cor_coeff_vg = cor_coeff_vg,
+    t_freqk = bench_freqk_count$cpu_time,
+    mem_freqk = max(bench_freqk_count$max_rss),
+    t_freqk_index = bench_freqk_index$cpu_time + bench_freqk_dedup$cpu_time,
+    mem_freqk_index = max(bench_freqk_index$max_rss + bench_freqk_dedup$max_rss),
+    #t_freebayes = bench_bwa_mem$cpu_time + bench_freebayes_a_priori$cpu_time,
+    #mem_freebayes = max(bench_bwa_mem$max_rss, bench_freebayes_a_priori$max_rss),
+    t_vg = bench_vg_giraffe$cpu_time + bench_vg_surject$cpu_time + bench_vg_sort$cpu_time + bench_freebayes_vg$cpu_time,
+    mem_vg = max(bench_vg_giraffe$max_rss, bench_vg_surject$max_rss, bench_vg_sort$max_rss, bench_freebayes_vg$max_rss),
+    t_vg_index = bench_vg_index$cpu_time,
+    mem_vg_index = bench_vg_index$max_rss
   )
   
   results = rbind(results, result)
@@ -1916,17 +1979,136 @@ ggsave(paste("../../results/", today, "/", i, ".pdf", sep = ""), width = 7, heig
 }
 
 
-# compare varscan to freqk
-ggplot(results, aes(x = cor_coeff_varscan, y = cor_coeff_freqk)) +
+# compare mapping approaches to freqk
+params_res = merge(params, results, by = "ID")
+
+# ggplot(results, aes(x = cor_coeff_freebayes, y = cor_coeff_freqk)) +
+#   geom_point(shape = 16) +
+#   geom_abline(slope = 1, intercept = 0, lwd = 2) +
+#   theme_minimal() +
+#   theme(text = element_text(size = 16, family = "Helvetica")) +
+#   labs(x = "Pearson Corr. of MAF\nbwa+Freebayes vs SLiM", y = "Pearson Corr. of MAF\nK-mers vs SLiM")
+
+ggplot(params_res, aes(x = cor_coeff_vg, y = cor_coeff_freqk, color = as.factor(cov))) +
   geom_point(shape = 16) +
   geom_abline(slope = 1, intercept = 0, lwd = 2) +
   theme_minimal() +
   theme(text = element_text(size = 16, family = "Helvetica")) +
-  labs(x = "Pearson Corr. of MAF\nVarscan vs SLiM", y = "Pearson Corr. of MAF\nK-mers vs SLiM")
+  scale_colour_scico_d(palette = "hawaii", name = "Coverage") +
+  labs(x = "Pearson Corr.\nvg+Freebayes vs SLiM MAF", y = "Pearson Corr.\nk-mers vs SLiM MAF")
 
-ggsave(paste("../../results/", today, "/", "varscan_vs_freqk.pdf", sep = ""), height = 7, width = 7, device = cairo_pdf)
+ggsave(paste("../../results/", today, "/", "vg_vs_freqk.pdf", sep = ""), height = 6, width = 7, device = cairo_pdf)
+
+# compare run times per sample
+time_res = melt(params_res[,c("ID", "cov", "n", "t_freqk", "t_vg")], id = c("ID", "cov", "n"))
+
+mem_res = melt(params_res[,c("ID", "cov", "n", "mem_freqk", "mem_vg")], id = c("ID", "cov", "n"))
+
+names(mem_res)[4] = "tool"
+names(mem_res)[5] = "mem"
+mem_res$tool = gsub("mem_","", mem_res$tool)
+
+names(time_res)[4] = "tool"
+names(time_res)[5] = "time"
+time_res$tool = gsub("t_","", time_res$tool)
+
+res_summary = merge(time_res, mem_res, by =  c("ID", "cov", "n", "tool"))
+
+plot_time = ggplot(res_summary, aes(x = tool, y = time, fill = as.factor(cov))) +
+  geom_boxplot() +
+  theme_minimal() +
+  theme(text = element_text(size = 16, family = "Helvetica")) +
+  scale_fill_scico_d(palette = "hawaii", name = "Coverage") +
+  labs(x = "Workflow", y = "CPU Time (s)", fill = "Coverage")
+
+plot_mem = ggplot(res_summary, aes(x = tool, y = mem, fill = as.factor(cov))) +
+  geom_boxplot() +
+  theme_minimal() +
+  theme(text = element_text(size = 16, family = "Helvetica")) +
+  scale_fill_scico_d(palette = "hawaii", name = "Coverage") +
+  labs(x = "Workflow", y = "Maximum\nResident Set Size (MB)", fill = "Coverage")
+
+ggarrange(plot_time, plot_mem, nrow = 1, ncol = 2, labels = c("A", "B"), font.label = list(size = 16, family = "Helvetica"), common.legend = T)
+
+ggsave(paste("../../results/", today, "/", "resources_freqk_vs_vg.pdf", sep = ""), height = 4, width = 7)
+
+# compare index times
+time_index = melt(params_res[,c("ID", "cov", "n", "t_freqk_index", "t_vg_index")], id = c("ID", "cov", "n"))
+
+mem_index = melt(params_res[,c("ID", "cov", "n", "mem_freqk_index", "mem_vg_index")], id = c("ID", "cov", "n"))
+
+names(mem_index)[4] = "tool"
+names(mem_index)[5] = "mem"
+mem_index$tool = gsub("mem_","", mem_index$tool)
+mem_index$tool = gsub("_index","", mem_index$tool)
+
+names(time_index)[4] = "tool"
+names(time_index)[5] = "time"
+time_index$tool = gsub("t_","", time_index$tool)
+time_index$tool = gsub("_index","", time_index$tool)
+
+res_index = merge(time_index, mem_index, by =  c("ID", "cov", "n", "tool"))
+
+plot_time_index = ggplot(res_index, aes(x = tool, y = time, fill = as.factor(n))) +
+  geom_boxplot() +
+  theme_minimal() +
+  theme(text = element_text(size = 16, family = "Helvetica")) +
+  scale_fill_scico_d(palette = "acton", name = "Pool size") +
+  labs(x = "Workflow", y = "CPU Time (s)", fill = "Pool size")
+
+plot_mem_index = ggplot(res_index, aes(x = tool, y = mem, fill = as.factor(n))) +
+  geom_boxplot() +
+  theme_minimal() +
+  theme(text = element_text(size = 16, family = "Helvetica")) +
+  scale_fill_scico_d(palette = "acton", name = "Coverage") +
+  labs(x = "Workflow", y = "Maximum\nResident Set Size (MB)", fill = "Pool size")
+
+ggarrange(plot_time_index, plot_mem_index, nrow = 1, ncol = 2, labels = c("A", "B"), font.label = list(size = 16, family = "Helvetica"), common.legend = T)
+
+ggsave(paste("../../results/", today, "/", "resources_index_freqk_vs_vg.pdf", sep = ""), height = 4, width = 7)
+```
+
+# Empirical data: frequencies of known variants
+
+```{r}
+real_counts = read.table("/global/scratch/users/milesroberts/tmp/counts_by_allele.txt", sep = "|", col.names = c("c1", "c2", "c3", "c4"), fill = T, blank.lines.skip = F)
+
+# alternate allele frequency
+real_counts$af = 1 - real_counts$c1/(real_counts$c1 + real_counts$c2)
+
+real_vcf <- read.vcfR("~/tmp/at.genetics.variation/final.vcf.gz")
+
+gt <- apply(real_vcf@gt[,-1], 2, as.numeric)
+
+to_keep = is.na(real_counts$c3)
+
+gt = gt[-nrow(gt), ]
+
+gt = gt[to_keep, ]
+
+real_counts = real_counts[to_keep,]
+
+allele_counts <- rowSums(gt == 1)
+
+real_plot_data = data.frame(
+  estim_af = real_counts$af*7,
+  true_af = allele_counts
+)
 
 
+cor_estim <- signif(cor.test(real_counts$af, allele_counts)$estimate, 3)
+
+ggplot(real_plot_data, aes(x = as.factor(true_af), y = estim_af)) +
+  geom_boxplot() +
+  geom_point(aes(x=1, y=2), colour="red", size = 3, shape = 16) +
+  geom_point(aes(x=2, y=3), colour="red", size = 3, shape = 16) +
+  geom_point(aes(x=3, y=4), colour="red", size = 3, shape = 16) +
+  geom_point(aes(x=4, y=5), colour="red", size = 3, shape = 16) +
+  theme_minimal() +
+  theme(text = element_text(size = 16, family = "Helvetica")) +
+  labs(x = "True allele frequency", y = "Estimated allele frequency", title = paste("r = ", cor_estim, sep = ""))
+
+ggsave(paste("../../results/", today, "/", "true_vs_estimated_7_genomes.pdf", sep = ""), width = 7, height = 7)
 ```
 
 # benchmarks

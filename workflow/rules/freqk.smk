@@ -1,22 +1,31 @@
-rule freqk_index:
+rule ancestral_samtools_faidx:
     input:
-        vcf="slim_results/samples_{SID}_{PID}.vcf.gz",
-        fasta="ancestral_genome_results/{SID}.fasta"
+        "ancestral_genome_results/{SID}.fasta"
     output:
-        "freqk_indices/{SID}_{PID}.txt"
-    benchmark:
-        "benchmarks/freqk_index/{SID}_{PID}.bench"
-    params:
-        k=config["k"]
+        temp("ancestral_genome_results/{SID}.fasta.fai")
     conda:
         "../envs/bcftools.yaml"
     shell:
         """
         # index reference genome
-        samtools faidx {input.fasta}
+        samtools faidx {input}
+        """
 
+rule freqk_index:
+    input:
+        vcf="slim_results/samples_{SID}_{PID}.vcf.gz",
+        fasta="ancestral_genome_results/{SID}.fasta",
+        fai="ancestral_genome_results/{SID}.fasta.fai"
+    output:
+        index="freqk_indices/{SID}_{PID}.txt"
+    benchmark:
+        "benchmarks/freqk_index/{SID}_{PID}.bench"
+    params:
+        k=config["k"]
+    shell:
+        """
         # index panel of variants
-        ./scripts/freqk index --fasta {input.fasta} --vcf {input.vcf} -k {params.k} --output {output}
+        ./scripts/freqk index --fasta {input.fasta} --vcf {input.vcf} -k {params.k} --output {output.index}
         """
 
 rule freqk_dedup:
@@ -39,11 +48,13 @@ rule freqk_count:
         uread1="fastp_results/trimmed_unpaired_R1_{SID}_{PID}.fastq",
         uread2="fastp_results/trimmed_unpaired_R2_{SID}_{PID}.fastq",
     output:
+        all=temp("all_{SID}_{PID}.fastq"),
         counts="freqk_results/{SID}_{PID}_counts.txt",
         freqs="freqk_results/{SID}_{PID}_freqs.txt"
     benchmark:
         "benchmarks/freqk_count/{SID}_{PID}.bench"
     shell:
         """
-        ./scripts/freqk count --index {input.index} --reads {input.pread1},{input.pread2},{input.uread1},{input.uread2} --freq-output {output.freqs} --count-output {output.counts}
+        cat {input.pread1} {input.pread2} {input.uread1} {input.uread2} > {output.all}
+        ./scripts/freqk count --nthreads {threads} --index {input.index} --reads {output.all} --freq-output {output.freqs} --count-output {output.counts}
         """

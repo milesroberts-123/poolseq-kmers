@@ -1,4 +1,4 @@
-rule samtools_faidx:
+rule ref_samtools_faidx:
     input:
         ref="seqkit_results/ref_{ID}.fasta",
     output:
