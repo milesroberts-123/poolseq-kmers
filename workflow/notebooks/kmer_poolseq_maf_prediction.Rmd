@@ -13,6 +13,7 @@ library(plyr)
 library(MASS)
 library(reshape)
 library(ggpubr)
+library(ggforce)
 
 # library(fitdistrplus)
 
@@ -1948,15 +1949,15 @@ for(i in params$ID){
     cor_coeff_freqk = cor_coeff_freqk,
     #cor_coeff_freebayes = cor_coeff_freebayes,
     cor_coeff_vg = cor_coeff_vg,
-    t_freqk = bench_freqk_count$cpu_time,
+    t_freqk = bench_freqk_count$s,
     mem_freqk = max(bench_freqk_count$max_rss),
-    t_freqk_index = bench_freqk_index$cpu_time + bench_freqk_dedup$cpu_time,
+    t_freqk_index = bench_freqk_index$s + bench_freqk_dedup$s,
     mem_freqk_index = max(bench_freqk_index$max_rss + bench_freqk_dedup$max_rss),
-    #t_freebayes = bench_bwa_mem$cpu_time + bench_freebayes_a_priori$cpu_time,
+    #t_freebayes = bench_bwa_mem$s + bench_freebayes_a_priori$s,
     #mem_freebayes = max(bench_bwa_mem$max_rss, bench_freebayes_a_priori$max_rss),
-    t_vg = bench_vg_giraffe$cpu_time + bench_vg_surject$cpu_time + bench_vg_sort$cpu_time + bench_freebayes_vg$cpu_time,
+    t_vg = bench_vg_giraffe$s + bench_vg_surject$s + bench_vg_sort$s + bench_freebayes_vg$s,
     mem_vg = max(bench_vg_giraffe$max_rss, bench_vg_surject$max_rss, bench_vg_sort$max_rss, bench_freebayes_vg$max_rss),
-    t_vg_index = bench_vg_index$cpu_time,
+    t_vg_index = bench_vg_index$s,
     mem_vg_index = bench_vg_index$max_rss
   )
   
@@ -2019,7 +2020,8 @@ plot_time = ggplot(res_summary, aes(x = tool, y = time, fill = as.factor(cov))) 
   theme_minimal() +
   theme(text = element_text(size = 16, family = "Helvetica")) +
   scale_fill_scico_d(palette = "hawaii", name = "Coverage") +
-  labs(x = "Workflow", y = "CPU Time (s)", fill = "Coverage")
+  #ylim(0,1000) +
+  labs(x = "Workflow", y = "Wall Time (s)", fill = "Coverage")
 
 plot_mem = ggplot(res_summary, aes(x = tool, y = mem, fill = as.factor(cov))) +
   geom_boxplot() +
@@ -2054,7 +2056,7 @@ plot_time_index = ggplot(res_index, aes(x = tool, y = time, fill = as.factor(n))
   theme_minimal() +
   theme(text = element_text(size = 16, family = "Helvetica")) +
   scale_fill_scico_d(palette = "acton", name = "Pool size") +
-  labs(x = "Workflow", y = "CPU Time (s)", fill = "Pool size")
+  labs(x = "Workflow", y = "Wall Time (s)", fill = "Pool size")
 
 plot_mem_index = ggplot(res_index, aes(x = tool, y = mem, fill = as.factor(n))) +
   geom_boxplot() +
