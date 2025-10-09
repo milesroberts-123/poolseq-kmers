@@ -17,7 +17,7 @@ rule kmc_histo:
         mkdir tmp_kmc_{wildcards.species}
 
         # count k-mers
-        kmc -t{threads} -ci{params.mincount} -cs{params.maxcount} -k{params.k} {input.pread1} counts_{wildcards.species} tmp_kmc_{wildcards.species} &>> {log}
+        kmc -t{threads} -ci{params.mincount} -cs{params.maxcount} -fm -k{params.k} {input} counts_{wildcards.species} tmp_kmc_{wildcards.species} &>> {log}
 
         # create histogram
         kmc_tools transform counts_{wildcards.species} histogram {output.histo}
