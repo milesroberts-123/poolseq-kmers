@@ -1,4 +1,4 @@
-rule vg_autoindex
+rule vg_autoindex:
     input:
         fasta="ancestral_genome_results/{SID}.fasta",
         vcf="slim_results/samples_{SID}_{PID}.vcf.gz"
