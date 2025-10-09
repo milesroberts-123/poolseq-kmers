@@ -2015,11 +2015,14 @@ time_res$tool = gsub("t_","", time_res$tool)
 
 res_summary = merge(time_res, mem_res, by =  c("ID", "cov", "n", "tool"))
 
+# compare time and memory
 plot_time = ggplot(res_summary, aes(x = tool, y = time, fill = as.factor(cov))) +
   geom_boxplot() +
   theme_minimal() +
   theme(text = element_text(size = 16, family = "Helvetica")) +
   scale_fill_scico_d(palette = "hawaii", name = "Coverage") +
+  #facet_zoom(ylim = c(0,750)) +
+  #stat_compare_means(method = "wilcox", paired = TRUE) +
   #ylim(0,1000) +
   labs(x = "Workflow", y = "Wall Time (s)", fill = "Coverage")
 
@@ -2032,7 +2035,7 @@ plot_mem = ggplot(res_summary, aes(x = tool, y = mem, fill = as.factor(cov))) +
 
 ggarrange(plot_time, plot_mem, nrow = 1, ncol = 2, labels = c("A", "B"), font.label = list(size = 16, family = "Helvetica"), common.legend = T)
 
-ggsave(paste("../../results/", today, "/", "resources_freqk_vs_vg.pdf", sep = ""), height = 4, width = 7)
+ggsave(paste("../../results/", today, "/", "resources_freqk_vs_vg.pdf", sep = ""), height = 4, width = 9)
 
 # compare index times
 time_index = melt(params_res[,c("ID", "cov", "n", "t_freqk_index", "t_vg_index")], id = c("ID", "cov", "n"))

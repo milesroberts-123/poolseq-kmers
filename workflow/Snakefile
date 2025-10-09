@@ -72,6 +72,7 @@ rule all:
     input:
         expand("{SID}_0.done", SID=one_pop_params.index.get_level_values("ID")),
         expand("{SID}_{PID}.done", SID=two_pop_params.index.get_level_values("ID"), PID=[0,1]),
+        expand("{species}.histo", species = config["species"]),
         "multiqc_report.html"
 
 #rule all_per_sim:
@@ -175,3 +176,4 @@ include: "rules/varscan.smk"
 #include: "rules/varscan_one_pop.smk"
 #include: "rules/varscan_two_pop.smk"
 include: "rules/vg.smk"
+include: "rules/kmc_histo.smk"

@@ -30,3 +30,8 @@ maxcount: 1000000
 
 # e-value for blast
 blastEvalue: 0.0000000001
+
+# species
+species:
+ - "GCA_000180655.1_ASM18065v1_genomic"
+ - "GCA_000340665.3_Cajca.Asha_v2.0_genomic"
