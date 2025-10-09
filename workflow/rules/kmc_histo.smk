@@ -19,7 +19,7 @@ rule kmc_histo:
         mkdir tmp_kmc_{wildcards.species}
 
         # count k-mers
-        kmc -t{threads} -ci1 -cs100000 -fm -k{params.k} {input} counts_{wildcards.species} tmp_kmc_{wildcards.species} &>> {log}
+        kmc -t{threads} -ci1 -cs100000 -fm -k{params.k} {input} counts_{wildcards.species} tmp_kmc_{wildcards.species}
 
         # create histogram
         kmc_tools transform counts_{wildcards.species} histogram {output.histo}
