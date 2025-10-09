@@ -7,6 +7,8 @@ rule kmc_histo:
         suf=temp("counts_{species}.kmc_suf")
     conda:
         "../envs/kmc.yaml"
+    params:
+        k=config["k"],
     shell:
         """
         # create directory
@@ -17,7 +19,7 @@ rule kmc_histo:
         mkdir tmp_kmc_{wildcards.species}
 
         # count k-mers
-        kmc -t{threads} -ci{params.mincount} -cs{params.maxcount} -fm -k{params.k} {input} counts_{wildcards.species} tmp_kmc_{wildcards.species} &>> {log}
+        kmc -t{threads} -ci1 -cs100000 -fm -k{params.k} {input} counts_{wildcards.species} tmp_kmc_{wildcards.species} &>> {log}
 
         # create histogram
         kmc_tools transform counts_{wildcards.species} histogram {output.histo}
