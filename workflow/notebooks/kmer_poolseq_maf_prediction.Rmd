@@ -817,17 +817,39 @@ my_histos = list.files(path = "/global/scratch/users/milesroberts/moi_lab_projec
 results = NULL
 
 for(one_histo in my_histos){
+  # Initialize a flag to indicate if an error occurred in this iteration
+  skip_to_next <- FALSE 
+  
   histo = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/kmc_histo_results/", one_histo, sep = ""), header = F)
-
+  
   #plot(log10(histo$V1), log10(histo$V2))
   
   data = histo$V2
   
   data = data[1:(pmin( which.min(data) - 1, 100) )]
+  
+  
+  p1 = makePSData(n = 1:length(data), count = data, type = "S")
 
-  fit <- vglm(data ~ 1, zetaff)
+  tryCatch(
+    expr = {
+      fit <- fitDist(p1)
+    },
+    error = function(e) {
+      # If an error occurs, set the flag to TRUE
+      message(paste("Error in iteration", e$message))
+      skip_to_next <<- TRUE # Use superassignment to modify the flag in the enclosing environment
+    }
+  )
+  
+  if(skip_to_next){
+    next
+  }
+  
+  #fit <- vglm(data ~ 1, zetaff, coefstart = 2)
 
-  s = Coef(fit)
+  #s = Coef(fit)
+  s <- fit$shape
 
   #print(s)
   
@@ -835,8 +857,8 @@ for(one_histo in my_histos){
 
   compare = data.frame(
     x = 1:length(data),
-    data = data/sum(data),
-    zeta = dzeta(1:length(data), shape = 10^s)
+    data = prob_mass,
+    zeta = dzeta(1:length(data), shape = s)
   )
 
 #print(compare)
@@ -844,7 +866,7 @@ for(one_histo in my_histos){
   result = data.frame(
     genome = one_histo,
     perc_uniq_kmers = prob_mass[1],
-    shape = 10^s
+    shape = s
   )
 
   results = rbind(results, result)
@@ -860,6 +882,18 @@ for(one_histo in my_histos){
 
 }
 
+
+# distribution of shape parameter
+ggplot(results, aes(x = shape)) +
+  geom_density(lwd = 1.1) +
+  geom_vline(xintercept = results[grepl("GCF_000001735.4", results$genome),"shape"], color = "green2", lwd = 1.25, alpha = 0.75) +
+  geom_vline(xintercept = results[grepl("GCF_902167145.1", results$genome),"shape"], color = "yellow2", lwd = 1.25, alpha = 0.75) +
+  geom_vline(xintercept = results[grepl("GCF_036512215", results$genome), "shape"], color = "pink2", lwd = 1.25, alpha = 0.75) +
+  theme_minimal() +
+  theme(text = element_text(size = 20, family = "Helvetica", colour = "black"), axis.text = element_text(colour = "black")) +
+  labs(x = "zeta distribution shape", title = paste("n = ", nrow(results), sep = ""))
+
+ggsave(paste("../results/", today, "/shape_dist.pdf", sep = ""), device = cairo_pdf, width = 6, height = 4)
 ```
 
 # process single population metrics
