@@ -15,8 +15,8 @@ library(reshape)
 library(ggpubr)
 library(ggforce)
 
-# library(fitdistrplus)
-
+library(fitdistrplus)
+library(VGAM)
 library(rjson)
 
 library(scico)
@@ -806,6 +806,59 @@ p = plot_ly(
   )
 
 add_mesh(p, x= ~maf/n, y= ~cov, z = ~cutoff, data = results, opacity = 0.3, color = "grey", inherit = F)
+
+```
+
+# zeta distribution
+```{r}
+
+my_histos = list.files(path = "/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/kmc_histo_results/", pattern = ".histo")
+
+results = NULL
+
+for(one_histo in my_histos){
+  histo = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/kmc_histo_results/", one_histo, sep = ""), header = F)
+
+  #plot(log10(histo$V1), log10(histo$V2))
+  
+  data = histo$V2
+  
+  data = data[1:(pmin( which.min(data) - 1, 100) )]
+
+  fit <- vglm(data ~ 1, zetaff)
+
+  s = Coef(fit)
+
+  #print(s)
+  
+  prob_mass = data/sum(data)
+
+  compare = data.frame(
+    x = 1:length(data),
+    data = data/sum(data),
+    zeta = dzeta(1:length(data), shape = 10^s)
+  )
+
+#print(compare)
+
+  result = data.frame(
+    genome = one_histo,
+    perc_uniq_kmers = prob_mass[1],
+    shape = 10^s
+  )
+
+  results = rbind(results, result)
+
+  compare = melt(compare, id = "x")
+
+  plot_zeta = ggplot(compare, aes(x = log10(x), y = log10(value), color = variable)) +
+    geom_point(shape = 16) +
+    geom_line() +
+    theme_minimal()
+
+#print(plot_zeta)
+
+}
 
 ```
 

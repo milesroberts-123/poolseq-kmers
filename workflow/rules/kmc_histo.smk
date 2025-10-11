@@ -3,8 +3,8 @@ rule kmc_histo:
         "../config/genomes/{species}.fna"
     output:
         histo="kmc_histo_results/{species}.histo",
-        pre=temp("counts_{species}.kmc_pre"),
-        suf=temp("counts_{species}.kmc_suf")
+        #pre=temp("counts_{species}.kmc_pre"),
+        #suf=temp("counts_{species}.kmc_suf")
     conda:
         "../envs/kmc.yaml"
     params:
@@ -19,8 +19,8 @@ rule kmc_histo:
         mkdir tmp_kmc_{wildcards.species}
 
         # count k-mers
-        kmc -t{threads} -ci1 -cs100000 -fm -k{params.k} {input} counts_{wildcards.species} tmp_kmc_{wildcards.species}
+        # just estimate histogram only
+        kmc -t{threads} -e -m9 -ci1 -cs100000 -fm -k{params.k} {input} {output.histo} tmp_kmc_{wildcards.species}
 
-        # create histogram
-        kmc_tools transform counts_{wildcards.species} histogram {output.histo}
+        rm -r tmp_kmc_{wildcards.species}
         """
