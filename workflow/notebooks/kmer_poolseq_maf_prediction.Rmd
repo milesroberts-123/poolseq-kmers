@@ -15,9 +15,10 @@ library(reshape)
 library(ggpubr)
 library(ggforce)
 
-library(fitdistrplus)
 library(VGAM)
-library(rjson)
+library(fitPS)
+
+#library(rjson)
 
 library(scico)
 
@@ -828,7 +829,6 @@ for(one_histo in my_histos){
   
   data = data[1:(pmin( which.min(data) - 1, 100) )]
   
-  
   p1 = makePSData(n = 1:length(data), count = data, type = "S")
 
   tryCatch(
@@ -837,7 +837,7 @@ for(one_histo in my_histos){
     },
     error = function(e) {
       # If an error occurs, set the flag to TRUE
-      message(paste("Error in iteration", e$message))
+      message(paste("Error in iteration:", one_histo, e$message))
       skip_to_next <<- TRUE # Use superassignment to modify the flag in the enclosing environment
     }
   )
@@ -846,22 +846,32 @@ for(one_histo in my_histos){
     next
   }
   
-  #fit <- vglm(data ~ 1, zetaff, coefstart = 2)
-
-  #s = Coef(fit)
   s <- fit$shape
-
-  #print(s)
   
   prob_mass = data/sum(data)
+  
+  if(FALSE){
+    
+    print("Plotting...")
+    
+    compare = data.frame(
+      x = 1:length(data),
+      data = prob_mass,
+      zeta = dzeta(1:length(data), shape = s)
+    )
+    
+    compare = melt(compare, id = "x")
 
-  compare = data.frame(
-    x = 1:length(data),
-    data = prob_mass,
-    zeta = dzeta(1:length(data), shape = s)
-  )
-
-#print(compare)
+    plot_zeta = ggplot(compare, aes(x = log10(x), y = log10(value), group = variable)) +
+      geom_point(shape = 16) +
+      geom_line(aes(linetype = variable)) +
+      theme_minimal() +
+      theme(text = element_text(size = 20, family = "Helvetica", colour = "black"), 
+        axis.text = element_text(colour = "black")) +
+      labs(x = "log10(k-mer frequency)", y = "log10(Probability mass)")
+    
+    ggsave(paste("../results/", today, "/zeta_dist_comparison.pdf", sep = ""), device = cairo_pdf, width = 6, height = 4)
+  }
 
   result = data.frame(
     genome = one_histo,
@@ -870,28 +880,75 @@ for(one_histo in my_histos){
   )
 
   results = rbind(results, result)
-
-  compare = melt(compare, id = "x")
-
-  plot_zeta = ggplot(compare, aes(x = log10(x), y = log10(value), color = variable)) +
-    geom_point(shape = 16) +
-    geom_line() +
-    theme_minimal()
-
-#print(plot_zeta)
-
 }
 
+# separate data by k
+results$k = NA
+results[grepl("_31.histo", results$genome),"k"] <- 31
+results[grepl("_41.histo", results$genome),"k"] <- 41
+results[grepl("_51.histo", results$genome),"k"] <- 51
+
+# separate plants and animals
+plants = read.table("../../data/embryophyta_ncbi_ids.tsv", fill = T, header = T, sep = "\t")
+
+plants$Assembly.Accession = gsub("\\.[0-9]", "", plants$Assembly.Accession)
+
+results$Assembly.Accession = gsub("\\.[0-9]_.*", "", results$genome)
+
+results$kingdom = NA
+
+results$kingdom[(results$Assembly.Accession %in% plants$Assembly.Accession)] = "Plants"
+
+results$kingdom[is.na(results$kingdom)] = "Animals"
+
+table(results$kingdom)
+
+# get three values for sweep sims
+summary(results[(results$k == 31), "shape"])
+summary(results[(results$k == 41), "shape"])
+summary(results[(results$k == 51), "shape"])
+
+# label specific species to orient reader
+extra_point_data <- data.frame(
+      k = c(31, 31, 31,
+            41, 41, 41,
+            51, 51, 51,
+            31, 31, 31,
+            41, 41, 41,
+            51, 51, 51),
+      shape = c(1.772823, 2.957833, 3.946757,
+                1.925577, 3.315291, 4.193795,
+                2.066483, 3.577704, 4.382319,
+                2.949517, 3.560309, 4.122031,
+                3.068094, 3.566018, 4.292060,
+                3.159185, 3.585911, 4.447315),
+      species = c("maize", "tomato", "arabidopsis",
+                  "maize", "tomato", "arabidopsis",
+                  "maize", "tomato", "arabidopsis",
+                  "human", "fly", "worm",
+                  "human", "fly", "worm",
+                  "human", "fly", "worm"),
+      kingdom = c("Plants", "Plants", "Plants",
+                  "Plants", "Plants", "Plants",
+                  "Plants", "Plants", "Plants",
+                  "Animals", "Animals", "Animals",
+                  "Animals", "Animals", "Animals",
+                  "Animals", "Animals", "Animals")
+)
 
 # distribution of shape parameter
-ggplot(results, aes(x = shape)) +
-  geom_density(lwd = 1.1) +
-  geom_vline(xintercept = results[grepl("GCF_000001735.4", results$genome),"shape"], color = "green2", lwd = 1.25, alpha = 0.75) +
-  geom_vline(xintercept = results[grepl("GCF_902167145.1", results$genome),"shape"], color = "yellow2", lwd = 1.25, alpha = 0.75) +
-  geom_vline(xintercept = results[grepl("GCF_036512215", results$genome), "shape"], color = "pink2", lwd = 1.25, alpha = 0.75) +
+ggplot(results, aes(x = as.factor(k), y = shape)) +
+  geom_violin(lwd = 1.1) +
+  facet_wrap(~ kingdom, ncol = 1) +
+  geom_point(data = extra_point_data, mapping = aes(x = as.factor(k), y = shape, color = species), size = 3) +
+  scale_color_manual(values = c("maize" = "yellow3", "tomato" = "pink2", "arabidopsis" = "green1", "human" = "black", "fly" = "grey50", "worm" = "grey90")) +
   theme_minimal() +
-  theme(text = element_text(size = 20, family = "Helvetica", colour = "black"), axis.text = element_text(colour = "black")) +
-  labs(x = "zeta distribution shape", title = paste("n = ", nrow(results), sep = ""))
+  theme(text = element_text(size = 20, family = "Helvetica", colour = "black"), 
+        axis.text = element_text(colour = "black"), 
+        legend.position = "None",
+        axis.title.y = element_text(angle = 0, vjust = 0.5)) +
+  labs(x = "k", y = "zeta shape parameter",title = paste("n = ", length(unique(results$Assembly.Accession)), sep = "")) +
+  coord_flip()
 
 ggsave(paste("../results/", today, "/shape_dist.pdf", sep = ""), device = cairo_pdf, width = 6, height = 4)
 ```

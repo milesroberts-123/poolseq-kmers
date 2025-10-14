@@ -162,9 +162,9 @@ This could be nicer because R markdown will give me more control over what the r
 
 - [ ] add workflow to compare freqk and vg on empirical data from plantpan
 
-- [ ] analyze zeta distribution across ncbi reference genomes
+- [x] analyze zeta distribution across ncbi reference genomes
 
-- [ ] use zeta distribution to inform parameter choices for ancestral genome generation
+- [x] use zeta distribution to inform parameter choices for ancestral genome generation
 
 - [ ] run a final huge analysis 
 
