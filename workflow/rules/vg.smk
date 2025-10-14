@@ -14,55 +14,91 @@ rule vg_autoindex:
     shell:
         "vg autoindex -w giraffe -r {input.fasta} -v {input.vcf} -p {wildcards.SID}_{wildcards.PID}"
 
-rule vg_giraffe:
+rule vg_giraffe_paired:
     input:
         dist = "{SID}_{PID}.dist",
         gbz = "{SID}_{PID}.giraffe.gbz",
         min = "{SID}_{PID}.shortread.withzip.min",
         zip = "{SID}_{PID}.shortread.zipcodes",
-        read1 = "fastp_results/trimmed_paired_R1_{SID}_{PID}.fastq",
-        read2 = "fastp_results/trimmed_paired_R2_{SID}_{PID}.fastq",
+        pread1 = "fastp_results/trimmed_paired_R1_{SID}_{PID}.fastq",
+        pread2 = "fastp_results/trimmed_paired_R2_{SID}_{PID}.fastq",
     output:
-        temp("vg_giraffe_results/{SID}_{PID}.gam")
+        temp("vg_giraffe_results/paired_{SID}_{PID}.gam"),
     conda:
         "../envs/vg.yaml"
     benchmark:
         "benchmarks/vg_giraffe/{SID}_{PID}.bench"
     shell:
         """
-        vg giraffe -Z {input.gbz} -d {input.dist} -m {input.min} -z {input.zip} -p -t {threads} -f {input.read1} -f {input.read2} > {output}
+        vg giraffe -Z {input.gbz} -d {input.dist} -m {input.min} -z {input.zip} -p -t {threads} -f {input.pread1} -f {input.pread2} > {output}
+        """
+
+rule vg_giraffe_unpaired:
+    input:
+        dist = "{SID}_{PID}.dist",
+        gbz = "{SID}_{PID}.giraffe.gbz",
+        min = "{SID}_{PID}.shortread.withzip.min",
+        zip = "{SID}_{PID}.shortread.zipcodes",
+        uread = "fastp_results/trimmed_unpaired_{read}_{SID}_{PID}.fastq",
+    output:
+        temp("vg_giraffe_results/{read}_{SID}_{PID}.gam")
+    conda:
+        "../envs/vg.yaml"
+    benchmark:
+        "benchmarks/vg_giraffe/{read}_{SID}_{PID}.bench"
+    shell:
+        """
+        vg giraffe -Z {input.gbz} -d {input.dist} -m {input.min} -z {input.zip} -p -t {threads} -f {input.uread} > {output}
         """
 
 rule vg_surject:
     input:
         gbz = "{SID}_{PID}.giraffe.gbz",
-        gam = "vg_giraffe_results/{SID}_{PID}.gam"
+        gam = "vg_giraffe_results/{read}_{SID}_{PID}.gam",
     output:
-        temp("vg_surject_results/{SID}_{PID}.bam")
+        temp("vg_surject_results/{read}_{SID}_{PID}.bam"),
     conda:
         "../envs/vg.yaml"
     benchmark:
-        "benchmarks/vg_surject/{SID}_{PID}.bam"
+        "benchmarks/vg_surject/{read}_{SID}_{PID}.bam"
     shell:
-        "vg surject -x {input.gbz} --progress -t {threads} -b {input.gam} > {output}"
+        """
+        vg surject -x {input.gbz} --progress -t {threads} -b {input.gam} > {output}
+        """
 
 rule samtools_sort:
     input:
-        "vg_surject_results/{SID}_{PID}.bam"
+        "vg_surject_results/{read}_{SID}_{PID}.bam"
     output:
-        temp("vg_surject_results/sorted_{SID}_{PID}.bam")
+        temp("vg_surject_results/sorted_{read}_{SID}_{PID}.bam")
     conda:
         "../envs/bcftools.yaml"
     benchmark:
-        "benchmarks/samtools_sort/{SID}_{PID}.bam"
+        "benchmarks/samtools_sort/{read}_{SID}_{PID}.bam"
     shell:
-        "samtools sort {input} -o {output}"
+        """
+        samtools sort {input} -o {output}
+        """
+
+rule samtools_merge:
+    input:
+        expand("vg_surject_results/sorted_{read}_{{SID}}_{{PID}}.bam", read = ["paired", "R1", "R2"])
+    output:
+        temp("vg_surject_results/merged_{SID}_{PID}.bam")
+    benchmark:
+        "benchmarks/samtools_merge/{SID}_{PID}.bam"
+    conda:
+        "../envs/bcftools.yaml"
+    shell:
+        """
+        samtools merge -o {output} {input}
+        """
 
 rule freebayes_vg:
     input:
         reffasta="seqkit_results/ref_{SID}.fasta",
         index="seqkit_results/ref_{SID}.fasta.fai",
-        trimbam="vg_surject_results/sorted_{SID}_{PID}.bam",
+        trimbam="vg_surject_results/merged_{SID}_{PID}.bam",
         vcf="slim_results/samples_{SID}_{PID}.vcf.gz",
         tbi="slim_results/samples_{SID}_{PID}.vcf.gz.tbi"
     output:

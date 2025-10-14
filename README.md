@@ -156,19 +156,19 @@ This could be nicer because R markdown will give me more control over what the r
 
 ## To do
 
-###
+### high priority
 
-- [ ] polish freqk
+- [ ] run final huge analysis
 
-- [ ] add workflow to compare freqk and vg on empirical data from plantpan
+- [ ] polish freqk: separate code into modules, skip over problematic variants (close to chromosome ends)
+
+- [ ] have vg in simulations also map unpaired reads
+
+- [x] add workflow to compare freqk and vg on empirical data from plantpan
 
 - [x] analyze zeta distribution across ncbi reference genomes
 
 - [x] use zeta distribution to inform parameter choices for ancestral genome generation
-
-- [ ] run a final huge analysis 
-
-### higher priority
 
 - [x] add option to vary sequencing machine
 
