@@ -73,8 +73,8 @@ rule all_histos:
 
 rule all_sims:
     input:
-        expand("{SID}_0.done", SID=one_pop_params.index.get_level_values("ID")),
-        expand("{SID}_{PID}.done", SID=two_pop_params.index.get_level_values("ID"), PID=[0,1]),
+        expand("finished/{SID}_0.done", SID=one_pop_params.index.get_level_values("ID")),
+        expand("finished/{SID}_{PID}.done", SID=two_pop_params.index.get_level_values("ID"), PID=[0,1]),
         "multiqc_report.html"
 
 rule all_per_sim:
@@ -93,7 +93,7 @@ rule all_per_sim:
         "freqk_results/{SID}_{PID}_counts.txt"    
     #"dissimilarity_results/{SID}.txt"
     output:
-        touch("{SID}_{PID}.done")
+        touch("finished/{SID}_{PID}.done")
 
 # helper functions
 include: "rules/common.smk"
