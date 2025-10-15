@@ -33,7 +33,7 @@ rule kmc:
         kmc -t{threads} -ci{params.mincount} -cs{params.maxcount} -k{params.k} @{output.list} tmp_counts_{wildcards.SID}_{wildcards.PID} tmp_kmc_{wildcards.SID}_{wildcards.PID}
 
         # dump all k-mers to text file
-        kmc_tools transform tmp_counts_{wildcards.SID}_{wildcards.PID} dump {output.counts} &>> {log}
+        kmc_tools transform tmp_counts_{wildcards.SID}_{wildcards.PID} dump {output.counts}
 
         # delete tmp directories
         rm -r tmp_kmc_{wildcards.SID}_{wildcards.PID}
