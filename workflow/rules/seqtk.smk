@@ -15,9 +15,9 @@ rule seqtk:
         qualThresh=config["qualThresh"],
     shell:
         """
-        seqtk -q {params.qualThresh} -n N {input.pread1} > {output.pread1}
-        seqtk -q {params.qualThresh} -n N {input.pread2} > {output.pread2}
-        seqtk -q {params.qualThresh} -n N {input.uread1} > {output.uread1}
-        seqtk -q {params.qualThresh} -n N {input.uread2} > {output.uread2}
+        seqtk seq -q {params.qualThresh} -n N {input.pread1} > {output.pread1}
+        seqtk seq -q {params.qualThresh} -n N {input.pread2} > {output.pread2}
+        seqtk seq -q {params.qualThresh} -n N {input.uread1} > {output.uread1}
+        seqtk seq -q {params.qualThresh} -n N {input.uread2} > {output.uread2}
         """
 
