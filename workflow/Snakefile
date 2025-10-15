@@ -69,12 +69,12 @@ localrules: all_per_sim
 
 rule all_histos:
     input:
-        expand("kmc_histo_results/{species}.histo", species = config["species"])
+        expand("kmc_histo_results/{species}_{k}.histo", species = config["species"], k = config["k_zeta"])
 
 rule all_sims:
     input:
-        expand("finished/{SID}_0.done", SID=one_pop_params.index.get_level_values("ID")),
-        expand("finished/{SID}_{PID}.done", SID=two_pop_params.index.get_level_values("ID"), PID=[0,1]),
+        expand("{SID}_0.done", SID=one_pop_params.index.get_level_values("ID")),
+        expand("{SID}_{PID}.done", SID=two_pop_params.index.get_level_values("ID"), PID=[0,1]),
         "multiqc_report.html"
 
 rule all_per_sim:
@@ -93,7 +93,7 @@ rule all_per_sim:
         "freqk_results/{SID}_{PID}_counts.txt"    
     #"dissimilarity_results/{SID}.txt"
     output:
-        touch("finished/{SID}_{PID}.done")
+        touch("{SID}_{PID}.done")
 
 # helper functions
 include: "rules/common.smk"
