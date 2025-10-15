@@ -1,15 +1,15 @@
 library("dplyr") 
 
 replicates = 1:3
-sample_sizes = c(25, 50, 75, 100, 125)
-coverages = c(30, 50, 100, 150, 200)
+sample_sizes = c(25, 50, 75, 100, 125, 150)
+coverages = c(30, 50, 100, 150, 200, 250)
 sequencers = c("nextseq", "novaseq", "miseq", "hiseq")
 
 population_sizes = c(1000)
 mutation_rates = c(1e-8)
 recombination_rates = c(1e-8)
 
-shapes = c(4.22, 1e6)
+shapes = c(17, 1e6)
 shuffles = c(TRUE, FALSE)
 
 # create data frame of workflow parameters
@@ -100,7 +100,7 @@ params = bind_rows(one_pop_params, two_pop_params, sweep_params, bsa_params)
 params[is.na(params)] = 0
 
 # subset if needed
-params = params[(params$simtype %in% c("onepop")),]
+params = params[(params$simtype %in% c("onepop", "sweep_params")),]
 
 # add simulation id
 params$ID = 1:nrow(params)
