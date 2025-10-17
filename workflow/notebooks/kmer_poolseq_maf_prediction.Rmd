@@ -866,11 +866,14 @@ for(one_histo in my_histos){
       geom_point(shape = 16) +
       geom_line(aes(linetype = variable)) +
       theme_minimal() +
-      theme(text = element_text(size = 20, family = "Helvetica", colour = "black"), 
-        axis.text = element_text(colour = "black")) +
+      theme(text = element_text(size = 20, 
+                                family = "Helvetica", 
+                                colour = "black"), 
+        axis.text = element_text(colour = "black"),
+        legend.title = element_blank()) +
       labs(x = "log10(k-mer frequency)", y = "log10(Probability mass)")
     
-    ggsave(paste("../results/", today, "/zeta_dist_comparison.pdf", sep = ""), device = cairo_pdf, width = 6, height = 4)
+    ggsave(paste("../results/", today, "/zeta_vs_data.pdf", sep = ""), device = cairo_pdf, width = 6, height = 4)
   }
 
   result = data.frame(
@@ -1575,11 +1578,11 @@ plot_max_dist_sweep = ggplot(plotdata, aes(x = n, y = max_dist, color = as.facto
 #   labs(x = "Pool size", y = "Distance between snps at sweep/mean distance", color = "Selection", title = "Ground truth")
 
 # Hypothesis: after a selective sweep, the longest unitigs in a population graph are more likely to be near the sweep site, compared to neutral scenario
-unitig_files = list.files(path = "/global/scratch/users/milesroberts/poolseq-kmers/workflow/blast_results", pattern = ".*txt", full.names = T)
+unitig_files = list.files(path = "/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/blast_results", pattern = ".*txt", full.names = T)
 
 unitig_files = sample(unitig_files, size = 500)
 
-unitig_files_ids = as.numeric(gsub("_0.txt", "", gsub("/global/scratch/users/milesroberts/poolseq-kmers/workflow/blast_results/", "", unitig_files)))
+unitig_files_ids = as.numeric(gsub("_0.txt", "", gsub("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/blast_results/", "", unitig_files)))
 
 unitig_files = lapply(unitig_files, read.table, col.names = c("qid", "sid", "pid", "alen", "mm", "go", "qs", "qe", "ss", "se", "ev", "bs"))
 
