@@ -14,8 +14,6 @@ rule bcftools_discosnp:
         final="disco_results/{SID}_{PID}.txt",
     conda:
         "../envs/bcftools.yaml"
-    log:
-        "logs/bcftools_discosnp/{SID}_{PID}.log",
     shell:
         """
         # reheader

@@ -6,8 +6,6 @@ rule iss:
         temp("iss_results/reads_{SID}_{PID}_R2.fastq"),
     conda:
         "../envs/iss.yaml"
-    log:
-        "logs/iss/{SID}_{PID}.log",
     params:
         L=config["L"],
         cov=lookup(query="ID == '{SID}'", within=parameters, cols="cov"),
@@ -34,5 +32,5 @@ rule iss:
         fi
 
         # simulate reads
-        iss generate -g {input} --seed {params.issseed} --cpus {threads} --model {params.sequencer} -n $nreads --abundance uniform --output iss_results/reads_{wildcards.SID}_{wildcards.PID} &> {log}
+        iss generate -g {input} --seed {params.issseed} --cpus {threads} --model {params.sequencer} -n $nreads --abundance uniform --output iss_results/reads_{wildcards.SID}_{wildcards.PID}
         """

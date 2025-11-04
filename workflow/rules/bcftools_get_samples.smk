@@ -8,12 +8,9 @@ rule bcftools_get_samples:
         "../envs/bcftools.yaml"
     params:
         sammies = get_samples
-    log:
-        "logs/bcftools_get_samples/{SID}_{PID}.log",
     shell:
         """
-        echo {params.sammies} &>> {log}
-        bcftools view --samples {params.sammies} -Oz -o {output.popvcf} {input} &>> {log}
+        bcftools view --samples {params.sammies} -Oz -o {output.popvcf} {input}
 
         tabix {output.popvcf}
         """

@@ -4,8 +4,6 @@ rule slim:
     output:
         temp("slim_results/{ID}.vcf"),
         temp("slim_results/{ID}.fasta"),
-    log:
-        "logs/slim/{ID}.log",
     params:
         simtype=lookup(query="ID == '{ID}'", within=parameters, cols="simtype"),
         slimseed=lookup(query="ID == '{ID}'", within=parameters, cols="slimseed"),
@@ -20,10 +18,10 @@ rule slim:
     shell:
         """
         if [ "{params.simtype}" == "onepop" ]; then
-            slim -d ID={wildcards.ID} -d SLIMSEED={params.slimseed} -d N={params.N} -d mu={params.mu} -d R={params.R} -d n={params.n} scripts/neutral.slim &> {log}
+            slim -d ID={wildcards.ID} -d SLIMSEED={params.slimseed} -d N={params.N} -d mu={params.mu} -d R={params.R} -d n={params.n} scripts/neutral.slim
         fi
 
         if [ "{params.simtype}" == "sweep" ]; then
-            slim -d ID={wildcards.ID} -d SLIMSEED={params.slimseed} -d h={params.h} -d s={params.s} -d N={params.N} -d mu={params.mu} -d R={params.R} -d n={params.n} scripts/sweep.slim &> {log}
+            slim -d ID={wildcards.ID} -d SLIMSEED={params.slimseed} -d h={params.h} -d s={params.s} -d N={params.N} -d mu={params.mu} -d R={params.R} -d n={params.n} scripts/sweep.slim
         fi
         """

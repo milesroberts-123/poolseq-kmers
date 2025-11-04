@@ -14,8 +14,6 @@ rule poolsnp:
         "../envs/poolsnp.yaml"
     benchmark:
         "benchmarks/poolsnp/{SID}_{PID}.bench"
-    log:
-        "logs/poolsnp/{SID}_{PID}.log",
     shell:
         """
         samtools mpileup -f {input.reffasta} {input.trimbam} > {output.mpileup}
@@ -31,5 +29,5 @@ rule poolsnp:
         miss-frac=0 \
         badsites=1 \
         allsites=0 \
-        output={params.wd}{wildcards.SID}_{wildcards.PID}_poolsnp_output &> {log}
+        output={params.wd}{wildcards.SID}_{wildcards.PID}_poolsnp_output
         """

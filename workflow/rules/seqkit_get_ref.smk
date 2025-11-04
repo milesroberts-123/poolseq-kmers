@@ -6,8 +6,6 @@ rule seqkit_get_ref:
         samplefasta="seqkit_results/samples_across_pop_{SID}.fasta",
     conda:
         "../envs/seqkit.yaml"
-    log:
-        "logs/seqkit/{SID}.log",
     shell:
         """
         # get a haploid reference genome

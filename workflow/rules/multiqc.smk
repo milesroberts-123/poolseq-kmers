@@ -8,8 +8,6 @@ rule multiqc:
         "multiqc_report.html"
     conda:
         "../envs/multiqc.yaml"
-    log:
-        "logs/multiqc.log",
     shell:
         """
         multiqc fastp_results/

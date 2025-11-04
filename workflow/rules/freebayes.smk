@@ -7,15 +7,13 @@ rule freebayes_de_novo:
         "freebayes_de_novo_results/{SID}_{PID}.vcf",
     conda:
         "../envs/freebayes.yaml"
-    log:
-        "logs/freebayes_de_novo/{SID}_{PID}.log",
     benchmark:
         "benchmarks/freebayes_de_novo/{SID}_{PID}.bench"
     params:
         n=get_pool
     shell:
         """
-        freebayes -f {input.reffasta} -p {params.n} --use-best-n-alleles 2 --pooled-discrete {input.trimbam} 1> {output} 2> {log}
+        freebayes -f {input.reffasta} -p {params.n} --use-best-n-alleles 2 --pooled-discrete {input.trimbam} 1> {output}
         """
 
 rule freebayes_a_priori:
@@ -29,13 +27,11 @@ rule freebayes_a_priori:
         "freebayes_a_priori_results/{SID}_{PID}.vcf",
     conda:
         "../envs/freebayes.yaml"
-    log:
-        "logs/freebayes_a_priori/{SID}_{PID}.log",
     benchmark:
         "benchmarks/freebayes_a_priori/{SID}_{PID}.bench"
     params:
         n=get_pool
     shell:
         """
-        freebayes -f {input.reffasta} -p {params.n} --use-best-n-alleles 2 --variant-input {input.vcf} --only-use-input-alleles --pooled-discrete {input.trimbam} 1> {output} 2> {log}
+        freebayes -f {input.reffasta} -p {params.n} --use-best-n-alleles 2 --variant-input {input.vcf} --only-use-input-alleles --pooled-discrete {input.trimbam} 1> {output}
         """

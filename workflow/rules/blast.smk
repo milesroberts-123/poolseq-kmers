@@ -16,9 +16,7 @@ rule blast:
         "../envs/blast.yaml"
     params:
         blastEvalue=config["blastEvalue"],
-    log:
-        "logs/blast/{SID}_{PID}.log",
     shell:
         """
-        blastn -query {input.unitigs} -db $(basename {input.ref} .fasta) -out {output.alignments} -max_target_seqs 1 -evalue {params.blastEvalue} -outfmt 6 &>> {log}
+        blastn -query {input.unitigs} -db $(basename {input.ref} .fasta) -out {output.alignments} -max_target_seqs 1 -evalue {params.blastEvalue} -outfmt 6
         """

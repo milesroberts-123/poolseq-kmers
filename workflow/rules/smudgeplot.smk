@@ -6,9 +6,7 @@ rule smudgeplot:
         "smudgeplot_results/{SID}_{PID}_sequences.tsv",
     conda:
         "../envs/smudgeplot.yaml"
-    log:
-        "logs/smudgeplot/{SID}_{PID}.log",
     benchmark:
         "benchmarks/smudgeplot/{SID}_{PID}.bench"
     shell:
-        "smudgeplot.py hetkmers -o smudgeplot_results/{wildcards.SID}_{wildcards.PID} --middle {input} &> {log}"
+        "smudgeplot.py hetkmers -o smudgeplot_results/{wildcards.SID}_{wildcards.PID} --middle {input}"

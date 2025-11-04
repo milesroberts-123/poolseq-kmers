@@ -7,8 +7,6 @@ rule bcftools_poolsnp:
         final="poolsnp_results/{SID}_{PID}.txt",
     conda:
         "../envs/bcftools.yaml"
-    log:
-        "logs/bcftools_poolsnp/{SID}_{PID}.log",
     shell:
         """
         # unpack gzip

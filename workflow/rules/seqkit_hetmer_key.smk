@@ -9,8 +9,6 @@ rule seqkit_hetmer_key:
         L=config["L"],
     conda:
         "../envs/seqkit.yaml"
-    log:
-        "logs/seqkit_hetmer_key/{SID}.log",
     shell:
         """        
         # get list of snp positions
@@ -27,7 +25,7 @@ rule seqkit_hetmer_key:
         # loop over snp positions
         for i in "${{posarray[@]}}"
         do
-            echo Extracting k-mers for snp $i &>> {log}
+            echo Extracting k-mers for snp $i
 
             # calculate bounds of k-mers
             center_start=$(($i-15))
