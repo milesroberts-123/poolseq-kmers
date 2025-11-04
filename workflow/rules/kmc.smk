@@ -1,9 +1,9 @@
 rule kmc:
     input:
-        pread1="seqtk_results/paired_R1_{SID}_{PID}.fastq",
-        pread2="seqtk_results/paired_R2_{SID}_{PID}.fastq",
-        uread1="seqtk_results/unpaired_R1_{SID}_{PID}.fastq",
-        uread2="seqtk_results/unpaired_R2_{SID}_{PID}.fastq",
+        pread1="fastp_results/trimmed_paired_R1_{SID}_{PID}.fastq",
+        pread2="fastp_results/trimmed_paired_R2_{SID}_{PID}.fastq",
+        uread1="fastp_results/trimmed_unpaired_R1_{SID}_{PID}.fastq",
+        uread2="fastp_results/trimmed_unpaired_R2_{SID}_{PID}.fastq",
     output:
         counts=temp("kmc_results/kmer_counts_{SID}_{PID}.txt"),
         list=temp("{SID}_{PID}.list"),

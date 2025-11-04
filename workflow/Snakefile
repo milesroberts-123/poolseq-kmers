@@ -2,9 +2,9 @@
 import pandas as pd
 import os
 from snakemake.utils import validate
-#from snakemake.utils import Paramspace
 from snakemake.utils import min_version
 
+# check snakemake version
 min_version("9.3.3")
 
 # configuration
@@ -24,19 +24,14 @@ parameters = pd.read_table(
 ).set_index(["ID"], drop=False)
 validate(parameters, "../config/parameters.schema.yaml")
 
-
-# declare a dataframe to be a paramspace
-#parameters = Paramspace(parameters)
-
-
 # split into paired-end and single-end
-one_pop_params = parameters[
-    (parameters["simtype"] == "onepop") | (parameters["simtype"] == "sweep")
-]
+#one_pop_params = parameters[
+#    (parameters["simtype"] == "onepop") | (parameters["simtype"] == "sweep")
+#]
 
-two_pop_params = parameters[
-    (parameters["simtype"] == "twopop") | (parameters["simtype"] == "bsa")
-]
+#two_pop_params = parameters[
+#    (parameters["simtype"] == "twopop") | (parameters["simtype"] == "bsa")
+#]
 
 
 wildcard_constraints:
@@ -46,35 +41,17 @@ wildcard_constraints:
 
 localrules: all_per_sim
 
-# rule report:
-#    input:
-#        expand("{ID}.done", ID=one_pop_params.index.get_level_values("ID")),
-# 	expand("{ID}_p1p2.done", ID=two_pop_params.index.get_level_values("ID")),
-#    output:
-#        "report.html"
-#    params:
-#        wd = get_wd
-#    conda:
-#        "../envs/r_markdown.yaml"
-#    log:
-#        "logs/r_markdown.log"
-#    shell:
-#        """
-#        Rscript -e 'parameters <- list(root_directory = "{params.wd}");
-#                    rmarkdown::render("notebooks/kmer_poolseq_maf_prediction.Rmd",
-#                                      params      = parameters,
-#                                      output_dir  = "{params.wd}",
-#                                      output_file = "{output}")'
-#        """
-
+# create histograms across reference genomes
 rule all_histos:
     input:
         expand("kmc_histo_results/{species}_{k}.histo", species = config["species"], k = config["k_zeta"])
 
+# perform simulations
+# additional rule helps with batching
 rule all_sims:
     input:
-        expand("finished/{SID}_0.done", SID=one_pop_params.index.get_level_values("ID")),
-        expand("finished/{SID}_{PID}.done", SID=two_pop_params.index.get_level_values("ID"), PID=[0,1]),
+        expand("finished/{SID}_0.done", SID=parameters.index.get_level_values("ID")),
+        #expand("finished/{SID}_{PID}.done", SID=two_pop_params.index.get_level_values("ID"), PID=[0,1]),
         "multiqc_report.html"
 
 rule all_per_sim:
@@ -91,7 +68,6 @@ rule all_per_sim:
         "hetmers_results/{SID}_{PID}_counts.csv",
         "seqkit_results/center_kmer_pairs_{SID}.txt",   
         "freqk_results/{SID}_{PID}_counts.txt"    
-    #"dissimilarity_results/{SID}.txt"
     output:
         touch("finished/{SID}_{PID}.done")
 
@@ -101,67 +77,34 @@ include: "rules/common.smk"
 # other rules
 include: "rules/ancestral_genome.smk"
 include: "rules/bcftools_discosnp.smk"
-#include: "rules/bcftools_discosnp_one_pop.smk"
-#include: "rules/bcftools_discosnp_two_pop.smk"
-#include: "rules/bcftools_poolsnp_masked.smk"
 include: "rules/bcftools_poolsnp.smk"
-#include: "rules/bcftools_poolsnp_one_pop.smk"
-#include: "rules/bcftools_poolsnp_two_pop.smk"
-#include: "rules/bcftools_slim_one_pop.smk"
 include: "rules/bcftools_remove_ref.smk"
 include: "rules/bcftools_get_samples.smk"
 include: "rules/bcftools_fill_tags.smk"
 include: "rules/bcftools_freebayes.smk"
-#include: "rules/bcftools_slim_two_pop.smk"
-# include: "rules/bedtools.smk"
 include: "rules/blast.smk"
 include: "rules/makeblastdb.smk"
-# include: "rules/bwa_masked.smk"
 include: "rules/bwa_index.smk"
 include: "rules/bwa_mem.smk"
-#include: "rules/bwa_one_pop.smk"
-#include: "rules/bwa_two_pop.smk"
-# include: "rules/bwa.smk"
 include: "rules/compress.smk"
 include: "rules/discosnp.smk"
-#include: "rules/discosnp_one_pop.smk"
-#include: "rules/discosnp_two_pop.smk"
 include: "rules/dissimilarity.smk"
 include: "rules/fastp.smk"
 include: "rules/freebayes.smk"
-#include: "rules/fastp_one_pop.smk"
-#include: "rules/fastp_two_pop.smk"
 include: "rules/hetmers.smk"
-#include: "rules/hetmers_one_pop.smk"
-#include: "rules/hetmers_two_pop.smk"
 include: "rules/freqk.smk"
 include: "rules/iss.smk"
-#include: "rules/iss_two_pop.smk"
 include: "rules/kmc.smk"
-#include: "rules/kmc_one_pop.smk"
-#include: "rules/kmc_two_pop.smk"
-# include: "rules/poolsnp_masked.smk"
 include: "rules/multiqc.smk"
 include: "rules/poolsnp.smk"
-#include: "rules/poolsnp_one_pop.smk"
-#include: "rules/poolsnp_two_pop.smk"
 include: "rules/samtools_faidx.smk"
-include: "rules/seqtk.smk"
 include: "rules/seqkit_get_ref.smk"
 include: "rules/seqkit_get_samples.smk"
-#include: "rules/seqkit_get_ref_one_pop.smk"
 include: "rules/seqkit_hetmer_key.smk"
 include: "rules/seqkit_rename.smk"
-#include: "rules/seqkit_get_ref_two_pop.smk"
-#include: "rules/seqkit_hetmer_key_two_pop.smk"
 include: "rules/slim.smk"
 include: "rules/smudgeplot.smk"
-#include: "rules/smudgeplot_one_pop.smk"
-#include: "rules/smudgeplot_two_pop.smk"
 include: "rules/unitig_caller.smk"
-# include: "rules/varscan_masked.smk"
 include: "rules/varscan.smk"
-#include: "rules/varscan_one_pop.smk"
-#include: "rules/varscan_two_pop.smk"
 include: "rules/vg.smk"
 include: "rules/kmc_histo.smk"

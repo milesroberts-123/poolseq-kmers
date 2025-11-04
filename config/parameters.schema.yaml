@@ -10,9 +10,6 @@ properties:
   n:
     type: integer
     description: sample size
-  sigma:
-    type: number
-    description: selfing rate
   mu:
     type: number
     description: mutation rate per base pair per generation per type of nucleotide transition
@@ -34,39 +31,12 @@ properties:
   shuffle:
     type: boolean
     description: whether k-mers should be shuffled to make ancestral genome
-  N1:
-    type: integer
-    description: number of individuals in population 1 after split
-  N2:
-    type: integer
-    description: number of individuals in population 2 after split
-  mg1:
-    type: number
-  mg2:
-    type: number
-  tau:
-    type: integer
-  h:
-    type: number
-    description: dominance coefficient of sweep
   Nes:
     type: number
     description: scaled selection coefficient of sweep
   s:
     type: number
     description: selection coefficient
-  qtl_mean:
-    type: number
-  qtl_sigma:
-    type: number
-  qtl_prop:
-    type: number
-  optimum_mean:
-    type: number
-  optimum_sigma:
-    type: number
-  phenotype_cutoff:
-    type: number
   ID:
     type: string
     description: unique identifier for each simulation
