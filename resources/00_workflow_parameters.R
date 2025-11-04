@@ -3,13 +3,13 @@ library("dplyr")
 replicates = 1:3
 sample_sizes = c(25, 50, 75, 100, 125, 150)
 coverages = c(30, 50, 100, 150, 200, 250)
-sequencers = c("nextseq", "novaseq", "miseq", "hiseq")
+sequencers = c("hiseq")
 
 population_sizes = c(1000)
 mutation_rates = c(1e-8)
 recombination_rates = c(1e-8)
 
-shapes = c(17, 1e6)
+shapes = c(2.5, 5, 10, 15, 1e6)
 shuffles = c(TRUE, FALSE)
 
 # create data frame of workflow parameters
