@@ -160,9 +160,13 @@ This could be nicer because R markdown will give me more control over what the r
 
 - [ ] run final huge analysis
 
-- [ ] polish freqk: separate code into modules, skip over problematic variants (close to chromosome ends)
+- [ ] polish freqk, skip over variants close to chromosome ends, non-isolated variants
 
-- [ ] have vg in simulations also map unpaired reads
+- [ ] polish simulation repo: remove left overs 
+
+- [x] polish freqk: separate code into modules, skip over problematic variants (close to chromosome ends)
+
+- [x] have vg in simulations also map unpaired reads
 
 - [x] add workflow to compare freqk and vg on empirical data from plantpan
 
