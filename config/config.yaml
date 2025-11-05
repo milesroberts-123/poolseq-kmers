@@ -31,6 +31,11 @@ maxcount: 1000000
 # e-value for blast
 blastEvalue: 0.0000000001
 
+# bloom filter parameters
+array_size: 10000
+
+num_hash: 3
+
 ###################################
 # KMER HISTOGRAM FOR REAL GENOMES #
 ###################################

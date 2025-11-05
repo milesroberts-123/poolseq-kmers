@@ -37,6 +37,18 @@ properties:
   s:
     type: number
     description: selection coefficient
+  N1:
+    type: integer
+    description: number of individuals in population 1 after split
+  N2:
+    type: integer
+    description: number of individuals in population 2 after split
+  mg1:
+    type: number
+  mg2:
+    type: number
+  tau:
+    type: integer
   ID:
     type: string
     description: unique identifier for each simulation

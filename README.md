@@ -160,7 +160,7 @@ This could be nicer because R markdown will give me more control over what the r
 
 - [ ] run final huge analysis
 
-- [ ] polish freqk, skip over variants close to chromosome ends, non-isolated variants
+- [x] polish freqk, skip over variants close to chromosome ends, non-isolated variants
 
 - [ ] add workflow for processing empirical datasets
 
