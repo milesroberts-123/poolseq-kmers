@@ -29,6 +29,10 @@ one_pop_params = parameters[
     (parameters["simtype"] == "onepop") | (parameters["simtype"] == "sweep")
 ]
 
+sweep_params = parameters[
+    (parameters["simtype"] == "sweep")
+]
+
 two_pop_params = parameters[
     (parameters["simtype"] == "twopop")
 ]
@@ -41,11 +45,6 @@ wildcard_constraints:
 
 localrules: all_per_sim
 
-#
-#print("Testing lookup function")
-#print(type(lookup(query="ID == '1'", within=parameters, cols="simtype")))
-#print(lookup(query="ID == '15000'", within=parameters, cols="simtype")[0] == "twopop")
-
 # create histograms across reference genomes
 rule all_histos:
     input:
@@ -55,9 +54,22 @@ rule all_histos:
 # additional rule helps with batching
 rule all_sims:
     input:
-        expand("finished/{SID}_0.done", SID=parameters.index.get_level_values("ID")),
+        expand("finished/{SID}_0.done", SID=one_pop_params.index.get_level_values("ID")),
+        expand("finished/{SID}_0.done", SID=sweep_params.index.get_level_values("ID")),
         expand("finished/{SID}_{PID}.done", SID=two_pop_params.index.get_level_values("ID"), PID=[0,1]),
         "multiqc_report.html"
+
+rule all_neutral_sims:
+    input:
+        expand("finished/{SID}_0.done", SID=parameters.index.get_level_values("ID")),
+
+rule all_sweep_sims:
+    input:
+        expand("finished/{SID}_0.done", SID=sweep_params.index.get_level_values("ID")),
+
+rule all_two_sims:
+    input:
+        expand("finished/{SID}_{PID}.done", SID=two_pop_params.index.get_level_values("ID"), PID=[0,1]),
 
 #rule all_per_sim:
 #    input:
@@ -81,41 +93,72 @@ rule all_sims:
 #    output:
 #        touch("finished/{SID}_{PID}.done")
 
-def test_if_twopop(wildcards):
+#def test_if_twopop(wildcards):
+#    simtype = parameters.loc[parameters["ID"] == wildcards.SID, "simtype"]
+#    simtype = str(simtype.iloc[0])
+#    return(simtype == "twopop")
+
+#rule all_per_sim:
+#    input:
+#        branch(
+#            condition=test_if_twopop,
+#            then=["varscan_results/{SID}_{PID}.tsv",
+#                "smudgeplot_results/{SID}_{PID}_coverages.tsv",
+#                "disco_results/{SID}_{PID}.txt",
+#                "slim_results/allele_freqs_{SID}_{PID}.txt",
+#                "poolsnp_results/{SID}_{PID}.txt",
+#                "freebayes_de_novo_results/{SID}_{PID}.txt",
+#                "freebayes_a_priori_results/{SID}_{PID}.txt",
+#                "freebayes_vg_results/{SID}_{PID}.txt",
+#                "blast_results/{SID}_{PID}.txt",
+#                "hetmers_results/{SID}_{PID}_counts.csv",
+#                "seqkit_results/center_kmer_pairs_{SID}.txt",
+#                "freqk_results/{SID}_{PID}_counts.txt",
+#                "distances_{SID}.txt"],
+#            otherwise=["varscan_results/{SID}_{PID}.tsv",
+#                "smudgeplot_results/{SID}_{PID}_coverages.tsv",
+#                "disco_results/{SID}_{PID}.txt",
+#                "slim_results/allele_freqs_{SID}_{PID}.txt",
+#                "poolsnp_results/{SID}_{PID}.txt",
+#                "freebayes_de_novo_results/{SID}_{PID}.txt",
+#                "freebayes_a_priori_results/{SID}_{PID}.txt",
+#                "freebayes_vg_results/{SID}_{PID}.txt",
+#                "blast_results/{SID}_{PID}.txt",
+#                "hetmers_results/{SID}_{PID}_counts.csv",
+#                "seqkit_results/center_kmer_pairs_{SID}.txt",
+#                "freqk_results/{SID}_{PID}_counts.txt"]
+#            )
+#    output:
+#        touch("finished/{SID}_{PID}.done")
+
+def get_simtype(wildcards):
     simtype = parameters.loc[parameters["ID"] == wildcards.SID, "simtype"]
     simtype = str(simtype.iloc[0])
-    return(simtype == "twopop")
+    return(simtype)
 
 rule all_per_sim:
     input:
         branch(
-            condition=test_if_twopop,
-            then=["varscan_results/{SID}_{PID}.tsv",
-                "smudgeplot_results/{SID}_{PID}_coverages.tsv",
-                "disco_results/{SID}_{PID}.txt",
-                "slim_results/allele_freqs_{SID}_{PID}.txt",
-                "poolsnp_results/{SID}_{PID}.txt",
-                "freebayes_de_novo_results/{SID}_{PID}.txt",
-                "freebayes_a_priori_results/{SID}_{PID}.txt",
-                "freebayes_vg_results/{SID}_{PID}.txt",
-                "blast_results/{SID}_{PID}.txt",
-                "hetmers_results/{SID}_{PID}_counts.csv",
-                "seqkit_results/center_kmer_pairs_{SID}.txt",
-                "freqk_results/{SID}_{PID}_counts.txt",
-                "distances_{SID}.txt"],
-            otherwise=["varscan_results/{SID}_{PID}.tsv",
-                "smudgeplot_results/{SID}_{PID}_coverages.tsv",
-                "disco_results/{SID}_{PID}.txt",
-                "slim_results/allele_freqs_{SID}_{PID}.txt",
-                "poolsnp_results/{SID}_{PID}.txt",
-                "freebayes_de_novo_results/{SID}_{PID}.txt",
-                "freebayes_a_priori_results/{SID}_{PID}.txt",
-                "freebayes_vg_results/{SID}_{PID}.txt",
-                "blast_results/{SID}_{PID}.txt",
-                "hetmers_results/{SID}_{PID}_counts.csv",
-                "seqkit_results/center_kmer_pairs_{SID}.txt",
-                "freqk_results/{SID}_{PID}_counts.txt"]
-            )
+            get_simtype,
+            cases={
+                "onepop": ("varscan_results/{SID}_{PID}.tsv",
+                    "smudgeplot_results/{SID}_{PID}_coverages.tsv",
+                    "disco_results/{SID}_{PID}.txt",
+                    "slim_results/allele_freqs_{SID}_{PID}.txt",
+                    "poolsnp_results/{SID}_{PID}.txt",
+                    "freebayes_de_novo_results/{SID}_{PID}.txt",
+                    "freebayes_a_priori_results/{SID}_{PID}.txt",
+                    "freebayes_vg_results/{SID}_{PID}.txt",
+                    "blast_results/{SID}_{PID}.txt",
+                    "hetmers_results/{SID}_{PID}_counts.csv",
+                    "seqkit_results/center_kmer_pairs_{SID}.txt",
+                    "freqk_results/{SID}_{PID}_counts.txt"),
+                "sweep": ("blast_results/{SID}_{PID}.txt", 
+                    "slim_results/allele_freqs_{SID}_{PID}.txt"),
+                "twopop": ("slim_results/allele_freqs_{SID}_{PID}.txt",
+                    "distances_{SID}.txt")
+            }
+        )
     output:
         touch("finished/{SID}_{PID}.done")
 
