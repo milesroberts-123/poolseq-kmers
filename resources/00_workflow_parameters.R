@@ -7,7 +7,7 @@ coverages = c(30, 50, 100, 150, 200, 250)
 #sequencers = c("hiseq", "novaseq", "miseq", "nextseq")
 sequencers = "hiseq"
 
-population_sizes = c(1000, 2000)
+population_sizes = c(1000)
 mutation_rates = c(1e-8)
 recombination_rates = c(1e-8)
 
@@ -55,7 +55,8 @@ sweep_params = expand.grid(
   rep = replicates,
   N = population_sizes,
   n = sample_sizes,
-  h = c(0, 0.5, 1),
+  #h = c(0, 0.5, 1),
+  h = 0.5,
   Nes = c(5, 10, 25, 50, 100),
   sigma = c(0),
   mu = mutation_rates,
