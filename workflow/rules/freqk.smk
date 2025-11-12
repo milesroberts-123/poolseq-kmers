@@ -79,5 +79,5 @@ rule freqk_count:
         "benchmarks/freqk_count/{SID}_{PID}.bench"
     shell:
         """
-        ./scripts/freqk count --nthreads {threads} --index {input.index} --reads {output.all} --freq-output {output.freqs} --count-output {output.counts}
+        ./scripts/freqk count --nthreads {threads} --index {input.index} --reads {input.reads} --freq-output {output.freqs} --count-output {output.counts}
         """
