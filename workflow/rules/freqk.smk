@@ -47,7 +47,7 @@ rule freqk_ref_dedup:
         fasta="ancestral_genome_results/{SID}.fasta",
         fai="ancestral_genome_results/{SID}.fasta.fai"
     output:
-        temp("freqk_ref_dedup/{SID}_{PID}.txt")
+        "freqk_ref_dedup/{SID}_{PID}.txt"
     benchmark:
         "benchmarks/freqk_ref_dedup/{SID}_{PID}.bench"
     params:
