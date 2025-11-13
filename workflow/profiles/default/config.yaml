@@ -31,6 +31,8 @@ set-resources:
         cpus_per_task: 4
     vg_surject:
         cpus_per_task: 4
+    freebayes_a_priori:
+        cpus_per_task: 2
 
 # parallelization with threads needs to be defined separately:
 # threads and cpus_per_task are supposed to be synonymous for this plugin, but for some reason I need to specify them separately
@@ -42,3 +44,4 @@ set-threads:
     vg_giraffe_paired: 4
     vg_giraffe_unpaired: 4
     vg_surject: 4
+    freebayes_a_priori: 1 
