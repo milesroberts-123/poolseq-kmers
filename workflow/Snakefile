@@ -26,7 +26,7 @@ validate(parameters, "../config/parameters.schema.yaml")
 
 # split into paired-end and single-end
 one_pop_params = parameters[
-    (parameters["simtype"] == "onepop") | (parameters["simtype"] == "sweep")
+    (parameters["simtype"] == "onepop")
 ]
 
 sweep_params = parameters[
@@ -61,7 +61,7 @@ rule all_sims:
 
 rule all_neutral_sims:
     input:
-        expand("finished/{SID}_0.done", SID=parameters.index.get_level_values("ID")),
+        expand("finished/{SID}_0.done", SID=one_pop_params.index.get_level_values("ID")),
 
 rule all_sweep_sims:
     input:
