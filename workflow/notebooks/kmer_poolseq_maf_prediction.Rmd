@@ -2069,7 +2069,14 @@ for(i in params$ID){
     next
   }
 
-  kmer_counts$maf = pmin(kmer_counts$V1, kmer_counts$V2)/(kmer_counts$V1 + kmer_counts$V2)
+  kmer_counts$kmer_maf = pmin(kmer_counts$V1, kmer_counts$V2)/(kmer_counts$V1 + kmer_counts$V2)
+  
+  kmer_index = tryCatch({
+    read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/freqk_ref_dedup/", i, "_0.txt", sep = ""), sep = ",")
+  }, error = function(e) {
+    message(paste("Error at iteration", i, ":", e$message))
+    return(NA) # Or some other indicator for error
+  })
 
   slim = tryCatch({
     read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/slim_results/allele_freqs_", i, "_0.txt", sep = ""), sep = " ")
@@ -2084,9 +2091,18 @@ for(i in params$ID){
   
   names(slim)[1:2] =  c("Chrom", "Position")
   
-  slim$maf = pmin(slim$V6, 1 - slim$V6)
+  slim$slim_maf = pmin(slim$V6, 1 - slim$V6)
 
-  cor_coeff_freqk = signif(cor.test(kmer_counts$maf, slim$maf)$estimate, digits = 3)
+  kmer_counts = cbind(kmer_index, kmer_counts)
+  
+  names(kmer_counts)[2:3] =  c("Chrom", "Position")
+  
+  # shift position to vcf convention
+  kmer_counts$Position = kmer_counts$Position + 2
+  
+  slim_vs_kmer = merge(slim, kmer_counts, by = c("Chrom", "Position"))
+  
+  cor_coeff_freqk = signif(cor.test(slim_vs_kmer$kmer_maf, slim_vs_kmer$slim_maf)$estimate, digits = 3)
   
   #print(cor_coeff)
   
@@ -2094,24 +2110,24 @@ for(i in params$ID){
   
   #varscan$maf = pmin(varscan$Reads1, varscan$Reads2)/(varscan$Reads1 + varscan$Reads2)
   
-  freebayes = tryCatch({
-    read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/freebayes_a_priori_results/", i, "_0.txt", sep = ""), header = F)
-  }, error = function(e) {
-    message(paste("Error at iteration", i, ":", e$message))
-    return(NA) # Or some other indicator for error
-  })
-  
-  if (all(is.na(freebayes))){
-    next
-  }
-  
-  names(freebayes)[c(1:2,6)] = c("Chrom", "Position", "af")
-  
-  freebayes$maf = pmin(freebayes$af, 1 - freebayes$af)
-  
-  slim_freebayes = merge(slim, freebayes, by = c("Chrom", "Position"))
-  
-  cor_coeff_freebayes = signif(cor.test(slim_freebayes$maf.x, slim_freebayes$maf.y)$estimate, digits = 3)
+  # freebayes = tryCatch({
+  #   read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/freebayes_a_priori_results/", i, "_0.txt", sep = ""), header = F)
+  # }, error = function(e) {
+  #   message(paste("Error at iteration", i, ":", e$message))
+  #   return(NA) # Or some other indicator for error
+  # })
+  # 
+  # if (all(is.na(freebayes))){
+  #   next
+  # }
+  # 
+  # names(freebayes)[c(1:2,6)] = c("Chrom", "Position", "af")
+  # 
+  # freebayes$maf = pmin(freebayes$af, 1 - freebayes$af)
+  # 
+  # slim_freebayes = merge(slim, freebayes, by = c("Chrom", "Position"))
+  # 
+  # cor_coeff_freebayes = signif(cor.test(slim_freebayes$maf.x, slim_freebayes$maf.y)$estimate, digits = 3)
   
   ## vg giraffe + freebayes
   vg = tryCatch({
@@ -2136,9 +2152,9 @@ for(i in params$ID){
   cor_coeff_vg = signif(cor.test(slim_vg$maf.x, slim_vg$maf.y)$estimate, digits = 3)
   
   ## bwa mem + freebayes
-  bench_bwa_mem = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks/bwa_mem/", i, "_0.bench", sep = ""), header = T)
+  #bench_bwa_mem = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks/bwa_mem/", i, "_0.bench", sep = ""), header = T)
   
-  bench_freebayes_a_priori = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks/freebayes_a_priori/", i, "_0.bench", sep = ""), header = T)
+  #bench_freebayes_a_priori = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks/freebayes_a_priori/", i, "_0.bench", sep = ""), header = T)
   
   ## vg giraffe + freebayes
   bench_vg_index = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks/vg_autoindex/", i, "_0.bench", sep = ""), header = T)
