@@ -2145,11 +2145,11 @@ for(i in params$ID){
   
   names(vg)[c(1:2,6)] = c("Chrom", "Position", "af")
   
-  vg$maf = pmin(vg$af, 1 - vg$af)
+  vg$vg_maf = pmin(vg$af, 1 - vg$af)
   
   slim_vg = merge(slim, vg, by = c("Chrom", "Position"))
   
-  cor_coeff_vg = signif(cor.test(slim_vg$maf.x, slim_vg$maf.y)$estimate, digits = 3)
+  cor_coeff_vg = signif(cor.test(slim_vg$slim_maf, slim_vg$vg_maf)$estimate, digits = 3)
   
   ## bwa mem + freebayes
   #bench_bwa_mem = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks/bwa_mem/", i, "_0.bench", sep = ""), header = T)
@@ -2180,7 +2180,9 @@ for(i in params$ID){
   ## kmer counts
   bench_freqk_index = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks/freqk_index/", i, "_0.bench", sep = ""), header = T)
   
-  bench_freqk_dedup = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks/freqk_dedup/", i, "_0.bench", sep = ""), header = T)
+  bench_freqk_var_dedup = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks/freqk_var_dedup/", i, "_0.bench", sep = ""), header = T)
+  
+  bench_freqk_ref_dedup = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks/freqk_ref_dedup/", i, "_0.bench", sep = ""), header = T)
   
   bench_freqk_count = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks/freqk_count/", i, "_0.bench", sep = ""), header = T)
   
@@ -2192,8 +2194,8 @@ for(i in params$ID){
     cor_coeff_vg = cor_coeff_vg,
     t_freqk = bench_freqk_count$s,
     mem_freqk = max(bench_freqk_count$max_rss),
-    t_freqk_index = bench_freqk_index$s + bench_freqk_dedup$s,
-    mem_freqk_index = max(bench_freqk_index$max_rss + bench_freqk_dedup$max_rss),
+    t_freqk_index = bench_freqk_index$s + bench_freqk_var_dedup$s + bench_freqk_ref_dedup$s,
+    mem_freqk_index = max(bench_freqk_index$max_rss, bench_freqk_var_dedup$max_rss, bench_freqk_ref_dedup$max_rss),
     #t_freebayes = bench_bwa_mem$s + bench_freebayes_a_priori$s,
     #mem_freebayes = max(bench_bwa_mem$max_rss, bench_freebayes_a_priori$max_rss),
     t_vg = bench_vg_giraffe$s + max(c(bench_vg_surject_paired$s, bench_vg_surject_r1$s, bench_vg_surject_r2$s)) + max(c(bench_vg_sort_paired$s, bench_vg_sort_r1$s, bench_vg_sort_r2$s)) + bench_vg_merge$s + bench_freebayes_vg$s,

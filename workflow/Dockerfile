@@ -1,6 +1,6 @@
 FROM condaforge/miniforge3:latest
 LABEL io.github.snakemake.containerized="true"
-LABEL io.github.snakemake.conda_env_hash="396ed6eb2ae5bb57c4f662874540e90c5999397225e3850fb13f3ac2afc7d072"
+LABEL io.github.snakemake.conda_env_hash="1a1318c638f952d9d51891ba9f8b1f58cd33ba3e0e9fedaf4e842964165bfb2f"
 
 # Step 2: Retrieve conda environments
 
@@ -909,6 +909,19 @@ COPY envs/unitig-caller.yaml /conda-envs/c3426142ab2478501bd2794e9bc90f87/enviro
 RUN mkdir -p /conda-envs/00ac27dafb55868320e892d08cfe5ee2
 COPY envs/varscan.yaml /conda-envs/00ac27dafb55868320e892d08cfe5ee2/environment.yaml
 
+# Conda environment:
+#   source: envs/vg.yaml
+#   prefix: /conda-envs/7ef36989942043e8e5d4340db58bfd0f
+#   name: vg
+#   channels:
+#     - bioconda
+#   dependencies:
+#     - vg=1.67.0=h9ee0642_0
+#   
+#   prefix: "/global/home/users/milesroberts/.local/share/mamba/envs/vg"
+RUN mkdir -p /conda-envs/7ef36989942043e8e5d4340db58bfd0f
+COPY envs/vg.yaml /conda-envs/7ef36989942043e8e5d4340db58bfd0f/environment.yaml
+
 # Step 3: Generate conda environments
 
 RUN conda env create --prefix /conda-envs/3c74495c6c8f8b13c8f5e41bfa52b11d --file /conda-envs/3c74495c6c8f8b13c8f5e41bfa52b11d/environment.yaml && \
@@ -926,4 +939,5 @@ RUN conda env create --prefix /conda-envs/3c74495c6c8f8b13c8f5e41bfa52b11d --fil
     conda env create --prefix /conda-envs/ac6e0663d3c2604df3006ff1e3857de9 --file /conda-envs/ac6e0663d3c2604df3006ff1e3857de9/environment.yaml && \
     conda env create --prefix /conda-envs/c3426142ab2478501bd2794e9bc90f87 --file /conda-envs/c3426142ab2478501bd2794e9bc90f87/environment.yaml && \
     conda env create --prefix /conda-envs/00ac27dafb55868320e892d08cfe5ee2 --file /conda-envs/00ac27dafb55868320e892d08cfe5ee2/environment.yaml && \
+    conda env create --prefix /conda-envs/7ef36989942043e8e5d4340db58bfd0f --file /conda-envs/7ef36989942043e8e5d4340db58bfd0f/environment.yaml && \
     conda clean --all -y
