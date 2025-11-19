@@ -39,11 +39,16 @@ two_pop_params = parameters[
 
 
 wildcard_constraints:
-    ID="\\d+",
+    ID="[a-zA-Z0-9]+",
     SID="[a-zA-Z0-9]+",
     PID="[a-zA-Z0-9]+"
 
 localrules: all_per_sim
+
+# 
+rule empirical:
+    input:
+        "calls.txt"
 
 # create histograms across reference genomes
 rule all_histos:
@@ -164,6 +169,9 @@ rule all_per_sim:
 
 # helper functions
 include: "rules/common.smk"
+
+# empirical data
+include: "rules/empirical.smk"
 
 # other rules
 include: "rules/ancestral_genome.smk"

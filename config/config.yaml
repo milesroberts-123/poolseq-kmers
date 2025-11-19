@@ -1,3 +1,7 @@
+###############
+# SIMULATIONS #
+###############
+
 # k-mer length/minimum read trim length
 k: 31
 
@@ -36,6 +40,66 @@ array_size: 10000
 
 num_hash: 3
 
+#############
+# REAL DATA #
+#############
+
+real_fasta: "/global/scratch/users/milesroberts/tmp/brassica_rapa_plantpan_data/br.genome.gene/Chiifu.genome.fasta"
+
+real_vcf: "/global/scratch/users/milesroberts/tmp/brassica_rapa_plantpan_data/br.genetics.variation/final.vcf.gz"
+
+num_reads: 25000000
+
+real_accessions:
+ - "SRR14584034"
+ - "SRR14584045"
+ - "SRR14584052"
+ - "SRR14583938"
+ - "SRR14583939"
+ - "SRR14583940"
+ - "SRR14584002"
+ - "SRR14584000"
+ - "SRR14583941"
+ - "SRR14583942"
+ - "SRR14583943"
+ - "SRR14583999"
+ - "SRR14583998"
+ - "SRR14583944"
+ - "SRR14583945"
+ - "SRR14583912"
+ - "SRR14583964"
+ - "SRR14583903"
+ - "SRR14583946"
+ - "SRR14583947"
+ - "SRR14583997"
+ - "SRR14583949"
+ - "SRR14583950"
+ - "SRR14583951"
+ - "SRR14583996"
+ - "SRR14583995"
+ - "SRR14583952"
+ - "SRR14584025"
+ - "SRR14584026"
+ - "SRR14584027"
+ - "SRR14583991"
+ - "SRR14583990"
+ - "SRR14583989"
+ - "SRR14583976"
+ - "SRR14583984"
+ - "SRR14584066"
+ - "SRR14584030"
+ - "SRR14584031"
+ - "SRR14584032"
+ - "SRR14583953"
+ - "SRR14583954"
+ - "SRR14584023"
+ - "SRR14583994"
+ - "SRR14583993"
+ - "SRR14583992"
+ - "SRR14583988"
+ - "SRR14584028"
+ - "SRR14584029"
+
 ###################################
 # KMER HISTOGRAM FOR REAL GENOMES #
 ###################################
@@ -43,6 +107,7 @@ k_zeta:
  - 31
  - 41
  - 51
+ - 61
 
 species:
  - "GCA_000180655.1_ASM18065v1_genomic"

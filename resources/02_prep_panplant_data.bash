@@ -95,6 +95,9 @@ awk '{if ($0 ~ /^#/) print; else {split($4, a, ","); for (i=1; i<=length(a); i++
 echo Convert spaces to tabs...
 grep -v "^#" capital.vcf | tr ' ' '\t' > body.vcf
 grep "^#" capital.vcf > header.vcf
-cat header.vcf body.vcf > final.vcf
-bgzip final.vcf
-tabix final.vcf.gz
+cat header.vcf body.vcf > capital.vcf
+bgzip capital.vcf
+tabix capital.vcf.gz
+
+# realign indels and remove duplicates
+bcftools norm -d all -o final.vcf.gz -O z -c s -f at.fa capital.vcf.gz
