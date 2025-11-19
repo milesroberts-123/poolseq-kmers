@@ -1,7 +1,8 @@
 rule sra:
     output:
-        r1="real_reads/{ID}_1.fastq",
-        r2="real_reads/{ID}_2.fastq"
+        r1="{ID}_1.fastq",
+        r2="{ID}_2.fastq"
+    retries: 2
     conda:
         "../envs/sra.yaml"
     shell:
@@ -11,8 +12,8 @@ rule sra:
 
 rule real_fastp:
     input:
-        r1="real_reads/{ID}_1.fastq",
-        r2="real_reads/{ID}_2.fastq"    
+        r1="{ID}_1.fastq",
+        r2="{ID}_2.fastq"    
     output:
         pread1=temp("real_fastp_results/trimmed_paired_R1_{ID}.fastq"),
         pread2=temp("real_fastp_results/trimmed_paired_R2_{ID}.fastq"),
