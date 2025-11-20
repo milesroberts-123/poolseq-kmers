@@ -5,9 +5,13 @@ rule sra:
     retries: 2
     conda:
         "../envs/sra.yaml"
+    params:
+        k=config["k"],
+        N=config["num_reads"],
     shell:
         """
-        fasterq-dump --threads {threads} --split-files --skip-technical {wildcards.ID}
+        fastq-dump --split-3 --skip-technical -X {params.N} --clip -M {params.k} {wildcards.ID}
+        #fasterq-dump --threads {threads} --split-files --skip-technical {wildcards.ID}
         """
 
 rule real_fastp:
@@ -32,26 +36,30 @@ rule real_fastp:
         fastp --thread {threads} -u {params.unqualLimit} -q {params.qualThresh} --correction -l {params.k} --cut_tail --cut_tail_window_size {params.windowLength} --cut_tail_mean_quality {params.qualThresh} --json {output.jsonR1R2} -i {input.r1} -I {input.r2} -o {output.pread1} -O {output.pread2} --unpaired1 {output.uread1} --unpaired2 {output.uread2}
         """
 
-rule downsample:
-    input:
-        "real_fastp_results/trimmed_paired_R1_{ID}.fastq",
-        "real_fastp_results/trimmed_paired_R2_{ID}.fastq",
-        "real_fastp_results/trimmed_unpaired_R1_{ID}.fastq",
-        "real_fastp_results/trimmed_unpaired_R2_{ID}.fastq",
-    output:
-        temp("downsample/{ID}.fastq")
-    conda:
-        "../envs/seqkit.yaml"
-    params:
-        N=config["num_reads"]
-    shell:
-        """
-        set +o pipefail; cat {input} | seqkit sample -s 21 -p 0.1 | seqkit head -n {params.N} > {output}
-        """
+#rule downsample:
+#    input:
+#        "real_fastp_results/trimmed_paired_R1_{ID}.fastq",
+#        "real_fastp_results/trimmed_paired_R2_{ID}.fastq",
+#        "real_fastp_results/trimmed_unpaired_R1_{ID}.fastq",
+#        "real_fastp_results/trimmed_unpaired_R2_{ID}.fastq",
+#    output:
+#        temp("downsample/{ID}.fastq")
+#    conda:
+#        "../envs/seqkit.yaml"
+#    params:
+#        N=config["num_reads"]
+#    shell:
+#        """
+#        set +o pipefail; cat {input} | seqkit sample -s 21 -p 0.1 | seqkit head -n {params.N} > {output}
+#        """
 
 rule real_cat:
     input:
-        expand("downsample/{ID}.fastq", ID=config["real_accessions"])
+        #expand("downsample/{ID}.fastq", ID=config["real_accessions"]),
+        expand("real_fastp_results/trimmed_paired_R1_{ID}.fastq", ID=config["real_accessions"]),
+        expand("real_fastp_results/trimmed_paired_R2_{ID}.fastq", ID=config["real_accessions"]),
+        expand("real_fastp_results/trimmed_unpaired_R1_{ID}.fastq", ID=config["real_accessions"]),
+        expand("real_fastp_results/trimmed_unpaired_R2_{ID}.fastq", ID=config["real_accessions"]),
     output:
         "pseudopool.fastq"
     shell:
