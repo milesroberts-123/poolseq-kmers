@@ -46,7 +46,7 @@ rule downsample:
         N=config["num_reads"]
     shell:
         """
-        cat {input} | seqkit sample -s 21 -p 0.1 | seqkit head -n {params.N} > {output}
+        set +o pipefail; cat {input} | seqkit sample -s 21 -p 0.1 | seqkit head -n {params.N} > {output}
         """
 
 rule real_cat:
