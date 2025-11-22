@@ -56,14 +56,22 @@ rule real_fastp:
 rule real_cat:
     input:
         #expand("downsample/{ID}.fastq", ID=config["real_accessions"]),
-        expand("real_fastp_results/trimmed_paired_R1_{ID}.fastq", ID=config["real_accessions"]),
-        expand("real_fastp_results/trimmed_paired_R2_{ID}.fastq", ID=config["real_accessions"]),
-        expand("real_fastp_results/trimmed_unpaired_R1_{ID}.fastq", ID=config["real_accessions"]),
-        expand("real_fastp_results/trimmed_unpaired_R2_{ID}.fastq", ID=config["real_accessions"]),
+        r1=expand("real_fastp_results/trimmed_paired_R1_{ID}.fastq", ID=config["real_accessions"]),
+        r2=expand("real_fastp_results/trimmed_paired_R2_{ID}.fastq", ID=config["real_accessions"]),
+        u1=expand("real_fastp_results/trimmed_unpaired_R1_{ID}.fastq", ID=config["real_accessions"]),
+        u2=expand("real_fastp_results/trimmed_unpaired_R2_{ID}.fastq", ID=config["real_accessions"]),
     output:
-        "pseudopool.fastq"
+        all="pseudopool.fastq",
+        r1="r1_pool.fastq",
+        r2="r2_pool.fastq",
+        u1="u_pool.fastq",
     shell:
-        "cat {input} > {output}"
+        """
+        cat {input.r1} > {output.r1}
+        cat {input.r2} > {output.r2}
+        cat {input.u1} {input.u2} > {output.u}
+        cat {output.r1} {output.r2} {output.u} > {output.all}
+        """
 
 
 rule real_freqk_index:
@@ -133,3 +141,118 @@ rule real_freqk_call:
         "benchmarks/real_data/freqk_call.bench"
     shell:
         "./scripts/freqk call --index {input.index} -c {input.counts} --output {output}"
+
+rule real_vg_autoindex:
+    input:
+        vcf=config["real_vcf"],
+        fasta=config["real_fasta"],
+    output:
+        dist = temp("real.dist"),
+        gbz = temp("real.giraffe.gbz"),
+        min = temp("real.shortread.withzip.min"),
+        zip = temp("real.shortread.zipcodes")
+    benchmark:
+        "benchmarks/real_data/vg_autoindex.bench"
+    conda:
+        "../envs/vg.yaml"
+    shell:
+        "vg autoindex -w giraffe -r {input.fasta} -v {input.vcf} -p real"
+
+rule real_vg_giraffe_paired:
+    input:
+        dist = "real.dist",
+        gbz = "real.giraffe.gbz",
+        min = "real.shortread.withzip.min",
+        zip = "real.shortread.zipcodes",
+        pread1 = "r1_pool.fastq",
+        pread2 = "r2_pool.fastq",
+    output:
+        temp("vg_giraffe_results/paired_{ID}.gam"),
+    conda:
+        "../envs/vg.yaml"
+    benchmark:
+        "benchmarks/real_data/vg_giraffe/{ID}.bench"
+    shell:
+        """
+        vg giraffe -Z {input.gbz} -d {input.dist} -m {input.min} -z {input.zip} -p -t {threads} -f {input.pread1} -f {input.pread2} > {output}
+        """
+
+rule real_vg_giraffe_unpaired:
+    input:
+        dist = "real.dist",
+        gbz = "real.giraffe.gbz",
+        min = "real.shortread.withzip.min",
+        zip = "real.shortread.zipcodes",
+        uread = "u_pool.fastq",
+    output:
+        temp("vg_giraffe_results/{read}_{ID}.gam")
+    conda:
+        "../envs/vg.yaml"
+    benchmark:
+        "benchmarks/real_data/vg_giraffe/{read}_{ID}.bench"
+    shell:
+        """
+        vg giraffe -Z {input.gbz} -d {input.dist} -m {input.min} -z {input.zip} -p -t {threads} -f {input.uread} > {output}
+        """
+
+rule real_vg_surject:
+    input:
+        gbz = "real.giraffe.gbz",
+        gam = "vg_giraffe_results/{read}_pool.gam",
+    output:
+        temp("vg_surject_results/{read}_pool.bam"),
+    conda:
+        "../envs/vg.yaml"
+    benchmark:
+        "benchmarks/real_data/vg_surject/{read}.bench"
+    shell:
+        """
+        vg surject -x {input.gbz} --progress -t {threads} -b {input.gam} > {output}
+        """
+
+rule real_samtools_sort:
+    input:
+        "vg_surject_results/{read}_pool.bam"
+    output:
+        temp("sorted_pool_{read}.bam")
+    conda:
+        "../envs/bcftools.yaml"
+    benchmark:
+        "benchmarks/real_data/samtools_sort/{read}_pool.bench"
+    shell:
+        """
+        samtools sort {input} -o {output}
+        """
+
+rule real_samtools_merge:
+    input:
+        expand("sorted_pool_{read}.bam", read = ["u", "r1", "r2"])
+    output:
+        temp("merged.bam")
+    benchmark:
+        "benchmarks/real_data/samtools_merge.bench"
+    conda:
+        "../envs/bcftools.yaml"
+    shell:
+        """
+        samtools merge -o {output} {input}
+        """
+
+rule real_freebayes_vg:
+    input:
+        reffasta=config["real_fasta"],
+        trimbam="merged.bam",
+        vcf=config["real_vcf"],
+    output:
+        "real.vcf",
+    conda:
+        "../envs/freebayes.yaml"
+    benchmark:
+        "benchmarks/real_data/freebayes_vg.bench"
+    params:
+        n=config["poolsize"]
+    shell:
+        """
+        freebayes -f {input.reffasta} -p {params.n} --use-best-n-alleles 2 --variant-input {input.vcf} --only-use-input-alleles --pooled-discrete {input.trimbam} 1> {output}
+        """
+

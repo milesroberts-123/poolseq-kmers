@@ -2322,7 +2322,8 @@ ggsave(paste("../../results/", today, "/", "resources_index_freqk_vs_vg.pdf", se
 # Empirical data: frequencies of known variants
 
 ```{r}
-real_counts = read.table("/global/scratch/users/milesroberts/tmp/arabidopsis_thaliana_plantpan_data/freqs.txt", sep = " ")
+#real_counts = read.table("/global/scratch/users/milesroberts/tmp/arabidopsis_thaliana_plantpan_data/freqs.txt", sep = " ")
+real_counts = read.table("/global/scratch/users/milesroberts/tmp/brassica_rapa_plantpan_data/calls.txt", sep = " ")
 
 real_counts = str_split(real_counts$V1, "\\|")
 
@@ -2332,9 +2333,11 @@ num_cols = max(unlist(lapply(real_counts, length)))
 
 real_col_names =  paste("f", 1:num_cols, sep = "")
 
-real_counts = read.table("/global/scratch/users/milesroberts/tmp/arabidopsis_thaliana_plantpan_data/freqs.txt", sep = "|", col.names =real_col_names, fill = T)
+#real_counts = read.table("/global/scratch/users/milesroberts/tmp/arabidopsis_thaliana_plantpan_data/freqs.txt", sep = "|", col.names =real_col_names, fill = T)
+real_counts = read.table("/global/scratch/users/milesroberts/tmp/brassica_rapa_plantpan_data/calls.txt", sep = "|", col.names =real_col_names, fill = T)
 
-real_index = read.table("/global/scratch/users/milesroberts/tmp/arabidopsis_thaliana_plantpan_data/at_ref_index.txt", sep = ",", fill = T)
+#real_index = read.table("/global/scratch/users/milesroberts/tmp/arabidopsis_thaliana_plantpan_data/at_ref_index.txt", sep = ",", fill = T)
+real_index = read.table("/global/scratch/users/milesroberts/tmp/brassica_rapa_plantpan_data/ref_index.txt", sep = ",", fill = T)
 
 real_counts = cbind(real_index, real_counts)
 
@@ -2349,7 +2352,8 @@ real_counts$V3 = real_counts$V3 + 2
 #real_counts$af = 1 - real_counts$c1/rowSums(real_counts[,real_col_names], na.rm = T)
 
 # load in vcf
-real_vcf <- read.vcfR("/global/scratch/users/milesroberts/tmp/arabidopsis_thaliana_plantpan_data/at.genetics.variation/final.vcf.gz")
+#real_vcf <- read.vcfR("/global/scratch/users/milesroberts/tmp/arabidopsis_thaliana_plantpan_data/at.genetics.variation/final.vcf.gz")
+real_vcf <- read.vcfR("/global/scratch/users/milesroberts/tmp/brassica_rapa_plantpan_data/br.genetics.variation/final.vcf.gz")
 
 gt <- apply(real_vcf@gt[,-1], 2, as.numeric)
 
@@ -2374,11 +2378,22 @@ pos = pos[to_keep,]
 
 allele_counts <- rowSums(gt == 0)
 
-real_plot_data = data.frame(
-  estim_af = real_counts$f1*7,
-  estim_rounded_af = round(real_counts$f1*7),
-  true_af = allele_counts
-)
+pos = cbind(pos, allele_counts)
+
+names(real_counts)[2:3] = c("CHROM", "POS")
+
+real_plot_data = merge(real_counts, pos, by = c("CHROM", "POS"))
+
+real_plot_data$allele_counts = as.numeric(real_plot_data$allele_counts)
+
+real_plot_data$estim_af = real_plot_data$f1*12
+real_plot_data$estim_rounded_af = round(real_plot_data$f1*12)
+  
+#real_plot_data = data.frame(
+#  estim_af = real_counts$f1*7,
+#  estim_rounded_af = round(real_counts$f1*7),
+#  true_af = allele_counts
+#)
 
 # type of variant
 real_plot_data$var_type = NA
@@ -2386,15 +2401,15 @@ real_plot_data$var_type[grepl("SNP", pos[,"ID"])] = "SNP"
 real_plot_data$var_type[grepl("INS", pos[,"ID"])] = "INS"
 
 # number of alleles
-num_alleles = str_split(real_counts$V5, "\\|")
+num_alleles = str_split(real_plot_data$V5, "\\|")
 num_alleles = unlist(lapply(num_alleles, length))
 
 real_plot_data$num_alleles = num_alleles
 
 # whether estimated = true frequency
-real_plot_data$match = (real_plot_data$estim_rounded_af == real_plot_data$true_af)
+real_plot_data$match = (real_plot_data$estim_rounded_af == real_plot_data$allele_counts)
 
-cor_estim <- signif(cor.test(real_plot_data$estim_rounded_af, real_plot_data$true_af, method = "spearman")$estimate, 3)
+cor_estim <- signif(cor.test(real_plot_data$estim_rounded_af, real_plot_data$allele_counts, method = "spearman")$estimate, 3)
 
 # ggplot(real_plot_data, aes(x = as.factor(true_af), y = estim_af)) +
 #   geom_boxplot() +
@@ -2415,13 +2430,23 @@ cor_estim <- signif(cor.test(real_plot_data$estim_rounded_af, real_plot_data$tru
 # plot number of estimates for each af class
 ggplot(real_plot_data, aes(x = estim_rounded_af, fill = match)) +
   geom_bar() +
-  facet_wrap(var_type ~ true_af, ncol = 6, nrow = 2, scales = "free") +
+  facet_wrap(var_type ~ allele_counts, scales = "free") +
   scale_fill_manual(values = c("black", "grey")) +
   theme_minimal() +
   theme(text = element_text(size = 16, family = "Helvetica", colour = "black"), axis.text = element_text(color = "black"), legend.position = "None") +
-  labs(x = "Estimated allele frequency", y = "Number of variants")
+  labs(x = "Estimated REF allele frequency", y = "Number of variants")
 
-ggsave(paste("../../results/", today, "/", "true_vs_estimated_7_genomes.pdf", sep = ""), width = 7, height = 5)
+ggsave(paste("../../results/", today, "/", "true_vs_estimated_brassica_napus_genomes.pdf", sep = ""))
+
+ggplot(real_plot_data[(real_plot_data$num_alleles <= 4),], aes(x = estim_rounded_af, fill = match)) +
+  geom_bar() +
+  facet_wrap(num_alleles ~ allele_counts, scales = "free") +
+  scale_fill_manual(values = c("black", "grey")) +
+  theme_minimal() +
+  theme(text = element_text(size = 16, family = "Helvetica", colour = "black"), axis.text = element_text(color = "black"), legend.position = "None") +
+  labs(x = "Estimated REF allele frequency", y = "Number of variants")
+
+ggsave(paste("../../results/", today, "/", "true_vs_estimated_brassica_napus_genomes_by_num_alleles.pdf", sep = ""), height = 9, width = 9)
 ```
 
 # benchmarks

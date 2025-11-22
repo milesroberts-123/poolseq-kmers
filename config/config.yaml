@@ -50,6 +50,8 @@ real_vcf: "/global/scratch/users/milesroberts/tmp/brassica_rapa_plantpan_data/br
 
 num_reads: 25000000
 
+poolsize: 12
+
 real_accessions:
  - "SRR14584034"
  - "SRR14584045"

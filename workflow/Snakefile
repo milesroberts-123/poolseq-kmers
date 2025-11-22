@@ -48,7 +48,8 @@ localrules: all_per_sim
 # 
 rule empirical:
     input:
-        "calls.txt"
+        "calls.txt",
+        "real.vcf"
 
 # create histograms across reference genomes
 rule all_histos:
