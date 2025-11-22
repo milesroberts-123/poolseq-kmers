@@ -29,11 +29,21 @@ set-resources:
         cpus_per_task: 2
     freqk_count:
         cpus_per_task: 4
+    real_freqk_count:
+        cpus_per_task: 4
     vg_giraffe_paired:
         cpus_per_task: 4
     vg_giraffe_unpaired:
         cpus_per_task: 4
     vg_surject:
+        cpus_per_task: 4
+    real_vg_autoindex:
+        cpus_per_task: 2
+    real_vg_giraffe_paired:
+        cpus_per_task: 4
+    real_vg_giraffe_unpaired:
+        cpus_per_task: 4
+    real_vg_surject:
         cpus_per_task: 4
     freebayes_a_priori:
         cpus_per_task: 2
@@ -49,8 +59,12 @@ set-threads:
     fastp: 2
     iss: 2
     freqk_count: 4
+    real_freqk_count: 4
     vg_giraffe_paired: 4
     vg_giraffe_unpaired: 4
     vg_surject: 4
+    real_vg_giraffe_paired: 4
+    real_vg_giraffe_unpaired: 4
+    real_vg_surject: 4
     freebayes_a_priori: 1 
     freebayes_de_novo: 1
