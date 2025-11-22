@@ -17,7 +17,7 @@ module load Conda/3
 
 # load snakemake
 echo Loading snakemake...
-conda activate snakemake-NEW
+conda activate snakemake
 
 # go to workflow directory with Snakefile
 echo Changing directory...
@@ -53,5 +53,5 @@ snakemake --unlock --cores 1 --batch all=1/100
 batch=10
 for i in $( eval echo {1..$batch} )
 do
-  snakemake --sdm conda apptainer --singularity-args "--bind /global/scratch/users/milesroberts/poolseq-kmers/workflow/" --rerun-incomplete --rerun-triggers mtime --scheduler greedy --retries 1 --keep-going --batch all=$i/$batch
+  snakemake --sdm conda apptainer --singularity-args "--bind /global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/" --rerun-incomplete --rerun-triggers mtime --scheduler greedy --keep-going --batch all_sims=$i/$batch
 done
