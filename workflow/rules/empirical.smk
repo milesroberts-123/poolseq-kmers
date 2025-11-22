@@ -64,7 +64,7 @@ rule real_cat:
         all="pseudopool.fastq",
         r1="r1_pool.fastq",
         r2="r2_pool.fastq",
-        u1="u_pool.fastq",
+        u="u_pool.fastq",
     shell:
         """
         cat {input.r1} > {output.r1}
