@@ -162,7 +162,7 @@ This could be nicer because R markdown will give me more control over what the r
 
 - [x] polish freqk, skip over variants close to chromosome ends, non-isolated variants
 
-- [ ] add workflow for processing empirical datasets
+- [x] add workflow for processing empirical datasets
 
 - [x] polish simulation repo: remove left overs 
 
