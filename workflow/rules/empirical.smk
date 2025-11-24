@@ -167,11 +167,11 @@ rule real_vg_giraffe_paired:
         pread1 = "r1_pool.fastq",
         pread2 = "r2_pool.fastq",
     output:
-        temp("vg_giraffe_results/paired_{ID}.gam"),
+        temp("real_vg_giraffe_results/paired.gam"),
     conda:
         "../envs/vg.yaml"
     benchmark:
-        "benchmarks/real_data/vg_giraffe/{ID}.bench"
+        "benchmarks/real_data/vg_giraffe_paired.bench"
     shell:
         """
         vg giraffe -Z {input.gbz} -d {input.dist} -m {input.min} -z {input.zip} -p -t {threads} -f {input.pread1} -f {input.pread2} > {output}
@@ -185,11 +185,11 @@ rule real_vg_giraffe_unpaired:
         zip = "real.shortread.zipcodes",
         uread = "u_pool.fastq",
     output:
-        temp("vg_giraffe_results/{read}_{ID}.gam")
+        temp("real_vg_giraffe_results/unpaired.gam")
     conda:
         "../envs/vg.yaml"
     benchmark:
-        "benchmarks/real_data/vg_giraffe/{read}_{ID}.bench"
+        "benchmarks/real_data/vg_giraffe_unpaired.bench"
     shell:
         """
         vg giraffe -Z {input.gbz} -d {input.dist} -m {input.min} -z {input.zip} -p -t {threads} -f {input.uread} > {output}
@@ -198,13 +198,13 @@ rule real_vg_giraffe_unpaired:
 rule real_vg_surject:
     input:
         gbz = "real.giraffe.gbz",
-        gam = "vg_giraffe_results/{read}_pool.gam",
+        gam = "real_vg_giraffe_results/{pairing}.gam",
     output:
-        temp("vg_surject_results/{read}_pool.bam"),
+        temp("real_vg_surject_results/{pairing}.bam"),
     conda:
         "../envs/vg.yaml"
     benchmark:
-        "benchmarks/real_data/vg_surject/{read}.bench"
+        "benchmarks/real_data/vg_surject_{pairing}.bench"
     shell:
         """
         vg surject -x {input.gbz} --progress -t {threads} -b {input.gam} > {output}
@@ -212,13 +212,13 @@ rule real_vg_surject:
 
 rule real_samtools_sort:
     input:
-        "vg_surject_results/{read}_pool.bam"
+        "real_vg_surject_results/{pairing}.bam"
     output:
-        temp("sorted_pool_{read}.bam")
+        temp("{pairing}.bam")
     conda:
         "../envs/bcftools.yaml"
     benchmark:
-        "benchmarks/real_data/samtools_sort/{read}_pool.bench"
+        "benchmarks/real_data/samtools_sort_{pairing}.bench"
     shell:
         """
         samtools sort {input} -o {output}
@@ -226,7 +226,7 @@ rule real_samtools_sort:
 
 rule real_samtools_merge:
     input:
-        expand("sorted_pool_{read}.bam", read = ["u", "r1", "r2"])
+        expand("{pairing}.bam", pairing = ["unpaired", "paired"])
     output:
         temp("merged.bam")
     benchmark:
