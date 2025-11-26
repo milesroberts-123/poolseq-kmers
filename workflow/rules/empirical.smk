@@ -114,7 +114,7 @@ rule real_freqk_ref_dedup:
         k=config["k"]
     shell:
         """
-        ./scripts/freqk ref-dedup --index {input.index} --fasta {input.fasta} --vcf {input.vcf} --kmer {params.k} --output {output}
+        ./scripts/freqk ref-dedup --index {input.index} --fasta {input.fasta} --vcf {input.vcf} --output {output}
         """
 
 rule real_freqk_count:
@@ -174,7 +174,7 @@ rule real_vg_giraffe_paired:
         "benchmarks/real_data/vg_giraffe_paired.bench"
     shell:
         """
-        vg giraffe -Z {input.gbz} -d {input.dist} -m {input.min} -z {input.zip} -p -t {threads} -f {input.pread1} -f {input.pread2} > {output}
+        vg giraffe -Z {input.gbz} -d {input.dist} -m {input.min} -z {input.zip} -p -t {threads} --rescue-algorithm none -f {input.pread1} -f {input.pread2} > {output}
         """
 
 rule real_vg_giraffe_unpaired:
@@ -192,7 +192,7 @@ rule real_vg_giraffe_unpaired:
         "benchmarks/real_data/vg_giraffe_unpaired.bench"
     shell:
         """
-        vg giraffe -Z {input.gbz} -d {input.dist} -m {input.min} -z {input.zip} -p -t {threads} -f {input.uread} > {output}
+        vg giraffe -Z {input.gbz} -d {input.dist} -m {input.min} -z {input.zip} --rescue-algorithm none -p -t {threads} -f {input.uread} > {output}
         """
 
 rule real_vg_surject:
@@ -253,6 +253,6 @@ rule real_freebayes_vg:
         n=config["poolsize"]
     shell:
         """
-        freebayes -f {input.reffasta} -p {params.n} --use-best-n-alleles 2 --variant-input {input.vcf} --only-use-input-alleles --pooled-discrete {input.trimbam} 1> {output}
+        freebayes -f {input.reffasta} -p {params.n} --use-best-n-alleles 2 -g 1000 --variant-input {input.vcf} --only-use-input-alleles --pooled-discrete {input.trimbam} > {output}
         """
 

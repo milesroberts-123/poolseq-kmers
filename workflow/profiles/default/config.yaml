@@ -9,7 +9,8 @@ cores: 10000
 default-resources:
     slurm_account: "co_moilab"
     slurm_partition: "savio3_htc"
-    slurm_extra: "--qos=savio_lowprio"
+    slurm_qos: "savio_lowprio"
+    #slurm_extra: "--qos=savio_lowprio"
     ntasks: 1
     cpus_per_task: 1
     runtime: "180m"
@@ -21,6 +22,8 @@ set-resources:
         cpus_per_task: 4
     real_freqk_count:
         cpus_per_task: 4
+    real_freqk_ref_dedup:
+        cpus_per_task: 8
     bwa_mem:
         cpus_per_task: 4
     iss:
@@ -40,21 +43,26 @@ set-resources:
     real_vg_autoindex:
         cpus_per_task: 2
     real_vg_giraffe_paired:
+        runtime: "1440m"
         cpus_per_task: 4
     real_vg_giraffe_unpaired:
         cpus_per_task: 4
     real_vg_surject:
         cpus_per_task: 4
+        runtime: "1440m"
     freebayes_a_priori:
         cpus_per_task: 2
     freebayes_de_novo:
         cpus_per_task: 2
+    real_freebayes_vg:
+        runtime: "1440m"
 
 # parallelization with threads needs to be defined separately:
 # threads and cpus_per_task are supposed to be synonymous for this plugin, but for some reason I need to specify them separately
 set-threads:
     real_fastp: 4
     real_freqk_count: 4
+    real_freqk_ref_dedup: 1
     bwa_mem: 4
     fastp: 2
     iss: 2
