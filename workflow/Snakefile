@@ -49,7 +49,8 @@ localrules: all_per_sim
 rule empirical:
     input:
         "calls.txt",
-        "real.vcf"
+        expand("calls_{chr}.vcf", chr = ["A01", "A02", "A03", "A04", "A05", "A06", "A07", "A08", "A09", "A10"])
+        #"real.vcf"
 
 # create histograms across reference genomes
 rule all_histos:

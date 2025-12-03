@@ -238,21 +238,32 @@ rule real_samtools_merge:
         samtools merge -o {output} {input}
         """
 
+rule split_merged_bam:
+    input:
+        "merged.bam"
+    output:
+        "splits/{chr}.bam"
+    conda:
+        "../envs/bcftools.yaml"
+    shell:
+        "samtools view -b {input} {wildcards.chr} > {output}"
+
 rule real_freebayes_vg:
     input:
         reffasta=config["real_fasta"],
-        trimbam="merged.bam",
-        vcf=config["real_vcf"],
+        trimbam="splits/{chr}.bam",
+        #vcf=config["real_vcf"],
+        vcf="{chr}.vcf.gz"
     output:
-        "real.vcf",
+        "calls_{chr}.vcf",
     conda:
         "../envs/freebayes.yaml"
     benchmark:
-        "benchmarks/real_data/freebayes_vg.bench"
+        "benchmarks/real_data/freebayes_vg_{chr}.bench"
     params:
         n=config["poolsize"]
     shell:
         """
-        freebayes -f {input.reffasta} -p {params.n} --use-best-n-alleles 2 -g 1000 --variant-input {input.vcf} --only-use-input-alleles --pooled-discrete {input.trimbam} > {output}
+        freebayes -f {input.reffasta} -p {params.n} --min-alternate-count 2 --min-alternate-fraction 0.001 --use-best-n-alleles 4 -g 1000 --variant-input {input.vcf} --only-use-input-alleles --pooled-discrete {input.trimbam} > {output}
         """
 

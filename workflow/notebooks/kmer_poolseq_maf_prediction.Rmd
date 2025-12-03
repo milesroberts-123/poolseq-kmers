@@ -2317,6 +2317,7 @@ plot_mem_index = ggplot(res_index, aes(x = tool, y = mem, fill = as.factor(n))) 
 ggarrange(plot_time_index, plot_mem_index, nrow = 1, ncol = 2, labels = c("A", "B"), font.label = list(size = 16, family = "Helvetica"), common.legend = T)
 
 ggsave(paste("../../results/", today, "/", "resources_index_freqk_vs_vg.pdf", sep = ""), height = 4, width = 7)
+
 ```
 
 # Empirical data: frequencies of known variants
@@ -2447,6 +2448,56 @@ ggplot(real_plot_data[(real_plot_data$num_alleles <= 4),], aes(x = estim_rounded
   labs(x = "Estimated REF allele frequency", y = "Number of variants")
 
 ggsave(paste("../../results/", today, "/", "true_vs_estimated_brassica_napus_genomes_by_num_alleles.pdf", sep = ""), height = 9, width = 9)
+
+# vg performance
+vg_results = list.files(path="/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/",full.names = T,pattern = "calls_A.*.vcf")
+
+vg_results <- lapply(vg_results, read.vcfR)
+
+get_allele_counts <- function(vcf){
+  gt <- vcf@gt[,-1]
+  
+  gt <- gsub(":.*", "", gt)
+  
+  print(head(gt))
+
+  pos <- vcf@fix
+  
+  allele_counts <- str_count(gt, pattern = "0")
+  
+  pos <- cbind(pos, allele_counts)
+
+  return(pos)
+}
+
+vg_allele_counts <- lapply(vg_results, get_allele_counts)
+
+vg_allele_counts = do.call("rbind", vg_allele_counts)
+
+#vg_allele_counts[,"allele_counts"] = as.numeric(vg_allele_counts[,"allele_counts"])
+
+#pos[,"allele_counts"] = 2*as.numeric(pos[,"allele_counts"])
+
+vg_vs_real <- merge(pos, vg_allele_counts, by = c("CHROM", "POS"))
+
+vg_vs_real$allele_counts.x = 2*as.numeric(vg_vs_real$allele_counts.x)
+
+#vg_vs_real$allele_counts.y = round(as.numeric(vg_vs_real$allele_counts.y)/2)
+vg_vs_real$allele_counts.y = as.numeric(vg_vs_real$allele_counts.y)
+
+cor.test(vg_vs_real$allele_counts.x, vg_vs_real$allele_counts.y, method = "spearman")
+
+vg_vs_real$MATCH = (vg_vs_real$allele_counts.x == vg_vs_real$allele_counts.y)
+
+ggplot(vg_vs_real, aes(x = allele_counts.y, fill = MATCH)) +
+  geom_bar() +
+  theme_minimal() +
+  scale_fill_manual(values = c("black", "grey")) +
+  facet_wrap(~allele_counts.x, scales = "free") +
+  theme(text = element_text(size = 16, family = "Helvetica", colour = "black"), axis.text = element_text(color = "black"), legend.position = "None") +
+  labs(x = "Estimated REF allele count", y = "Number of variants")
+
+ggsave(paste("../../results/", today, "/", "true_vs_vg_brassica_napus.pdf", sep = ""), height = 7, width = 9)
 ```
 
 # benchmarks
