@@ -1724,9 +1724,9 @@ plot_unitigs_shape_breakdown = ggplot(plotdata_unitigs, aes(x = sc, color = as.f
   theme(text = element_text(size = 16, family = "Helvetica", color = "black"),
         axis.text.x = element_blank(),
         axis.text.y = element_text(color = "black")) +
-  facet_grid(shuffle ~ shape ) +
+  facet_grid(shuffle ~ shape) +
   scale_color_scico_d(palette = "buda") +
-  #facet_grid(shape ~ .) +
+  #facet_grid( ~ shape) +
   geom_vline(xintercept = 2e6/2, lty = 2, lwd = 1) +
   labs(x = "Center of longest unitig", color = "Nes")
 

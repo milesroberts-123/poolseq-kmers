@@ -45,8 +45,27 @@ wildcard_constraints:
 
 localrules: all_per_sim
 
-# 
-rule empirical:
+#
+# create histograms across reference genomes
+# input function for the rule aggregate
+def aggregate_histos(wildcards):
+    checkpoint_output = checkpoints.datasets.get(**wildcards).output[0]
+    return expand("kmc_histo_results/{species}_{k}.histo", species = checkpoint_output, k = config["k_zeta"])
+
+#
+rule all:
+    input:
+        "calls.txt",
+        aggregate_histos,
+        #expand("kmc_histo_results/{species}_{k}.histo", species = config["species"], k = config["k_zeta"]),
+        expand("finished/{SID}_0.done", SID=one_pop_params.index.get_level_values("ID")),
+        expand("finished/{SID}_0.done", SID=sweep_params.index.get_level_values("ID")),
+        expand("finished/{SID}_{PID}.done", SID=two_pop_params.index.get_level_values("ID"), PID=[0,1]),
+        "multiqc_report.html"
+        #expand("calls_{chr}.vcf", chr = ["A01", "A02", "A03", "A04", "A05", "A06", "A07", "A08", "A09", "A10"])
+
+# rule to apply freqk and vg giraffe to real data 
+rule all_empirical:
     input:
         "calls.txt",
         expand("calls_{chr}.vcf", chr = ["A01", "A02", "A03", "A04", "A05", "A06", "A07", "A08", "A09", "A10"])
@@ -55,7 +74,8 @@ rule empirical:
 # create histograms across reference genomes
 rule all_histos:
     input:
-        expand("kmc_histo_results/{species}_{k}.histo", species = config["species"], k = config["k_zeta"])
+        aggregate_histos
+        #expand("kmc_histo_results/{species}_{k}.histo", species = config["species"], k = config["k_zeta"])
 
 # perform simulations
 # additional rule helps with batching
@@ -172,6 +192,9 @@ rule all_per_sim:
 # helper functions
 include: "rules/common.smk"
 
+# shape parameter analysis
+include: "rules/datasets.smk"
+
 # empirical data
 include: "rules/empirical.smk"
 
@@ -207,7 +230,6 @@ include: "rules/smudgeplot.smk"
 include: "rules/unitig_caller.smk"
 include: "rules/varscan.smk"
 include: "rules/vg.smk"
-include: "rules/kmc_histo.smk"
 include: "rules/kmer_distances.smk"
 include: "rules/counting_bloom_filter.smk"
 include: "rules/cbind.smk"

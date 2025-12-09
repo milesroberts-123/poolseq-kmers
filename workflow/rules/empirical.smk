@@ -214,7 +214,7 @@ rule real_samtools_sort:
     input:
         "real_vg_surject_results/{pairing}.bam"
     output:
-        temp("{pairing}.bam")
+        temp("real_samtools_sort_results/{pairing}.bam")
     conda:
         "../envs/bcftools.yaml"
     benchmark:
@@ -226,7 +226,7 @@ rule real_samtools_sort:
 
 rule real_samtools_merge:
     input:
-        expand("{pairing}.bam", pairing = ["unpaired", "paired"])
+        expand("real_samtools_sort_results/{pairing}.bam", pairing = ["unpaired", "paired"])
     output:
         temp("merged.bam")
     benchmark:

@@ -1,7 +1,7 @@
 library("dplyr") 
 
-replicates = 1:5
-#replicates = 1
+#replicates = 1:5
+replicates = 1
 #sample_sizes = c(25, 50, 75, 100, 125, 150)
 sample_sizes = c(25, 50, 75)
 #coverages = c(30, 50, 100, 150, 200, 250)
@@ -76,7 +76,7 @@ sweep_params$s = sweep_params$Nes/sweep_params$N
 params = bind_rows(one_pop_params, sweep_params, two_pop_params)
 
 # if needed, subset to one simulation type
-params = params[(params$simtype == "sweep"),]
+#params = params[(params$simtype == "sweep"),]
 
 # replace all NA with 0, so that snakemake stays happy
 params[is.na(params)] = 0

@@ -111,6 +111,6 @@ k_zeta:
  - 51
  - 61
 
-species:
- - "GCA_000180655.1_ASM18065v1_genomic"
- - "GCA_000340665.3_Cajca.Asha_v2.0_genomic"
+ncbi_taxa:
+ - "human"
+ - "mouse"
