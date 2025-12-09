@@ -106,6 +106,7 @@ real_accessions:
 # KMER HISTOGRAM FOR REAL GENOMES #
 ###################################
 k_zeta:
+ - 21
  - 31
  - 41
  - 51

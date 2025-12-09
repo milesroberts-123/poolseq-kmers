@@ -1,6 +1,6 @@
 checkpoint datasets:
     output:
-        directory("ncbi_datasets_results/")
+        directory("ncbi_datasets_results")
     params:
         taxa = config["ncbi_taxa"]
     conda:
@@ -9,6 +9,10 @@ checkpoint datasets:
         r"""
         if [ -d "contam_genomes" ]; then
             rm -r contam_genomes/
+        fi
+
+        if [ ! -d "ncbi_datasets_results" ]; then
+            mkdir ncbi_datasets_results
         fi
 
         # get all contaminating genomes
@@ -21,7 +25,7 @@ checkpoint datasets:
         datasets rehydrate --max-workers {threads} --directory contam_genomes/
 
         # search directory for all genomes and copy them into one file
-        find contam_genomes/ncbi_dataset/data/ -name '*.fna' -exec mv {{}} > {output} \;
+        find contam_genomes/ncbi_dataset/data/ -name '*.fna' -exec mv {{}} {output}/ \;
         # clean up
         # rm -r contam_genomes/
         """

@@ -50,7 +50,8 @@ localrules: all_per_sim
 # input function for the rule aggregate
 def aggregate_histos(wildcards):
     checkpoint_output = checkpoints.datasets.get(**wildcards).output[0]
-    return expand("kmc_histo_results/{species}_{k}.histo", species = checkpoint_output, k = config["k_zeta"])
+    print(checkpoint_output)
+    return expand("kmc_histo_results/{species}_{k}.histo", species = glob_wildcards(os.path.join(checkpoint_output, "{i}.fna")).i, k = config["k_zeta"])
 
 #
 rule all:
