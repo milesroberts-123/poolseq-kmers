@@ -21,7 +21,7 @@ set-resources:
     datasets_rehydrate:
         time: "2880m"
         cpus_per_task: 10
-        retries: 1
+        retries: 3
     real_fastp:
         cpus_per_task: 4
     real_freqk_count:
