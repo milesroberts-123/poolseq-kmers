@@ -1,18 +1,14 @@
-checkpoint datasets:
+rule datasets_download:
     output:
-        directory("ncbi_datasets_results")
-    params:
-        taxa = config["ncbi_taxa"]
+        directory("contam_genomes")
     conda:
         "../envs/datasets.yaml"
+    params:
+        taxa = config["ncbi_taxa"]
     shell:
         r"""
         if [ -d "contam_genomes" ]; then
             rm -r contam_genomes/
-        fi
-
-        if [ ! -d "ncbi_datasets_results" ]; then
-            mkdir ncbi_datasets_results
         fi
 
         # get all contaminating genomes
@@ -20,6 +16,20 @@ checkpoint datasets:
 
         # unpack metadata
         unzip contam.zip -d contam_genomes
+        """
+
+checkpoint datasets_rehydrate:
+    input:
+        directory("contam_genomes")
+    output:
+        directory("ncbi_datasets_results")
+    conda:
+        "../envs/datasets.yaml"
+    shell:
+        r"""
+        if [ ! -d "ncbi_datasets_results" ]; then
+            mkdir ncbi_datasets_results
+        fi
 
         # download genomes based on metadata
         datasets rehydrate --max-workers {threads} --directory contam_genomes/
