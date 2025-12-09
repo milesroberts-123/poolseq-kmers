@@ -53,11 +53,17 @@ def aggregate_histos(wildcards):
     print(checkpoint_output)
     return expand("kmc_histo_results/{species}_{k}.histo", species = glob_wildcards(os.path.join(checkpoint_output, "{i}.fna")).i, k = config["k_zeta"])
 
+def aggregate_stats(wildcards):
+    checkpoint_output = checkpoints.datasets_rehydrate.get(**wildcards).output[0]
+    print(checkpoint_output)
+    return expand("seqkit_stats_results/{species}.txt", species = glob_wildcards(os.path.join(checkpoint_output, "{i}.fna")).i)
+
 #
 rule all:
     input:
         "calls.txt",
         aggregate_histos,
+        aggregate_stats,
         #expand("kmc_histo_results/{species}_{k}.histo", species = config["species"], k = config["k_zeta"]),
         expand("finished/{SID}_0.done", SID=one_pop_params.index.get_level_values("ID")),
         expand("finished/{SID}_0.done", SID=sweep_params.index.get_level_values("ID")),
@@ -75,7 +81,8 @@ rule all_empirical:
 # create histograms across reference genomes
 rule all_histos:
     input:
-        aggregate_histos
+        aggregate_histos,
+        aggregate_stats
         #expand("kmc_histo_results/{species}_{k}.histo", species = config["species"], k = config["k_zeta"])
 
 # perform simulations

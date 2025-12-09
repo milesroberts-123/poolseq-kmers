@@ -18,7 +18,7 @@ default-resources:
 
 # here only rules, which require different (more) resources:
 set-resources:
-    datasets:
+    datasets_rehydrate:
         time: "2880m"
         cpus_per_task: 10
         retries: 1
@@ -64,7 +64,7 @@ set-resources:
 # parallelization with threads needs to be defined separately:
 # threads and cpus_per_task are supposed to be synonymous for this plugin, but for some reason I need to specify them separately
 set-threads:
-    datasets: 10
+    datasets_rehydrate: 10
     real_fastp: 4
     real_freqk_count: 4
     real_freqk_ref_dedup: 1

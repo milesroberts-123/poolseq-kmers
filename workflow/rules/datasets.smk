@@ -40,6 +40,16 @@ checkpoint datasets_rehydrate:
         # rm -r contam_genomes/
         """
 
+rule seqkit_stats:
+    input:
+        "ncbi_datasets_results/{species}.fna"
+    output:
+        "seqkit_stats_results/{species}.txt"
+    conda:
+        "../envs/seqkit.yaml"
+    shell:
+        "seqkit stats --all {input} > {output}"
+
 rule kmc_histo:
     input:
         "ncbi_datasets_results/{species}.fna"
