@@ -20,7 +20,7 @@ rule datasets_download:
 
 checkpoint datasets_rehydrate:
     input:
-        directory("contam_genomes")
+        "contam_genomes/"
     output:
         directory("ncbi_datasets_results")
     conda:

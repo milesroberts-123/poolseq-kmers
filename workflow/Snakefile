@@ -49,7 +49,7 @@ localrules: all_per_sim
 # create histograms across reference genomes
 # input function for the rule aggregate
 def aggregate_histos(wildcards):
-    checkpoint_output = checkpoints.datasets.get(**wildcards).output[0]
+    checkpoint_output = checkpoints.datasets_rehydrate.get(**wildcards).output[0]
     print(checkpoint_output)
     return expand("kmc_histo_results/{species}_{k}.histo", species = glob_wildcards(os.path.join(checkpoint_output, "{i}.fna")).i, k = config["k_zeta"])
 
