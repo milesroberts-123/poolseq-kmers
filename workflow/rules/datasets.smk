@@ -12,7 +12,7 @@ rule datasets_download:
         fi
 
         # get all contaminating genomes
-        datasets download genome taxon {params.taxa} --reference --dehydrated --filename contam.zip
+        datasets download genome taxon {params.taxa} --exclude-multi-isolate --assembly-version latest --exclude-atypical --mag exclude --reference --dehydrated --filename contam.zip
 
         # unpack metadata
         unzip contam.zip -d contam_genomes

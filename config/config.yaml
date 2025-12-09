@@ -106,12 +106,12 @@ real_accessions:
 # KMER HISTOGRAM FOR REAL GENOMES #
 ###################################
 k_zeta:
- - 21
+ - 27
  - 31
  - 41
  - 51
  - 61
 
 ncbi_taxa:
- - "human"
- - "mouse"
+ - "metazoa"
+ - "viridiplantae"
