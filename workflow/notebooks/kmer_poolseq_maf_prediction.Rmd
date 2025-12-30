@@ -34,7 +34,8 @@ theme_set(
                             family = "Helvetica", 
                             colour = "black"),
         axis.text = element_text(colour = "black"),
-        plot.title = element_text(hjust = 0.5))
+        plot.title = element_text(hjust = 0.5),
+        strip.text = element_text(colour = 'black'))
 )
 ```
 
@@ -829,7 +830,58 @@ add_mesh(p, x= ~maf/n, y= ~cov, z = ~cutoff, data = results, opacity = 0.3, colo
 
 ```
 
-# zeta distribution
+# Get genome size statistics from NCBI
+```{r message=FALSE, warning=FALSE, include=FALSE}
+
+assembly_info <- read.table("../../data/ncbi_dataset_2025-12-11.tsv", header = T, sep = "\t", fill = T)
+
+results = NULL
+
+for(i in 1:nrow(assembly_info)){
+  
+  taxid <- assembly_info$Organism.Taxonomic.ID[i]
+  
+  assembly_length <- assembly_info$Assembly.Stats.Total.Sequence.Length[i]
+  
+  testfile <- "/global/home/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/notebooks/test.xml"
+
+  url <- paste("https://api.ncbi.nlm.nih.gov/genome/v0/expected_genome_size?species_taxid=", taxid, "&length=", assembly_length, sep = "")
+
+  download.file(url, testfile, mode="wb") # get data into test
+
+  data <- xmlParse(testfile)
+
+  xml_data <- xmlToList(data)
+  
+  expected_ungapped_length = xml_data$expected_ungapped_length
+  
+  if(is.null(expected_ungapped_length)){
+    #minimum_ungapped_length = as.numeric(xml_data$minimum_ungapped_length)
+    #maximum_ungapped_length = as.numeric(xml_data$maximum_ungapped_length)
+    #expected_ungapped_length = (minimum_ungapped_length + maximum_ungapped_length)/2
+    #if(is.null(expected_ungapped_length)){
+      expected_ungapped_length = NA 
+    #}
+  }
+  
+  result = data.frame(
+    Organism.Taxonomic.ID = taxid,
+    assembly_percent_complete = assembly_length/as.numeric(expected_ungapped_length)*100,
+    expected_ungapped_length = expected_ungapped_length,
+    length_status = xml_data$length_status
+  )
+
+  results <- rbind(results, result)
+  
+  random_wait <- rexp(1, 1/3)
+  
+  Sys.sleep(random_wait)
+}
+
+write.table(results, paste("assembly_completeness_stats_", today, ".tsv", sep = ""), sep = "\t", row.names = F, quote = F)
+```
+
+# Fit zeta distributions to k-mer count histograms and compare to genome size estimates
 ```{r}
 my_histos = list.files(path = "/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/kmc_histo_results/", pattern = ".histo")
 
@@ -899,7 +951,7 @@ for(one_histo in my_histos) {
     
     compare = melt(compare, id = "x")
 
-    plot_zeta = ggplot(compare, aes(x = x, y = value, group = variable)) +
+    plot_point_zeta_example <- ggplot(compare, aes(x = x, y = value, group = variable)) +
       geom_point(shape = 16) +
       geom_line(aes(linetype = variable)) +
       scale_y_log10() +
@@ -1088,11 +1140,164 @@ plot_point_size_shape_k31 <- ggplot(results_genome_size[], aes(x = expected_unga
 
 ggsave(paste("../../results/", today, "/shape_vs_genome_size_k31.pdf", sep = ""), device = cairo_pdf, width = 9, height = 3)
 
+# demonstrate how zeta distribution sampling creates small genomes with power-law k-mer count distributions
+# these will be examples of the frequency distributions for the genomes in the simulations
+# except the simulated genomes will have additional unique k-mers because I'm not counting the k-mers at the junctions between chunks 
+# so the simulated genomes will still probably have lots of unique k-mers than the shape parameter alone would suggest, but the shape parameter still captures relative repeat content
+zeta_sampling = expand.grid(
+  k = c(27, 31, 41),
+  L = c(1e6, 2e6, 4e6),
+  #s = c(3.591, 1e6)
+  s = c(2.854, 3.591, 4.772, 1e6)
+)
+
+zeta_sampling_results = NULL
+
+for (i in 1:nrow(zeta_sampling)) {
+  print(i)
+  
+  k = zeta_sampling[i,1]
+  L = zeta_sampling[i,2]
+  s = zeta_sampling[i,3]
+  
+  zeta_samples = c()
+  total = 0
+  
+  if (s < 1e6){
+    while(total < L) {
+      result = suppressWarnings(rzeta(1, s))
+      zeta_samples = c(zeta_samples, result)
+      total = total + result*k
+    }
+    result = data.frame(
+      k = k,
+      L = L,
+      s = s,
+      ranks = table(zeta_samples)
+    )
+    # assume all k-mers at junctions are unique
+    result$ranks.Freq[(result$ranks.zeta_samples == 1)] = result$ranks.Freq[(result$ranks.zeta_samples == 1)] + (sum(result$ranks.Freq) - 1)*(k-1)
+  } else {
+    result = data.frame(
+      k = k,
+      L = L,
+      s = s,
+      ranks.zeta_samples = 1,
+      ranks.Freq = L - k + 1
+    )
+  }
+  zeta_sampling_results = rbind(zeta_sampling_results, result)
+}
+
+# compare zeta distribution by L and s and k
+# first reorder points to plot no-repeats first
+zeta_sampling_results <- zeta_sampling_results[order(zeta_sampling_results$s, decreasing = T),]
+
+plot_point_zeta_sampling <- ggplot(zeta_sampling_results, aes(x = as.numeric(ranks.zeta_samples), y = as.numeric(ranks.Freq), shape = as.factor(k), color = as.factor(s), size = as.factor(s))) +
+  geom_point() +
+  scale_x_log10() +
+  scale_y_log10() +
+  scale_color_scico_d(palette = "lajolla", begin = 0, end = 0.9, direction = -1) +
+  scale_shape_manual(values=c(16, 17, 18)) +
+  scale_size_manual(values=c(1.5,1.5,1.5,3)) + # emphasize no-repeat
+  facet_wrap( ~ L, labeller = label_both) +
+  guides(size = "none") +
+  labs(x = "k-mer count in genome", y = "Number of k-mers", color = "s", shape = "k")
+
+ggsave(paste("../../results/", today, "/zeta_ksL.pdf", sep = ""), device = cairo_pdf, width = 9, height = 3)
+
 # combine zeta plots into one figure
 
 ```
 
-# process single population metrics
+# DEPRECATED: Demonstrate zeta distribution sampling to make small, realistic genomes
+```{r}
+pA = 0.25
+pC = 0.25
+pG = 0.25
+pT = 0.25
+shape = 3.369
+k = 31
+L = 1e6
+
+shuffleKmers = TRUE
+
+alphabet = c("A", "C", "G", "T")
+
+print("Generating genome...")
+
+custom_probs = c(pA, pC, pG, pT)
+
+total_genome = c()
+
+while(k*length(total_genome) < L){
+
+  # generate random k-mer
+  kmer = paste(sample(alphabet, size = k, replace = T, prob = custom_probs), collapse = "")
+
+  # detmerine frequency of k-mer
+  freq = rzeta(1, shape)
+
+  # copy k-mer
+  kmers = rep(kmer, freq)
+
+  # add k-mers to total_genome
+  total_genome = c(total_genome, kmers)
+}
+
+# randomly order vector elements
+if(shuffleKmers){
+        print("Randomly ordering k-mers...")
+        total_genome = sample(total_genome, replace = F)
+}
+
+# concatenate k-mers together
+print("Concatenating shuffled k-mers...")
+total_genome = paste(total_genome, collapse = "")
+
+# trim genome to target length
+print("Trimming genome to target length...")
+total_genome = substring(total_genome, 1, L)
+
+# count k-mers in synthetic genome to confirm zipf distribution
+print("Counting k-mers genome...")
+start = 1
+stop = k
+
+kmer_list = list()
+
+while(stop <= L){
+
+  kmer = substring(total_genome, start, stop)
+
+  if(is.null(kmer_list[[kmer]])){
+     kmer_list[[kmer]] = 1
+ } else {
+   kmer_list[[kmer]] = kmer_list[[kmer]] + 1
+ }
+
+ start = start + 1
+ stop = stop + 1
+}
+
+# plot zipf distribution
+print("Plotting power-law distribution...")
+kmer_freqs = table(unlist(kmer_list))
+
+plotdata = data.frame(
+ dist = kmer_freqs
+)
+
+ggplot(plotdata, aes(x = as.numeric(dist.Var1), y = as.numeric(dist.Freq))) +
+  geom_point() +
+  scale_x_log10() +
+  scale_y_log10() +
+  labs(x = "k-mer count", y = "Number of unique k-mers with count")
+
+ggsave(paste("../../results/", today, "/zeta_sampling_k31_L1e6_s4.33.pdf", sep = ""), device = cairo_pdf, width = 9, height = 3)
+```
+
+# process single population simulations
 ```{r}
 params = read.table("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/config/parameters.tsv", header = T)
 
@@ -2144,6 +2349,8 @@ for(i in 137:160){
 ```
 
 # Allele frequencies of known variants
+
+## Simulations
 ```{r}
 
 results = NULL
@@ -2412,8 +2619,7 @@ ggsave(paste("../../results/", today, "/", "resources_index_freqk_vs_vg.pdf", se
 
 ```
 
-# Empirical data: frequencies of known variants
-
+## Empirical data
 ```{r}
 #real_counts = read.table("/global/scratch/users/milesroberts/tmp/arabidopsis_thaliana_plantpan_data/freqs.txt", sep = " ")
 #real_counts = read.table("/global/scratch/users/milesroberts/tmp/brassica_rapa_plantpan_data/calls.txt", sep = " ")
@@ -3250,56 +3456,7 @@ ggplot(data.frame(x=c(0:10)), aes(x)) +
     geom_point(aes(y=dpois(x, 1)), colour="red")
 ```
 
-# Genome size statistics
-```{r message=FALSE, warning=FALSE, include=FALSE}
 
-assembly_info <- read.table("../../data/ncbi_dataset_2025-12-11.tsv", header = T, sep = "\t", fill = T)
-
-results = NULL
-
-for(i in 1:nrow(assembly_info)){
-  
-  taxid <- assembly_info$Organism.Taxonomic.ID[i]
-  
-  assembly_length <- assembly_info$Assembly.Stats.Total.Sequence.Length[i]
-  
-  testfile <- "/global/home/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/notebooks/test.xml"
-
-  url <- paste("https://api.ncbi.nlm.nih.gov/genome/v0/expected_genome_size?species_taxid=", taxid, "&length=", assembly_length, sep = "")
-
-  download.file(url, testfile, mode="wb") # get data into test
-
-  data <- xmlParse(testfile)
-
-  xml_data <- xmlToList(data)
-  
-  expected_ungapped_length = xml_data$expected_ungapped_length
-  
-  if(is.null(expected_ungapped_length)){
-    #minimum_ungapped_length = as.numeric(xml_data$minimum_ungapped_length)
-    #maximum_ungapped_length = as.numeric(xml_data$maximum_ungapped_length)
-    #expected_ungapped_length = (minimum_ungapped_length + maximum_ungapped_length)/2
-    #if(is.null(expected_ungapped_length)){
-      expected_ungapped_length = NA 
-    #}
-  }
-  
-  result = data.frame(
-    Organism.Taxonomic.ID = taxid,
-    assembly_percent_complete = assembly_length/as.numeric(expected_ungapped_length)*100,
-    expected_ungapped_length = expected_ungapped_length,
-    length_status = xml_data$length_status
-  )
-
-  results <- rbind(results, result)
-  
-  random_wait <- rexp(1, 1/3)
-  
-  Sys.sleep(random_wait)
-}
-
-write.table(results, paste("assembly_completeness_stats_", today, ".tsv", sep = ""), sep = "\t", row.names = F, quote = F)
-```
 
 # DEPRECATED
 ```{r}
