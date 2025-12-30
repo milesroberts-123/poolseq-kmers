@@ -1,16 +1,6 @@
 # poolseq-kmers
 
-[![Super-Linter](https://github.com/milesroberts-123/poolseq-kmers/actions/workflows/linter.yml/badge.svg)](https://github.com/marketplace/actions/super-linter)
-
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-
-[![Snakemake](https://img.shields.io/badge/snakemake-≥8.0.0-brightgreen.svg)](https://snakemake.github.io)
-
-[![GitHub actions status](https://github.com/<owner>/<repo>/workflows/Tests/badge.svg?branch=main)](https://github.com/<owner>/<repo>/actions?query=branch%3Amain+workflow%3ATests)
-
-[![run with conda](http://img.shields.io/badge/run%20with-conda-3EB049?labelColor=000000&logo=anaconda)](https://docs.conda.io/en/latest/)
-
-[![workflow catalog](https://img.shields.io/badge/Snakemake%20workflow%20catalog-darkgreen)](https://snakemake.github.io/snakemake-workflow-catalog/docs/workflows/<owner>/<repo>)
+[![Super-Linter](https://github.com/milesroberts-123/poolseq-kmers/actions/workflows/linter.yml/badge.svg)](https://github.com/marketplace/actions/super-linter) [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black) [![Snakemake](https://img.shields.io/badge/snakemake-≥8.0.0-brightgreen.svg)](https://snakemake.github.io) [![GitHub actions status](https://github.com/milesroberts-123/poolseq-kmers/workflows/Tests/badge.svg?branch=main)](https://github.com/<owner>/<repo>/actions?query=branch%3Amain+workflow%3ATests) [![run with conda](http://img.shields.io/badge/run%20with-conda-3EB049?labelColor=000000&logo=anaconda)](https://docs.conda.io/en/latest/) [![workflow catalog](https://img.shields.io/badge/Snakemake%20workflow%20catalog-darkgreen)](https://snakemake.github.io/snakemake-workflow-catalog/docs/workflows/<owner>/<repo>)
 
 Author: Miles Roberts
 
@@ -32,7 +22,7 @@ Author: Miles Roberts
  
 ## Overview
 
-Simulation workflow to investigate the utility of k-mers, het-mers, and k-unitigs for pool-seq data analysis built with snakemake (v 9.3.3) and run with the snakemake slurm plugin (v 1.3.6) and snakedeploy (v 0.11.0)
+Simulation workflow to investigate the utility of k-mers, het-mers, and k-unitigs for pool-seq data analysis built with snakemake (v 9.3.3) and run with the snakemake slurm plugin (v 1.3.6).
 
 ## Setup
 
@@ -54,40 +44,39 @@ conda activate snakemake
 
 ## Inputs
 
-See config/README.md for a complete description of workflow inputs. In short, you need two files:
-
-* config/config.yaml: describes parameters that are held constant for every job in the workflow
-
-* config/parameters.tsv: is a table of parameters that can vary between simulations. Each simulation corresponds to a different row, and each parameter is a column. Each simulation should have a column `ID` that is an integer used as a unique identifier.
+See config/README.md for a complete description of workflow inputs. In short, There are three main branches to the workflow `all_histos` which will generate k-mer histograms, `all_sims` which will run SLiM simulations, and `all_empirical` which will test the performance of freqk on provided emprical datasets. You can run all three branches at once with the target rule `all` (default). For any run, you need `config/config.yaml` and `config/parameters.tsv`.
 
 ## Outputs
 
-For each simulation, this workflow outputs:
+The workflow outputs vary by branch
 
-* SNP calls from Varscan
+### all histos
 
-* SNP calls from PoolSNP
+### all sims
 
-* SNP calls from discosnp
-
-* Het-mers from smudgeplot
-
-* Het-mers from hetmers
+### all empirical
 
 ## Usage
 
-Examples commands are in `resources/01_snakemake.bash`
+There are three main branches to the workflow `all_histos` which will generate k-mer histograms, `all_sims` which will run SLiM simulations, and `all_empirical` which will test the performance of freqk on provided emprical datasets. You can run all three branches at once with the target rule `all` (default). 
+
+In addition, the workflow can be run with conda environments or with docker (recommended).
+
+If you're doing lots of simulations, then run snakemake in batches (example below)
+
+Example commands are given below.
 
 ### Run whole workflow with conda envs on slurm cluster
 
 `snakemake --sdm conda --rerun-incomplete --rerun-triggers mtime --scheduler greedy --retries 1 --keep-going`
 
-### Run workflow in batches with conda envs on slurm cluster
+### Run simulations in batches with conda envs on slurm cluster
 
 ```
-for num in {1..50}
+num_batch=50
+for num in {1..$num_batch}
 do
-  snakemake --sdm conda --rerun-incomplete --rerun-triggers mtime --scheduler greedy --retries 1 --keep-going --batch all=$num/50
+  snakemake --sdm conda --rerun-incomplete --rerun-triggers mtime --scheduler greedy --retries 1 --keep-going --batch all_sims=$num/$num_batch
 done
 ```
 
@@ -96,8 +85,9 @@ done
 ```
 # create initial archive
 tar -cvf logs.tar logs/
+rm -r logs/
 
-# add more files
+# after more log files are created, add them to original tarchive
 tar -uvf logs.tar logs/
 
 # compress at the very end
