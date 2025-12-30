@@ -8,7 +8,7 @@ k: 31
 # genome length
 L: 2000000
 
-# multinomial probabilities for generating genome
+# multinomial probabilities for generating k-mers for synthetic genomes
 pA: 0.25
 
 pC: 0.25
@@ -16,6 +16,10 @@ pC: 0.25
 pG: 0.25
 
 pT: 0.25
+
+#################
+# READ TRIMMING #
+#################
 
 # unqualified_percent_limit for fastp: how many percents of bases are allowed to be unqualified in terms of quality score
 unqualLimit: 40
@@ -25,6 +29,10 @@ qualThresh: 30
 
 # window length for read trimming
 windowLength: 1
+
+##################
+# K-MER COUNTING #
+##################
 
 # minimum k-mer count threshold
 mincount: 3

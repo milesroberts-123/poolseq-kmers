@@ -33,7 +33,8 @@ theme_set(
   theme(text = element_text(size = 16, 
                             family = "Helvetica", 
                             colour = "black"),
-        axis.text = element_text(colour = "black"))
+        axis.text = element_text(colour = "black"),
+        plot.title = element_text(hjust = 0.5))
 )
 ```
 
@@ -149,7 +150,7 @@ posterior_min_kmer_count = function(x,z,n,C,c,alpha,beta){
 #posterior_min_kmer_count(5, 200, 200, 1, 5, 1, 1)
 ```
 
-# Simulations
+# DEPRECATED: Simulations
 
 ## k-mer counts in pool-seq
 
@@ -830,7 +831,6 @@ add_mesh(p, x= ~maf/n, y= ~cov, z = ~cutoff, data = results, opacity = 0.3, colo
 
 # zeta distribution
 ```{r}
-
 my_histos = list.files(path = "/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/kmc_histo_results/", pattern = ".histo")
 
 ref_seq_ids_to_plot = c("GCF_000001735.4", "GCF_902167145", "GCF_036512215", "GCF_000001405.40", "GCF_000001215.4", "GCF_000002985.6")
@@ -840,7 +840,8 @@ histos_to_plot = my_histos[grepl(paste(ref_seq_ids_to_plot, collapse = "|"), my_
 results = NULL
 num_skipped = 0
 
-for(one_histo in my_histos){
+for(one_histo in my_histos) {
+#for(one_histo in histos_to_plot) {
   # Initialize a flag to indicate if an error occurred in this iteration
   skip_to_next <- FALSE 
   
@@ -881,10 +882,10 @@ for(one_histo in my_histos){
   compare = data.frame(
       x = 1:length(data),
       data = prob_mass,
-      zeta = log10(dzeta(1:length(data), shape = s))
+      zeta = dzeta(1:length(data), shape = s)
   )
   
-  r2 <- rsq(compare$data, compare$zeta)
+  r2 <- rsq(log10(compare$data), log10(compare$zeta))
   
   #sse = sum( (compare$data - compare$zeta)^2 )
   #sst = sum( (compare$data - mean(compare$data))^2 )
@@ -898,12 +899,13 @@ for(one_histo in my_histos){
     
     compare = melt(compare, id = "x")
 
-    plot_zeta = ggplot(compare, aes(x = log10(x), y = log10(value), group = variable)) +
+    plot_zeta = ggplot(compare, aes(x = x, y = value, group = variable)) +
       geom_point(shape = 16) +
       geom_line(aes(linetype = variable)) +
-      #theme_minimal() +
+      scale_y_log10() +
+      scale_x_log10() +
       theme(legend.title = element_blank()) +
-      labs(x = "log10(k-mer frequency)", y = "log10(Probability mass)", title = paste("R2 =", r2))
+      labs(x = "k-mer frequency", y = "Probability mass", title = bquote(R^2 == .(signif(r2, 3))))
     
     ggsave(paste("../../results/", today, "/", gsub(".histo", "", one_histo), "_zeta_vs_data.pdf", sep = ""), device = cairo_pdf, width = 6, height = 4)
   }
@@ -918,7 +920,6 @@ for(one_histo in my_histos){
 
   results = rbind(results, result)
 }
-
 
 # separate data by k
 results$k = NA
@@ -946,6 +947,7 @@ results$kingdom[is.na(results$kingdom)] = "Animals"
 table(results$kingdom)
 
 # get three values for sweep sims
+summary(results[, "shape"])
 summary(results[(results$k == 27), "shape"])
 summary(results[(results$k == 31), "shape"])
 summary(results[(results$k == 41), "shape"])
@@ -997,32 +999,44 @@ extra_point_data <- data.frame(
 )
 
 # distribution of shape parameter
-ggplot(results, aes(x = as.factor(k), y = shape)) +
+shape_sample_size = results %>% dplyr::count(k, kingdom) 
+
+plot_violin_boxplot_shape <- ggplot(results, aes(x = as.factor(k), y = shape)) +
   geom_violin(lwd = 1.1) +
   facet_wrap(~ kingdom, ncol = 1) +
-  geom_point(data = extra_point_data, mapping = aes(x = as.factor(k), y = shape, color = species), size = 3) +
-  scale_color_manual(values = c("maize" = "yellow3", "tomato" = "pink2", "arabidopsis" = "green1", "human" = "black", "fly" = "grey40", "worm" = "grey90")) +
-  theme_minimal() +
-  theme(text = element_text(size = 20, family = "Helvetica", colour = "black"),
-        axis.text = element_text(colour = "black"), 
-        legend.position = "None",
-        axis.title.y = element_text(angle = 0, vjust = 0.5)) +
-  labs(x = "k", y = "zeta shape parameter",title = paste("n = ", length(unique(results$Assembly.Accession)), sep = "")) +
+  geom_point(data = extra_point_data, 
+             mapping = aes(x = as.factor(k), 
+                           y = shape, 
+                           color = species), 
+             size = 3) +
+  scale_color_manual(
+    values = c("maize" = "yellow3", 
+               "tomato" = "pink2",
+               "arabidopsis" = "green1",
+               "human" = "black",
+               "fly" = "grey40",
+               "worm" = "grey80"
+               )
+    ) +
+  geom_boxplot(width = 0.25, color="grey", alpha=0.4) +
+  geom_text(data = shape_sample_size, aes(as.factor(k), 17.5, label = paste("n =", n)), vjust = 1.25) +
+  theme(legend.position = "None",axis.title.y = element_text(angle = 0, vjust = 0.5)) +
+  labs(x = "k", y = "\u03b6 shape parameter") +
   coord_flip()
 
 ggsave(paste("../../results/", today, "/shape_dist.pdf", sep = ""), device = cairo_pdf, width = 5, height = 5)
 
 # percent unique k-mers
-ggplot(results, aes(x = as.factor(k), y = perc_uniq_kmers)) +
-  geom_violin(lwd = 1.1) +
-  facet_wrap(~ kingdom, ncol = 1) +
-  theme_minimal() +
-  theme(text = element_text(size = 20, family = "Helvetica", colour = "black"),
-        axis.text = element_text(colour = "black"), 
-        legend.position = "None",
-        axis.title.y = element_text(angle = 0, vjust = 0.5)) +
-  labs(x = "k", y = "Percent uni-mers") +
-  coord_flip()
+# ggplot(results, aes(x = as.factor(k), y = perc_uniq_kmers)) +
+#   geom_violin(lwd = 1.1) +
+#   facet_wrap(~ kingdom, ncol = 1) +
+#   theme_minimal() +
+#   theme(text = element_text(size = 20, family = "Helvetica", colour = "black"),
+#         axis.text = element_text(colour = "black"), 
+#         legend.position = "None",
+#         axis.title.y = element_text(angle = 0, vjust = 0.5)) +
+#   labs(x = "k", y = "Percent uni-mers") +
+#   coord_flip()
 
 # compare plants vs animals
 median( results[(results$k == 31) & (results$kingdom == "Plants"), "shape"] )
@@ -1032,8 +1046,7 @@ wilcox.test(results[(results$k == 31) & (results$kingdom == "Plants"), "shape"],
 
 # zeta model fits
 summary(results$r2)
-
-sum(results$r2 > 0.99)/nrow(results)
+sum(results$r2 > 0.9)/nrow(results)
 
 # compare genome sizes to shape parameter
 genome_sizes <- read.table("assembly_completeness_stats_2025-12-11.tsv", header = T)
@@ -1044,19 +1057,39 @@ plant_ids_genome_size <- merge(plants, genome_sizes, by = "Organism.Taxonomic.ID
 
 results_genome_size <- merge(results, plant_ids_genome_size, by = "Assembly.Accession")
 
-ggplot(results_genome_size, aes(x = log10(expected_ungapped_length), y = shape)) +
+plot_point_size_shape <- ggplot(results_genome_size, aes(x = expected_ungapped_length, y = shape)) +
   geom_point() +
   geom_smooth(color = "red", lwd = 1.5) +
   facet_wrap(. ~ k, ncol = 5, labeller = label_both) +
   theme_minimal() +
+  scale_x_log10() +
   theme(text = element_text(size = 16, 
                                 family = "Helvetica", 
                                 colour = "black"), 
         axis.text = element_text(colour = "black")) +
   scale_y_continuous(limits = c(1, 7)) +
-  labs(x = "log10(Expected genome size (bp))", y = "Zeta shape")
+  labs(x = "Expected genome size (bp)", y = "\u03b6 shape parameter")
 
 ggsave(paste("../../results/", today, "/shape_vs_genome_size.pdf", sep = ""), device = cairo_pdf, width = 9, height = 3)
+
+# shape vs genome size for only k = 31
+plot_point_size_shape_k31 <- ggplot(results_genome_size[], aes(x = expected_ungapped_length, y = shape)) +
+  geom_point() +
+  geom_smooth(color = "red", lwd = 1.5) +
+  facet_wrap(. ~ k, ncol = 5, labeller = label_both) +
+  theme_minimal() +
+  scale_x_log10() +
+  theme(text = element_text(size = 16, 
+                                family = "Helvetica", 
+                                colour = "black"), 
+        axis.text = element_text(colour = "black")) +
+  scale_y_continuous(limits = c(1, 7)) +
+  labs(x = "Expected genome size (bp)", y = "\u03b6 shape parameter")
+
+ggsave(paste("../../results/", today, "/shape_vs_genome_size_k31.pdf", sep = ""), device = cairo_pdf, width = 9, height = 3)
+
+# combine zeta plots into one figure
+
 ```
 
 # process single population metrics

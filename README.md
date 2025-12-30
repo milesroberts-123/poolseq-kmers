@@ -36,7 +36,7 @@ Simulation workflow to investigate the utility of k-mers, het-mers, and k-unitig
 
 ## Setup
 
-1. Install mamba
+1. Install conda/mamba
 
 2. Download the workflow from github
 
@@ -56,9 +56,9 @@ conda activate snakemake
 
 See config/README.md for a complete description of workflow inputs. In short, you need two files:
 
-* config/config.yaml: describes parameters that are held constant for every simulation in the workflow
+* config/config.yaml: describes parameters that are held constant for every job in the workflow
 
-* config/parameters.tsv: is a table of parameters that vary between simulations. Each simulation corresponds to a different row, and each parameter is a column. Each simulation should have a column `ID` that is an integer used as a unique identifier.
+* config/parameters.tsv: is a table of parameters that can vary between simulations. Each simulation corresponds to a different row, and each parameter is a column. Each simulation should have a column `ID` that is an integer used as a unique identifier.
 
 ## Outputs
 
