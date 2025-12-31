@@ -46,7 +46,7 @@ theme_set(
 # Source - https://stackoverflow.com/a
 # Posted by Zheyuan Li, modified by community. See post 'Timeline' for change history
 # Retrieved 2025-12-29, License - CC BY-SA 4.0
-rsq <- function (x, y) cor(x, y) ^ 2
+rsq <- function (x, y) cor(x, y, use = "pairwise.complete.obs") ^ 2
 
 # expected number of segregating sites
 ES = function(N, mu, L, n){
@@ -916,7 +916,8 @@ for(one_histo in my_histos) {
       message(paste("Error in iteration:", one_histo, e$message))
       num_skipped <<- num_skipped + 1
       skip_to_next <<- TRUE # Use superassignment to modify the flag in the enclosing environment
-    }
+    },
+    warning = function(w) {}
   )
   
   if(skip_to_next){
@@ -956,8 +957,12 @@ for(one_histo in my_histos) {
       geom_line(aes(linetype = variable)) +
       scale_y_log10() +
       scale_x_log10() +
-      theme(legend.title = element_blank()) +
-      labs(x = "k-mer frequency", y = "Probability mass", title = bquote(R^2 == .(signif(r2, 3))))
+      theme(
+        legend.title = element_blank(), 
+        legend.position = c(0.8, 0.8),
+        plot.title = element_text(hjust = 0.5)
+      ) +
+      labs(x = "k-mer count in genome", y = "Probability mass", title = bquote(R^2 == .(signif(r2, 3))))
     
     ggsave(paste("../../results/", today, "/", gsub(".histo", "", one_histo), "_zeta_vs_data.pdf", sep = ""), device = cairo_pdf, width = 6, height = 4)
   }
@@ -1125,18 +1130,20 @@ plot_point_size_shape <- ggplot(results_genome_size, aes(x = expected_ungapped_l
 ggsave(paste("../../results/", today, "/shape_vs_genome_size.pdf", sep = ""), device = cairo_pdf, width = 9, height = 3)
 
 # shape vs genome size for only k = 31
-plot_point_size_shape_k31 <- ggplot(results_genome_size[], aes(x = expected_ungapped_length, y = shape)) +
+r2_size_shape_k31 <- rsq(log10(results_genome_size[(results_genome_size$k == 31),"expected_ungapped_length"]), results_genome_size[(results_genome_size$k == 31),"shape"])
+
+plot_point_size_shape_k31 <- ggplot(results_genome_size[(results_genome_size$k == 31),], aes(x = expected_ungapped_length, y = shape)) +
   geom_point() +
-  geom_smooth(color = "red", lwd = 1.5) +
-  facet_wrap(. ~ k, ncol = 5, labeller = label_both) +
+  geom_smooth(method = "lm",color = "red", lwd = 1.5) +
+  #facet_wrap(. ~ k, ncol = 5, labeller = label_both) +
   theme_minimal() +
   scale_x_log10() +
   theme(text = element_text(size = 16, 
                                 family = "Helvetica", 
                                 colour = "black"), 
         axis.text = element_text(colour = "black")) +
-  scale_y_continuous(limits = c(1, 7)) +
-  labs(x = "Expected genome size (bp)", y = "\u03b6 shape parameter")
+  scale_y_continuous(limits = c(1, 6)) +
+  labs(x = "Expected genome size (bp)", y = "\u03b6 shape parameter", title = bquote(R^2 == .(signif(r2_size_shape_k31, 3))))
 
 ggsave(paste("../../results/", today, "/shape_vs_genome_size_k31.pdf", sep = ""), device = cairo_pdf, width = 9, height = 3)
 
@@ -1202,12 +1209,17 @@ plot_point_zeta_sampling <- ggplot(zeta_sampling_results, aes(x = as.numeric(ran
   scale_size_manual(values=c(1.5,1.5,1.5,3)) + # emphasize no-repeat
   facet_wrap( ~ L, labeller = label_both) +
   guides(size = "none") +
+  theme(plot.title = element_text(hjust = 1)) +
   labs(x = "k-mer count in genome", y = "Number of k-mers", color = "s", shape = "k")
 
 ggsave(paste("../../results/", today, "/zeta_ksL.pdf", sep = ""), device = cairo_pdf, width = 9, height = 3)
 
 # combine zeta plots into one figure
+plot_fig1 <- grid.arrange(plot_point_zeta_example, plot_violin_boxplot_shape, plot_point_size_shape_k31, plot_point_zeta_sampling, layout_matrix = matrix(c(1, 4, 2, 4, 3, 4), nrow = 2), heights = c(1,0.75)) 
 
+#plot_fig1_patchwork <- ((plot_point_zeta_example + plot_violin_boxplot_shape + plot_point_size_shape_k31) / plot_point_zeta_sampling) + plot_annotation(tag_levels = "A") 
+
+ggsave(paste("../../results/", today, "/fig1.pdf", sep = ""), plot_fig1, device = cairo_pdf, width = 10, height = 7)
 ```
 
 # DEPRECATED: Demonstrate zeta distribution sampling to make small, realistic genomes
