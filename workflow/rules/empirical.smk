@@ -302,9 +302,11 @@ rule real_bcftools_vg:
         "../envs/bcftools.yaml"
     benchmark:
         "benchmarks/real_data/bcftools_vg_{num}_{chr}.bench"
+    params:
+        n=config["poolsize"]
     shell:
         """
-        bcftools mpileup -Ou -f {input.reffasta} {input.trimbam} | bcftools call -mv -Ou -o {output}
+        bcftools mpileup -Ou -f {input.reffasta} {input.trimbam} | bcftools call --ploidy {params.n} -mv -Ou -o {output}
         """
 
 rule real_varscan_vg:
