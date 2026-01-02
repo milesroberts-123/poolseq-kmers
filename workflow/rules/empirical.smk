@@ -1,7 +1,7 @@
 rule sra:
     output:
-        r1="{ID}_1.fastq",
-        r2="{ID}_2.fastq"
+        r1=temp("{ID}_1.fastq"),
+        r2=temp("{ID}_2.fastq")
     retries: 2
     conda:
         "../envs/sra.yaml"
@@ -10,20 +10,38 @@ rule sra:
         N=config["num_reads"],
     shell:
         """
-        fastq-dump --split-3 --skip-technical -X {params.N} --clip -M {params.k} {wildcards.ID}
-        #fasterq-dump --threads {threads} --split-files --skip-technical {wildcards.ID}
+        #fastq-dump --split-3 --skip-technical -X {params.N} --clip -M {params.k} {wildcards.ID}
+        fasterq-dump --threads {threads} --split-files --skip-technical {wildcards.ID}
+        """
+
+rule downsample:
+    input:
+        r1="{ID}_1.fastq",
+        r2="{ID}_2.fastq"
+    output:
+        r1=temp("downsample/{ID}_{num}_1.fastq"),
+        r2=temp("downsample/{ID}_{num}_2.fastq")
+    conda:
+        "../envs/seqkit.yaml"
+    params:
+        N=config["num_reads"]
+    shell:
+        """
+        set +o pipefail
+        seqkit sample -s 21 -p 0.1 {input.r1} | seqkit head -n {wildcards.num} > {output.r1}
+        seqkit sample -s 21 -p 0.1 {input.r2} | seqkit head -n {wildcards.num} > {output.r2}
         """
 
 rule real_fastp:
     input:
-        r1="{ID}_1.fastq",
-        r2="{ID}_2.fastq"    
+        r1="downsample/{ID}_{num}_1.fastq",
+        r2="downsample/{ID}_{num}_2.fastq"    
     output:
-        pread1=temp("real_fastp_results/trimmed_paired_R1_{ID}.fastq"),
-        pread2=temp("real_fastp_results/trimmed_paired_R2_{ID}.fastq"),
-        uread1=temp("real_fastp_results/trimmed_unpaired_R1_{ID}.fastq"),
-        uread2=temp("real_fastp_results/trimmed_unpaired_R2_{ID}.fastq"),
-        jsonR1R2="real_fastp_results/{ID}_R1R2.json",
+        pread1=temp("real_fastp_results/trimmed_paired_R1_{ID}_{num}.fastq"),
+        pread2=temp("real_fastp_results/trimmed_paired_R2_{ID}_{num}.fastq"),
+        uread1=temp("real_fastp_results/trimmed_unpaired_R1_{ID}_{num}.fastq"),
+        uread2=temp("real_fastp_results/trimmed_unpaired_R2_{ID}_{num}.fastq"),
+        jsonR1R2="real_fastp_results/{ID}_{num}_R1R2.json",
     conda:
         "../envs/fastp.yaml"
     params:
@@ -56,15 +74,15 @@ rule real_fastp:
 rule real_cat:
     input:
         #expand("downsample/{ID}.fastq", ID=config["real_accessions"]),
-        r1=expand("real_fastp_results/trimmed_paired_R1_{ID}.fastq", ID=config["real_accessions"]),
-        r2=expand("real_fastp_results/trimmed_paired_R2_{ID}.fastq", ID=config["real_accessions"]),
-        u1=expand("real_fastp_results/trimmed_unpaired_R1_{ID}.fastq", ID=config["real_accessions"]),
-        u2=expand("real_fastp_results/trimmed_unpaired_R2_{ID}.fastq", ID=config["real_accessions"]),
+        r1=expand("real_fastp_results/trimmed_paired_R1_{ID}_{{num}}.fastq", ID=config["real_accessions"]),
+        r2=expand("real_fastp_results/trimmed_paired_R2_{ID}_{{num}}.fastq", ID=config["real_accessions"]),
+        u1=expand("real_fastp_results/trimmed_unpaired_R1_{ID}_{{num}}.fastq", ID=config["real_accessions"]),
+        u2=expand("real_fastp_results/trimmed_unpaired_R2_{ID}_{{num}}.fastq", ID=config["real_accessions"]),
     output:
-        all="pseudopool.fastq",
-        r1="r1_pool.fastq",
-        r2="r2_pool.fastq",
-        u="u_pool.fastq",
+        all=temp("pseudopool_{num}.fastq"),
+        r1=temp("r1_pool_{num}.fastq"),
+        r2=temp("r2_pool_{num}.fastq"),
+        u=temp("u_pool_{num}.fastq"),
     shell:
         """
         cat {input.r1} > {output.r1}
@@ -73,6 +91,17 @@ rule real_cat:
         cat {output.r1} {output.r2} {output.u} > {output.all}
         """
 
+rule real_samtools_faidx:
+    input:
+        config["real_fasta"]
+    output:
+        config["real_fasta"] + ".fai"
+    conda:
+        "../envs/bcftools.yaml"
+    shell:
+        """
+        samtools faidx {input}
+        """
 
 rule real_freqk_index:
     input:
@@ -119,13 +148,13 @@ rule real_freqk_ref_dedup:
 
 rule real_freqk_count:
     input:
-        reads="pseudopool.fastq",
+        reads="pseudopool_{num}.fastq",
         index="ref_index.txt",
     output:
-        counts="real_freqk_results/counts_by_kmer.txt",
-        freqs="real_freqk_results/counts_by_allele.txt"
+        counts="real_freqk_results/{num}/counts_by_kmer.txt",
+        freqs="real_freqk_results/{num}/counts_by_allele.txt"
     benchmark:
-        "benchmarks/real_data/freqk_count.bench"
+        "benchmarks/real_data/freqk_count_{num}.bench"
     shell:
         """
         ./scripts/freqk count --nthreads {threads} --index {input.index} --reads {input.reads} --freq-output {output.freqs} --count-output {output.counts}
@@ -133,12 +162,12 @@ rule real_freqk_count:
 
 rule real_freqk_call:
     input:
-        counts="real_freqk_results/counts_by_allele.txt",
+        counts="real_freqk_results/{num}/counts_by_allele.txt",
         index="ref_index.txt"
     output:
-        "calls.txt"
+        "real_freqk_results/{num}/calls.txt"
     benchmark:
-        "benchmarks/real_data/freqk_call.bench"
+        "benchmarks/real_data/freqk_call_{num}.bench"
     shell:
         "./scripts/freqk call --index {input.index} -c {input.counts} --output {output}"
 
@@ -164,14 +193,14 @@ rule real_vg_giraffe_paired:
         gbz = "real.giraffe.gbz",
         min = "real.shortread.withzip.min",
         zip = "real.shortread.zipcodes",
-        pread1 = "r1_pool.fastq",
-        pread2 = "r2_pool.fastq",
+        pread1 = "r1_pool_{num}.fastq",
+        pread2 = "r2_pool_{num}.fastq",
     output:
-        temp("real_vg_giraffe_results/paired.gam"),
+        temp("real_vg_giraffe_results/{num}/paired.gam"),
     conda:
         "../envs/vg.yaml"
     benchmark:
-        "benchmarks/real_data/vg_giraffe_paired.bench"
+        "benchmarks/real_data/vg_giraffe_paired_{num}.bench"
     shell:
         """
         vg giraffe -Z {input.gbz} -d {input.dist} -m {input.min} -z {input.zip} -p -t {threads} --rescue-algorithm none -f {input.pread1} -f {input.pread2} > {output}
@@ -183,13 +212,13 @@ rule real_vg_giraffe_unpaired:
         gbz = "real.giraffe.gbz",
         min = "real.shortread.withzip.min",
         zip = "real.shortread.zipcodes",
-        uread = "u_pool.fastq",
+        uread = "u_pool_{num}.fastq",
     output:
-        temp("real_vg_giraffe_results/unpaired.gam")
+        temp("real_vg_giraffe_results/{num}/unpaired.gam")
     conda:
         "../envs/vg.yaml"
     benchmark:
-        "benchmarks/real_data/vg_giraffe_unpaired.bench"
+        "benchmarks/real_data/vg_giraffe_unpaired_{num}.bench"
     shell:
         """
         vg giraffe -Z {input.gbz} -d {input.dist} -m {input.min} -z {input.zip} --rescue-algorithm none -p -t {threads} -f {input.uread} > {output}
@@ -198,13 +227,13 @@ rule real_vg_giraffe_unpaired:
 rule real_vg_surject:
     input:
         gbz = "real.giraffe.gbz",
-        gam = "real_vg_giraffe_results/{pairing}.gam",
+        gam = "real_vg_giraffe_results/{num}/{pairing}.gam",
     output:
-        temp("real_vg_surject_results/{pairing}.bam"),
+        temp("real_vg_surject_results/{num}/{pairing}.bam"),
     conda:
         "../envs/vg.yaml"
     benchmark:
-        "benchmarks/real_data/vg_surject_{pairing}.bench"
+        "benchmarks/real_data/vg_surject_{pairing}_{num}.bench"
     shell:
         """
         vg surject -x {input.gbz} --progress -t {threads} -b {input.gam} > {output}
@@ -212,13 +241,13 @@ rule real_vg_surject:
 
 rule real_samtools_sort:
     input:
-        "real_vg_surject_results/{pairing}.bam"
+        "real_vg_surject_results/{num}/{pairing}.bam"
     output:
-        temp("real_samtools_sort_results/{pairing}.bam")
+        temp("real_samtools_sort_results/{num}/{pairing}.bam")
     conda:
         "../envs/bcftools.yaml"
     benchmark:
-        "benchmarks/real_data/samtools_sort_{pairing}.bench"
+        "benchmarks/real_data/samtools_sort_{pairing}_{num}.bench"
     shell:
         """
         samtools sort {input} -o {output}
@@ -226,11 +255,11 @@ rule real_samtools_sort:
 
 rule real_samtools_merge:
     input:
-        expand("real_samtools_sort_results/{pairing}.bam", pairing = ["unpaired", "paired"])
+        expand("real_samtools_sort_results/{{num}}/{pairing}.bam", pairing = ["unpaired", "paired"])
     output:
-        temp("merged.bam")
+        temp("samtools_merge_results/{num}.bam")
     benchmark:
-        "benchmarks/real_data/samtools_merge.bench"
+        "benchmarks/real_data/samtools_merge_{num}.bench"
     conda:
         "../envs/bcftools.yaml"
     shell:
@@ -240,13 +269,13 @@ rule real_samtools_merge:
 
 rule split_merged_bam:
     input:
-        "merged.bam"
+        "samtools_merge_results/{num}.bam"
     output:
-        "splits/{chr}.bam"
+        "splits/{num}/{chr}.bam"
     conda:
         "../envs/bcftools.yaml"
     benchmark:
-        "benchmarks/real_data/split_merged_bam/{chr}.bench"
+        "benchmarks/real_data/split_merged_bam/{num}/{chr}.bench"
     shell:
         "samtools view -b {input} {wildcards.chr} > {output}"
 
@@ -265,32 +294,34 @@ rule split_vcf:
 rule real_freebayes_vg:
     input:
         reffasta=config["real_fasta"],
-        trimbam="splits/{chr}.bam",
+        fai=config["real_fasta"] + ".fai",
+        trimbam="splits/{num}/{chr}.bam",
         #vcf=config["real_vcf"],
         vcf="splits/{chr}.vcf.gz"
     output:
-        "freebayes_calls_{chr}.vcf",
+        "real_freebayes_results/{num}_{chr}.vcf",
     conda:
         "../envs/freebayes.yaml"
     benchmark:
-        "benchmarks/real_data/freebayes_vg_{chr}.bench"
+        "benchmarks/real_data/freebayes_vg_{num}_{chr}.bench"
     params:
         n=config["poolsize"]
     shell:
         """
-        freebayes -f {input.reffasta} -p {params.n} --min-alternate-count 2 --min-alternate-fraction 0.001 --use-best-n-alleles 4 -g 1000 --variant-input {input.vcf} --only-use-input-alleles --pooled-discrete {input.trimbam} > {output}
+        freebayes-parallel <(fasta_generate_regions.py ref.fa.fai 100000) {threads} -f {input.reffasta} -p {params.n} --min-alternate-count 2 --min-alternate-fraction 0.001 --use-best-n-alleles 4 -g 1000 --variant-input {input.vcf} --only-use-input-alleles --pooled-discrete {input.trimbam} > {output}
+        #freebayes -f {input.reffasta} -p {params.n} --min-alternate-count 2 --min-alternate-fraction 0.001 --use-best-n-alleles 4 -g 1000 --variant-input {input.vcf} --only-use-input-alleles --pooled-discrete {input.trimbam} > {output}
         """
 
 rule real_varscan_vg:
     input:
         reffasta=config["real_fasta"],
-        trimbam="splits/{chr}.bam",
+        trimbam="splits/{num}/{chr}.bam",
     output:
-        "real_varscan_results/{chr}.tsv",
+        "real_varscan_results/{num}_{chr}.tsv",
     conda:
         "../envs/varscan.yaml"
     benchmark:
-        "benchmarks/real_data/varscan_vg_{chr}.bench"
+        "benchmarks/real_data/varscan_vg_{num}_{chr}.bench"
     shell:
         """
         samtools mpileup -f {input.reffasta} {input.trimbam} | varscan pileup2snp 1> {output}
@@ -299,19 +330,19 @@ rule real_varscan_vg:
 rule real_poolsnp_vg:
     input:
         reffasta=config["real_fasta"],
-        trimbam="splits/{chr}.bam",
+        trimbam="splits/{num}/{chr}.bam",
     output:
-        vcf="{chr}_poolsnp_output.vcf.gz",
-        cov=temp("{chr}_poolsnp_output-cov-0.9999.txt"),
-        bs=temp("{chr}_poolsnp_output_BS.txt.gz"),
-        mpileup=temp("{chr}.mpileup"),
+        vcf="{chr}_{num}_real_poolsnp_results.vcf.gz",
+        cov=temp("{chr}_{num}_real_poolsnp_results-cov-0.9999.txt"),
+        bs=temp("{chr}_{num}_real_poolsnp_results_BS.txt.gz"),
+        mpileup=temp("{chr}_{num}.mpileup"),
     params:
         wd=get_wd,
         mincount=config["mincount"],
     conda:
         "../envs/poolsnp.yaml"
     benchmark:
-        "benchmarks/real_data/poolsnp_vg_{chr}.bench"
+        "benchmarks/real_data/poolsnp_vg_{num}_{chr}.bench"
     shell:
         """
         samtools mpileup -f {input.reffasta} {input.trimbam} > {output.mpileup}
@@ -327,6 +358,6 @@ rule real_poolsnp_vg:
         miss-frac=0 \
         badsites=1 \
         allsites=0 \
-        output={params.wd}{wildcards.chr}_poolsnp_output
+        output={params.wd}{wildcards.chr}_real_poolsnp_results
         """
 

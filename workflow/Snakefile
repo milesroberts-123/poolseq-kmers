@@ -42,7 +42,7 @@ wildcard_constraints:
     ID="[a-zA-Z0-9]+",
     SID="[a-zA-Z0-9]+",
     PID="[a-zA-Z0-9]+",
-    chr="[a-zA-Z0-9]+"
+    #chr="[a-zA-Z0-9]+"
 
 localrules: all_per_sim
 
@@ -75,10 +75,10 @@ rule all:
 # rule to apply freqk and vg giraffe to real data 
 rule all_empirical:
     input:
-        "calls.txt",
-        expand("freebayes_calls_{chr}.vcf", chr = config["chroms"]),
-        expand("real_varscan_results/{chr}.tsv", chr = config["chroms"]),
-        expand("{chr}_poolsnp_output.vcf.gz", chr = config["chroms"])
+        expand("real_freqk_results/{num}/calls.txt", num = config["num_reads"]),
+        expand("real_freebayes_results/{num}_{chr}.vcf", chr = config["chroms"], num = config["num_reads"]),
+        expand("real_varscan_results/{num}_{chr}.tsv", chr = config["chroms"], num = config["num_reads"]),
+        expand("{chr}_{num}_real_poolsnp_results.vcf.gz", chr = config["chroms"], num = config["num_reads"])
         #"real.vcf"
 
 # create histograms across reference genomes

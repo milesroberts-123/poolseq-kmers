@@ -55,7 +55,11 @@ num_hash: 3
 ## Arabidopsis thaliana - 7 genomes
 real_fasta: "/global/scratch/users/milesroberts/tmp/arabidopsis_thaliana_tair10_ncbi/data/GCF_000001735.4/at_upper.fa"
 real_vcf: "/global/scratch/users/milesroberts/tmp/arabidopsis_thaliana_plantpan_data/at.genetics.variation/final.vcf.gz"
-num_reads: 35000000
+num_reads: 
+ - 3200000
+ - 1600000
+ - 800000
+ - 400000
 poolsize: 14
 chroms:
  - "NC_003070.9"
