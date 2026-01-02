@@ -1,7 +1,7 @@
 library("dplyr") 
 
 # number of replicates per simulation
-replicates = 1:3
+replicates = 1:2
 #replicates = 1
 
 # number of individuals to randomly sample at end of SLiM
@@ -40,7 +40,7 @@ recombination_rates = c(5e-9, 1e-8, 2e-8)
 # shape parameter for zeta distribution
 # large number = effectively no repeats
 #shapes = c(2.5, 3.5, 5, 10, 1e6)
-#shapes = c(1.854, 2.854, 3.591, 4.772, 5.772, 1e6)
+#shapes = c(1.854, 2.854, 3.591, 4.772, 1e6)
 shapes = c(2.854, 3.591, 4.772, 1e6)
 
 # whether identical k-mer copies should be shuffled (TRUE) or concatenated (FALSE) 

@@ -245,17 +245,31 @@ rule split_merged_bam:
         "splits/{chr}.bam"
     conda:
         "../envs/bcftools.yaml"
+    benchmark:
+        "benchmarks/real_data/split_merged_bam/{chr}.bench"
     shell:
         "samtools view -b {input} {wildcards.chr} > {output}"
+
+rule split_vcf:
+    input:
+        config["real_vcf"]
+    output:
+        "splits/{chr}.vcf.gz"
+    conda:
+        "../envs/bcftools.yaml"
+    benchmark:
+        "benchmarks/real_data/split_vcf/{chr}.bench"
+    shell:
+        "bcftools view -r {wildcards.chr} -Oz -o {output} {input}"
 
 rule real_freebayes_vg:
     input:
         reffasta=config["real_fasta"],
         trimbam="splits/{chr}.bam",
         #vcf=config["real_vcf"],
-        vcf="{chr}.vcf.gz"
+        vcf="splits/{chr}.vcf.gz"
     output:
-        "calls_{chr}.vcf",
+        "freebayes_calls_{chr}.vcf",
     conda:
         "../envs/freebayes.yaml"
     benchmark:
@@ -265,5 +279,54 @@ rule real_freebayes_vg:
     shell:
         """
         freebayes -f {input.reffasta} -p {params.n} --min-alternate-count 2 --min-alternate-fraction 0.001 --use-best-n-alleles 4 -g 1000 --variant-input {input.vcf} --only-use-input-alleles --pooled-discrete {input.trimbam} > {output}
+        """
+
+rule real_varscan_vg:
+    input:
+        reffasta=config["real_fasta"],
+        trimbam="splits/{chr}.bam",
+    output:
+        "real_varscan_results/{chr}.tsv",
+    conda:
+        "../envs/varscan.yaml"
+    benchmark:
+        "benchmarks/real_data/varscan_vg_{chr}.bench"
+    shell:
+        """
+        samtools mpileup -f {input.reffasta} {input.trimbam} | varscan pileup2snp 1> {output}
+        """
+
+rule real_poolsnp_vg:
+    input:
+        reffasta=config["real_fasta"],
+        trimbam="splits/{chr}.bam",
+    output:
+        vcf="{chr}_poolsnp_output.vcf.gz",
+        cov=temp("{chr}_poolsnp_output-cov-0.9999.txt"),
+        bs=temp("{chr}_poolsnp_output_BS.txt.gz"),
+        mpileup=temp("{chr}.mpileup"),
+    params:
+        wd=get_wd,
+        mincount=config["mincount"],
+    conda:
+        "../envs/poolsnp.yaml"
+    benchmark:
+        "benchmarks/real_data/poolsnp_vg_{chr}.bench"
+    shell:
+        """
+        samtools mpileup -f {input.reffasta} {input.trimbam} > {output.mpileup}
+
+        PoolSNP.sh   \
+        mpileup={params.wd}{output.mpileup} \
+        reference={params.wd}{input.reffasta} \
+        names=foobar \
+        max-cov=0.9999 \
+        min-cov={params.mincount} \
+        min-count={params.mincount} \
+        min-freq=0.01 \
+        miss-frac=0 \
+        badsites=1 \
+        allsites=0 \
+        output={params.wd}{wildcards.chr}_poolsnp_output
         """
 

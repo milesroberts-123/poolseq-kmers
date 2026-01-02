@@ -41,7 +41,8 @@ two_pop_params = parameters[
 wildcard_constraints:
     ID="[a-zA-Z0-9]+",
     SID="[a-zA-Z0-9]+",
-    PID="[a-zA-Z0-9]+"
+    PID="[a-zA-Z0-9]+",
+    chr="[a-zA-Z0-9]+"
 
 localrules: all_per_sim
 
@@ -75,7 +76,9 @@ rule all:
 rule all_empirical:
     input:
         "calls.txt",
-        expand("calls_{chr}.vcf", chr = config["chroms"])
+        expand("freebayes_calls_{chr}.vcf", chr = config["chroms"]),
+        expand("real_varscan_results/{chr}.tsv", chr = config["chroms"]),
+        expand("{chr}_poolsnp_output.vcf.gz", chr = config["chroms"])
         #"real.vcf"
 
 # create histograms across reference genomes
@@ -177,16 +180,16 @@ rule all_per_sim:
             get_simtype,
             cases={
                 "onepop": ("varscan_results/{SID}_{PID}.tsv",
-                    "smudgeplot_results/{SID}_{PID}_coverages.tsv",
-                    "disco_results/{SID}_{PID}.txt",
+                    #"smudgeplot_results/{SID}_{PID}_coverages.tsv",
+                    #"disco_results/{SID}_{PID}.txt",
                     "slim_results/allele_freqs_{SID}_{PID}.txt",
                     "poolsnp_results/{SID}_{PID}.txt",
                     "freebayes_de_novo_results/{SID}_{PID}.txt",
                     "freebayes_a_priori_results/{SID}_{PID}.txt",
                     "freebayes_vg_results/{SID}_{PID}.txt",
-                    "blast_results/{SID}_{PID}.txt",
-                    "hetmers_results/{SID}_{PID}_counts.csv",
-                    "seqkit_results/center_kmer_pairs_{SID}.txt",
+                    #"blast_results/{SID}_{PID}.txt",
+                    #"hetmers_results/{SID}_{PID}_counts.csv",
+                    #"seqkit_results/center_kmer_pairs_{SID}.txt",
                     "freqk_results/{SID}_{PID}_counts.txt"),
                 "sweep": ("blast_results/{SID}_{PID}.txt", 
                     "slim_results/allele_freqs_{SID}_{PID}.txt"),
