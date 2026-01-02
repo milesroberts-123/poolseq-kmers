@@ -2,9 +2,13 @@
 
 ## high priority
 
-- [ ] run final huge analysis
+- [ ] run final batch of simulations
 
-- [ ] add varscan to empirical data workflow
+- [ ] add bcftools call as another option after vg
+
+- [x] run histogram branch for final time
+
+- [x] add varscan to empirical data workflow
 
 - [x] polish freqk, skip over variants close to chromosome ends, non-isolated variants
 
