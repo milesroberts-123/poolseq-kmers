@@ -1,7 +1,7 @@
 rule sra:
     output:
-        r1=temp("{ID}_1.fastq"),
-        r2=temp("{ID}_2.fastq")
+        r1="{ID}_1.fastq",
+        r2="{ID}_2.fastq"
     retries: 2
     conda:
         "../envs/sra.yaml"
@@ -23,8 +23,6 @@ rule downsample:
         r2=temp("downsample/{ID}_{num}_2.fastq")
     conda:
         "../envs/seqkit.yaml"
-    params:
-        N=config["num_reads"]
     shell:
         """
         set +o pipefail
@@ -54,26 +52,8 @@ rule real_fastp:
         fastp --thread {threads} -u {params.unqualLimit} -q {params.qualThresh} --correction -l {params.k} --cut_tail --cut_tail_window_size {params.windowLength} --cut_tail_mean_quality {params.qualThresh} --json {output.jsonR1R2} -i {input.r1} -I {input.r2} -o {output.pread1} -O {output.pread2} --unpaired1 {output.uread1} --unpaired2 {output.uread2}
         """
 
-#rule downsample:
-#    input:
-#        "real_fastp_results/trimmed_paired_R1_{ID}.fastq",
-#        "real_fastp_results/trimmed_paired_R2_{ID}.fastq",
-#        "real_fastp_results/trimmed_unpaired_R1_{ID}.fastq",
-#        "real_fastp_results/trimmed_unpaired_R2_{ID}.fastq",
-#    output:
-#        temp("downsample/{ID}.fastq")
-#    conda:
-#        "../envs/seqkit.yaml"
-#    params:
-#        N=config["num_reads"]
-#    shell:
-#        """
-#        set +o pipefail; cat {input} | seqkit sample -s 21 -p 0.1 | seqkit head -n {params.N} > {output}
-#        """
-
 rule real_cat:
     input:
-        #expand("downsample/{ID}.fastq", ID=config["real_accessions"]),
         r1=expand("real_fastp_results/trimmed_paired_R1_{ID}_{{num}}.fastq", ID=config["real_accessions"]),
         r2=expand("real_fastp_results/trimmed_paired_R2_{ID}_{{num}}.fastq", ID=config["real_accessions"]),
         u1=expand("real_fastp_results/trimmed_unpaired_R1_{ID}_{{num}}.fastq", ID=config["real_accessions"]),
@@ -310,6 +290,21 @@ rule real_freebayes_vg:
         """
         freebayes-parallel <(fasta_generate_regions.py ref.fa.fai 100000) {threads} -f {input.reffasta} -p {params.n} --min-alternate-count 2 --min-alternate-fraction 0.001 --use-best-n-alleles 4 -g 1000 --variant-input {input.vcf} --only-use-input-alleles --pooled-discrete {input.trimbam} > {output}
         #freebayes -f {input.reffasta} -p {params.n} --min-alternate-count 2 --min-alternate-fraction 0.001 --use-best-n-alleles 4 -g 1000 --variant-input {input.vcf} --only-use-input-alleles --pooled-discrete {input.trimbam} > {output}
+        """
+
+rule real_bcftools_vg:
+    input:
+        reffasta=config["real_fasta"],
+        trimbam="splits/{num}/{chr}.bam",
+    output:
+        "real_bcftools_call_results/{num}_{chr}.vcf",
+    conda:
+        "../envs/bcftools.yaml"
+    benchmark:
+        "benchmarks/real_data/bcftools_vg_{num}_{chr}.bench"
+    shell:
+        """
+        bcftools mpileup -Ou -f {input.reffasta} {input.trimbam} | bcftools call -mv -Ou -o {output}
         """
 
 rule real_varscan_vg:

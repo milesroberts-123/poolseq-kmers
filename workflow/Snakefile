@@ -42,6 +42,7 @@ wildcard_constraints:
     ID="[a-zA-Z0-9]+",
     SID="[a-zA-Z0-9]+",
     PID="[a-zA-Z0-9]+",
+    num="[0-9]+"
     #chr="[a-zA-Z0-9]+"
 
 localrules: all_per_sim
@@ -76,6 +77,7 @@ rule all:
 rule all_empirical:
     input:
         expand("real_freqk_results/{num}/calls.txt", num = config["num_reads"]),
+        expand("real_bcftools_call_results/{num}_{chr}.vcf", chr = config["chroms"], num = config["num_reads"]),
         expand("real_freebayes_results/{num}_{chr}.vcf", chr = config["chroms"], num = config["num_reads"]),
         expand("real_varscan_results/{num}_{chr}.tsv", chr = config["chroms"], num = config["num_reads"]),
         expand("{chr}_{num}_real_poolsnp_results.vcf.gz", chr = config["chroms"], num = config["num_reads"])
