@@ -35,7 +35,7 @@ set-resources:
     freqk_count:
         cpus_per_task: 4
     real_freqk_count:
-        cpus_per_task: 8
+        cpus_per_task: 16
     vg_giraffe_paired:
         cpus_per_task: 4
     vg_giraffe_unpaired:
@@ -43,22 +43,22 @@ set-resources:
     vg_surject:
         cpus_per_task: 4
     real_vg_autoindex:
-        cpus_per_task: 8
+        cpus_per_task: 16
     real_vg_giraffe_paired:
-        runtime: "1440m"
-        cpus_per_task: 8
+        runtime: "2880m"
+        cpus_per_task: 16
     real_vg_giraffe_unpaired:
-        cpus_per_task: 8
+        cpus_per_task: 16
     real_vg_surject:
-        cpus_per_task: 8
-        runtime: "1440m"
+        cpus_per_task: 16
+        runtime: "2880m"
     freebayes_a_priori:
         cpus_per_task: 2
     freebayes_de_novo:
         cpus_per_task: 2
     real_freebayes_vg:
-        runtime: "1440m"
-        cpus_per_task: 8
+        runtime: "2880m"
+        cpus_per_task: 16
     sra:
         cpus_per_task: 6
         runtime: "1440m"
@@ -74,13 +74,13 @@ set-threads:
     fastp: 2
     iss: 2
     freqk_count: 4
-    real_freqk_count: 8
+    real_freqk_count: 16
     vg_giraffe_paired: 4
     vg_giraffe_unpaired: 4
     vg_surject: 4
-    real_vg_giraffe_paired: 8
-    real_vg_giraffe_unpaired: 8
-    real_vg_surject: 8
+    real_vg_giraffe_paired: 16
+    real_vg_giraffe_unpaired: 16
+    real_vg_surject: 16
     freebayes_a_priori: 1 
     freebayes_de_novo: 1
-    real_freebayes_vg: 8
+    real_freebayes_vg: 16

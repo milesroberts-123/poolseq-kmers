@@ -48,9 +48,16 @@ array_size: 10000
 
 num_hash: 3
 
-#############
-# REAL DATA #
-#############
+##########################
+# REAL DATA - REAL POOLS #
+##########################
+
+## grene-net seedmix
+
+
+###########################
+# REAL DATA - PSEUDOPOOLS #
+###########################
 
 ## Arabidopsis thaliana - 7 genomes
 real_fasta: "/global/scratch/users/milesroberts/tmp/arabidopsis_thaliana_tair10_ncbi/data/GCF_000001735.4/at_upper.fa"
@@ -82,6 +89,7 @@ real_accessions:
 #real_vcf: "/global/scratch/users/milesroberts/tmp/brassica_rapa_plantpan_data/br.genetics.variation/final.vcf.gz"
 #num_reads: 25000000
 #poolsize: 12
+#chroms:
 #real_accessions:
 # - "SRR14584034"
 # - "SRR14584045"
@@ -131,6 +139,15 @@ real_accessions:
 # - "SRR14583988"
 # - "SRR14584028"
 # - "SRR14584029"
+
+## Brassica napus
+#real_fasta:
+#real_vcf:
+#num_reads:
+#poolsize:
+#chroms:
+#real_accessions:
+
 
 ###################################
 # KMER HISTOGRAM FOR REAL GENOMES #
