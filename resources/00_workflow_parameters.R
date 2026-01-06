@@ -1,7 +1,7 @@
 library("dplyr")
 
 # number of replicates per simulation
-replicates <- 1:2
+replicates <- 1:3
 
 # number of individuals to randomly sample at end of SLiM
 # number of genomes in pool will be twice this number
@@ -27,11 +27,11 @@ pC <- 0.25
 pG <- 0.25
 
 # population parameters
-population_sizes <- c(1000, 2000, 4000)
+population_sizes <- c(1000, 2000)
 
-mutation_rates <- c(5e-9, 1e-8, 2e-8)
+mutation_rates <- c(1e-8, 2e-8)
 
-recombination_rates <- c(5e-9, 1e-8, 2e-8)
+recombination_rates <- c(1e-8, 2e-8)
 
 # shape parameter for zeta distribution
 # large number = effectively no repeats

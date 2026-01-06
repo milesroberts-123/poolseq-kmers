@@ -1,24 +1,29 @@
-rule kmc_histo:
+rule exact_kmc_histo:
     input:
-        "../config/genomes/{species}.fna"
+        "ancestral_genome_results/{ID}.fasta"
     output:
-        histo="kmc_histo_results/{species}_{k}.histo",
-        #pre=temp("counts_{species}.kmc_pre"),
-        #suf=temp("counts_{species}.kmc_suf")
+        histo="kmc_histo_results/{ID}.histo",
+        pre=temp("counts_{ID}.kmc_pre"),
+        suf=temp("counts_{ID}.kmc_suf")
     conda:
         "../envs/kmc.yaml"
+    params:
+        k=lookup(query="ID == '{ID}'", within=parameters, cols="k")
     shell:
         """
         # create directory
-        if [ -d "tmp_kmc_{wildcards.species}_{wildcards.k}" ]; then
-            rm -r tmp_kmc_{wildcards.species}_{wildcards.k}
+        if [ -d "tmp_kmc_{wildcards.ID}" ]; then
+            rm -r tmp_kmc_{wildcards.ID}
         fi
 
-        mkdir tmp_kmc_{wildcards.species}_{wildcards.k}
+        mkdir tmp_kmc_{wildcards.ID}
 
         # count k-mers
-        # just estimate histogram only
-        kmc -t{threads} -e -m9 -ci1 -cs100000 -fm -k{wildcards.k} {input} {output.histo} tmp_kmc_{wildcards.species}_{wildcards.k}
+        kmc -t{threads} -m9 -ci1 -cs100000 -fm -k{params.k} {input} counts_{wildcards.ID} tmp_kmc_{wildcards.ID}
 
-        rm -r tmp_kmc_{wildcards.species}_{wildcards.k}
+        # convert to histogram
+        kmc_tools transform counts_{wildcards.ID} histogram {output.histo}
+
+        # rm tmp dir
+        rm -r tmp_kmc_{wildcards.ID}
         """

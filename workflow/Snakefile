@@ -194,7 +194,8 @@ rule all_per_sim:
                     #"blast_results/{SID}_{PID}.txt",
                     #"hetmers_results/{SID}_{PID}_counts.csv",
                     #"seqkit_results/center_kmer_pairs_{SID}.txt",
-                    "freqk_results/{SID}_{PID}_counts.txt"),
+                    "freqk_results/{SID}_{PID}_counts.txt",
+                    "kmc_histo_results/{SID}.histo"),
                 "sweep": ("blast_results/{SID}_{PID}.txt", 
                     "slim_results/allele_freqs_{SID}_{PID}.txt"),
                 "twopop": ("slim_results/allele_freqs_{SID}_{PID}.txt",
@@ -215,6 +216,7 @@ include: "rules/empirical.smk"
 
 # other rules
 include: "rules/ancestral_genome.smk"
+include: "rules/kmc_histo.smk"
 include: "rules/bcftools_discosnp.smk"
 include: "rules/bcftools_poolsnp.smk"
 include: "rules/bcftools_remove_ref.smk"

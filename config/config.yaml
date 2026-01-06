@@ -1,22 +1,3 @@
-###############
-# SIMULATIONS #
-###############
-
-# k-mer length/minimum read trim length
-k: 31
-
-# genome length
-L: 2000000
-
-# multinomial probabilities for generating k-mers for synthetic genomes
-pA: 0.25
-
-pC: 0.25
-
-pG: 0.25
-
-pT: 0.25
-
 #################
 # READ TRIMMING #
 #################

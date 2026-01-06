@@ -4,13 +4,13 @@ rule ancestral_genome:
     output:
         "ancestral_genome_results/{ID}.fasta",
     params:
-        pA=config["pA"],
-        pC=config["pC"],
-        pG=config["pG"],
-        pT=config["pT"],
+        pA=lookup(query="ID == '{ID}'", within=parameters, cols="pA"),
+        pC=lookup(query="ID == '{ID}'", within=parameters, cols="pC"),
+        pG=lookup(query="ID == '{ID}'", within=parameters, cols="pG"),
+        pT=lookup(query="ID == '{ID}'", within=parameters, cols="pT"),
         shape=lookup(query="ID == '{ID}'", within=parameters, cols="shape"),
-        L=config["L"],
-        k=config["k"],
+        L=lookup(query="ID == '{ID}'", within=parameters, cols="L"),
+        k=lookup(query="ID == '{ID}'", within=parameters, cols="k"),
         shuffleKmers=lookup(query="ID == '{ID}'", within=parameters, cols="shuffle"),
     conda:
         "../envs/R.yaml"
