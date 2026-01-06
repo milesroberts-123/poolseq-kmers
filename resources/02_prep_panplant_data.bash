@@ -7,7 +7,8 @@ mamba activate bcftools
 # all letters should be capital
 #ref=/global/scratch/users/milesroberts/tmp/arabidopsis_thaliana_tair10_ncbi/data/GCF_000001735.4/at_upper.fa
 #ref=/global/scratch/users/milesroberts/tmp/brassica_rapa_plantpan_data/br.genome.gene/Chiifu.genome.fasta
-ref=/global/scratch/users/milesroberts/tmp/brassica_napus_plantpan_data/bn.genome.gene/zs11_upper.fa
+#ref=/global/scratch/users/milesroberts/tmp/brassica_napus_plantpan_data/bn.genome.gene/zs11_upper.fa
+ref=/global/scratch/users/milesroberts/tmp/solanum_lycopersicum_plantpan_data/to.genome.gene/SL5.genome.fasta
 
 # loop through variant types from plantpan
 #declare -a vartype=("snp" "ins" "cpg" "cpl" "del" "dup" "hdr" "inval" "invdp" "invtr" "tdm" "trans")
@@ -66,7 +67,7 @@ bcftools concat -a -Oz -o all.vcf.gz all.*.vcf.gz
 # realign indels and remove duplicates
 # merge bi-alleleic records
 echo Normalizing variants...
-bcftools norm -m +any -d all -o norm.vcf.gz -Oz -f $ref all.vcf.gz
+bcftools norm -m +any -d all -o norm.vcf.gz -c s -Oz -f $ref all.vcf.gz
 
 # filter out rare variants
 echo Filtering out rare variants...

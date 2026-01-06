@@ -186,8 +186,8 @@ rule all_per_sim:
                     #"disco_results/{SID}_{PID}.txt",
                     "slim_results/allele_freqs_{SID}_{PID}.txt",
                     "poolsnp_results/{SID}_{PID}.txt",
-                    "freebayes_de_novo_results/{SID}_{PID}.txt",
-                    "freebayes_a_priori_results/{SID}_{PID}.txt",
+                    #"freebayes_de_novo_results/{SID}_{PID}.txt",
+                    #"freebayes_a_priori_results/{SID}_{PID}.txt",
                     "freebayes_vg_results/{SID}_{PID}.txt",
                     #"blast_results/{SID}_{PID}.txt",
                     #"hetmers_results/{SID}_{PID}_counts.csv",
@@ -232,7 +232,7 @@ include: "rules/freqk.smk"
 include: "rules/iss.smk"
 include: "rules/kmc.smk"
 include: "rules/multiqc.smk"
-include: "rules/poolsnp.smk"
+#include: "rules/poolsnp.smk"
 include: "rules/samtools_faidx.smk"
 include: "rules/seqkit_get_ref.smk"
 include: "rules/seqkit_get_samples.smk"
@@ -241,7 +241,7 @@ include: "rules/seqkit_rename.smk"
 include: "rules/slim.smk"
 include: "rules/smudgeplot.smk"
 include: "rules/unitig_caller.smk"
-include: "rules/varscan.smk"
+#include: "rules/varscan.smk"
 include: "rules/vg.smk"
 include: "rules/kmer_distances.smk"
 include: "rules/counting_bloom_filter.smk"

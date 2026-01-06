@@ -114,34 +114,53 @@ rule freebayes_vg:
         freebayes -f {input.reffasta} -p {params.n} --use-best-n-alleles 2 --variant-input {input.vcf} --only-use-input-alleles --pooled-discrete {input.trimbam} 1> {output}
         """
 
-rule bcftools_varscan_vg:
-    input:
-        vcf="slim_results/samples_{SID}_{PID}.vcf.gz",
-        tbi="slim_results/samples_{SID}_{PID}.vcf.gz.tbi"
-    conda:
-        "../envs/bcftools.yaml"
-    output:
-        temp("bcftools_varscan_vg_results/{SID}_{PID}.txt")
-    shell:
-        "bcftools query -f '%CHROM\t%POS\n' {input} > {output}"
-
 rule varscan_vg:
     input:
         reffasta="seqkit_results/ref_{SID}.fasta",
+        index="seqkit_results/ref_{SID}.fasta.fai",
         trimbam="vg_surject_results/merged_{SID}_{PID}.bam",
-        known="bcftools_varscan_vg_results/{SID}_{PID}.txt"
     output:
-        raw=temp("varscan_vg_results/raw_{SID}_{PID}.tsv"),
-        limit="varscan_vg_results/{SID}_{PID}.tsv"
+        "varscan_results/{SID}_{PID}.tsv",
     conda:
         "../envs/varscan.yaml"
     benchmark:
-        "benchmarks/varscan_vg/{SID}_{PID}.bench"
+        "benchmarks/varscan/{SID}_{PID}.bench"
     shell:
         """
-        # pileup variants
-        samtools mpileup -f {input.reffasta} {input.trimbam} | varscan pileup2snp 1> {output.raw}
+        samtools mpileup -f {input.reffasta} {input.trimbam} | varscan pileup2snp 1> {output}
+        """
 
-        # restrict to known sites
-        varscan limit {output.raw} > {output.limit}
+rule poolsnp_vg:
+    input:
+        reffasta="seqkit_results/ref_{SID}.fasta",
+        index="seqkit_results/ref_{SID}.fasta.fai",
+        trimbam="vg_surject_results/merged_{SID}_{PID}.bam",
+    output:
+        vcf=temp("{SID}_{PID}_poolsnp_output.vcf.gz"),
+        cov=temp("{SID}_{PID}_poolsnp_output-cov-0.9999.txt"),
+        bs=temp("{SID}_{PID}_poolsnp_output_BS.txt.gz"),
+        mpileup=temp("{SID}_{PID}.mpileup"),
+    params:
+        wd=get_wd,
+        mincount=config["mincount"],
+    conda:
+        "../envs/poolsnp.yaml"
+    benchmark:
+        "benchmarks/poolsnp/{SID}_{PID}.bench"
+    shell:
+        """
+        samtools mpileup -f {input.reffasta} {input.trimbam} > {output.mpileup}
+
+        PoolSNP.sh   \
+        mpileup={params.wd}{output.mpileup} \
+        reference={params.wd}{input.reffasta} \
+        names={wildcards.SID} \
+        max-cov=0.9999 \
+        min-cov={params.mincount} \
+        min-count={params.mincount} \
+        min-freq=0.01 \
+        miss-frac=0 \
+        badsites=1 \
+        allsites=0 \
+        output={params.wd}{wildcards.SID}_{wildcards.PID}_poolsnp_output
         """
