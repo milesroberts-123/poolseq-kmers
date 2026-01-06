@@ -12,12 +12,9 @@ rule bwa_mem:
         bam=temp("bwa_results/{SID}_{PID}.bam"),
     conda:
         "../envs/bwa.yaml"
-    log:
-        "logs/bwa_mem/{SID}_{PID}.log",
     benchmark:
         "benchmarks/bwa_mem/{SID}_{PID}.bench"
     shell:
         """
-        # align reads to reference
         bwa mem -R '@RG\\tID:{wildcards.SID}\\tSM:{wildcards.SID}' -t {threads} {input.reffasta} {input.read1} {input.read2} | samtools sort -O bam > {output.bam}
         """

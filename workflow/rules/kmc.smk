@@ -6,24 +6,11 @@ rule kmc:
         uread2="fastp_results/trimmed_unpaired_R2_{SID}_{PID}.fastq",
     output:
         counts=temp("kmc_results/kmer_counts_{SID}_{PID}.txt"),
-        tmp_R1_pre=temp("tmp_R1_{SID}_{PID}.kmc_pre"),
-        tmp_R1_suf=temp("tmp_R1_{SID}_{PID}.kmc_suf"),
-        tmp_R2_pre=temp("tmp_R2_{SID}_{PID}.kmc_pre"),
-        tmp_R2_suf=temp("tmp_R2_{SID}_{PID}.kmc_suf"),
-        tmp_u_R1_pre=temp("tmp_u_R1_{SID}_{PID}.kmc_pre"),
-        tmp_u_R1_suf=temp("tmp_u_R1_{SID}_{PID}.kmc_suf"),
-        tmp_u_R2_pre=temp("tmp_u_R2_{SID}_{PID}.kmc_pre"),
-        tmp_u_R2_suf=temp("tmp_u_R2_{SID}_{PID}.kmc_suf"),
-        union_R1_R2_pre=temp("union_R1_R2_{SID}_{PID}.kmc_pre"),
-        union_R1_R2_suf=temp("union_R1_R2_{SID}_{PID}.kmc_suf"),
-        union_R1_R2_u1_pre=temp("union_R1_R2_u1_{SID}_{PID}.kmc_pre"),
-        union_R1_R2_u1_suf=temp("union_R1_R2_u1_{SID}_{PID}.kmc_suf"),
-        union_R1_R2_u1_u2_pre=temp("union_R1_R2_u1_u2_{SID}_{PID}.kmc_pre"),
-        union_R1_R2_u1_u2_suf=temp("union_R1_R2_u1_u2_{SID}_{PID}.kmc_suf"),
+        list=temp("{SID}_{PID}.list"),
+        pre=temp("tmp_counts_{SID}_{PID}.kmc_pre"),
+        suf=temp("tmp_counts_{SID}_{PID}.kmc_suf")
     conda:
         "../envs/kmc.yaml"
-    log:
-        "logs/kmc/{SID}_{PID}.log",
     benchmark:
         "benchmarks/kmc/{SID}_{PID}.bench"
     params:
@@ -39,19 +26,14 @@ rule kmc:
 
         mkdir tmp_kmc_{wildcards.SID}_{wildcards.PID}
 
+        # create file list
+        echo {input.pread1} {input.pread2} {input.uread1} {input.uread2} | tr ' ' '\n' > {output.list}
+        
         # count k-mers
-        kmc -t{threads} -ci{params.mincount} -cs{params.maxcount} -k{params.k} {input.pread1} tmp_R1_{wildcards.SID}_{wildcards.PID} tmp_kmc_{wildcards.SID}_{wildcards.PID} &>> {log}
-        kmc -t{threads} -ci{params.mincount} -cs{params.maxcount} -k{params.k} {input.pread2} tmp_R2_{wildcards.SID}_{wildcards.PID} tmp_kmc_{wildcards.SID}_{wildcards.PID} &>> {log}
-        kmc -t{threads} -ci{params.mincount} -cs{params.maxcount} -k{params.k} {input.uread1} tmp_u_R1_{wildcards.SID}_{wildcards.PID} tmp_kmc_{wildcards.SID}_{wildcards.PID} &>> {log}
-        kmc -t{threads} -ci{params.mincount} -cs{params.maxcount} -k{params.k} {input.uread2} tmp_u_R2_{wildcards.SID}_{wildcards.PID} tmp_kmc_{wildcards.SID}_{wildcards.PID} &>> {log}
-
-        # combine k-mer counts into one database
-        kmc_tools simple tmp_R1_{wildcards.SID}_{wildcards.PID} tmp_R2_{wildcards.SID}_{wildcards.PID} union union_R1_R2_{wildcards.SID}_{wildcards.PID} &>> {log}
-        kmc_tools simple union_R1_R2_{wildcards.SID}_{wildcards.PID} tmp_u_R1_{wildcards.SID}_{wildcards.PID} union union_R1_R2_u1_{wildcards.SID}_{wildcards.PID} &>> {log}
-        kmc_tools simple union_R1_R2_u1_{wildcards.SID}_{wildcards.PID} tmp_u_R2_{wildcards.SID}_{wildcards.PID} union union_R1_R2_u1_u2_{wildcards.SID}_{wildcards.PID} &>> {log}
+        kmc -t{threads} -ci{params.mincount} -cs{params.maxcount} -k{params.k} @{output.list} tmp_counts_{wildcards.SID}_{wildcards.PID} tmp_kmc_{wildcards.SID}_{wildcards.PID}
 
         # dump all k-mers to text file
-        kmc_tools transform union_R1_R2_u1_u2_{wildcards.SID}_{wildcards.PID} dump {output.counts} &>> {log}
+        kmc_tools transform tmp_counts_{wildcards.SID}_{wildcards.PID} dump {output.counts}
 
         # delete tmp directories
         rm -r tmp_kmc_{wildcards.SID}_{wildcards.PID}

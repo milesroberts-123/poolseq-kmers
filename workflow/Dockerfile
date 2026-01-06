@@ -1,6 +1,6 @@
 FROM condaforge/miniforge3:latest
 LABEL io.github.snakemake.containerized="true"
-LABEL io.github.snakemake.conda_env_hash="396ed6eb2ae5bb57c4f662874540e90c5999397225e3850fb13f3ac2afc7d072"
+LABEL io.github.snakemake.conda_env_hash="d77a063d1bd8717b5a4075b474243ef96c415a4630a8a3c0f9f92d5e726e947d"
 
 # Step 2: Retrieve conda environments
 
@@ -296,6 +296,71 @@ RUN mkdir -p /conda-envs/99d0271927f7937d98d4440f823b63a1
 COPY envs/bwa.yaml /conda-envs/99d0271927f7937d98d4440f823b63a1/environment.yaml
 
 # Conda environment:
+#   source: envs/cbf.yaml
+#   prefix: /conda-envs/55db855fcbcb181f72a773503cd0cf15
+#   name: click
+#   dependencies:
+#     - _libgcc_mutex=0.1=conda_forge
+#     - _openmp_mutex=4.5=2_gnu
+#     - bzip2=1.0.8=h4bc722e_7
+#     - ca-certificates=2025.4.26=hbd8a1cb_0
+#     - click=8.2.1=pyh707e725_0
+#     - joblib=1.5.1=pyhd8ed1ab_0
+#     - ld_impl_linux-64=2.43=h712a8e2_4
+#     - libblas=3.9.0=31_h59b9bed_openblas
+#     - libcblas=3.9.0=31_he106b2a_openblas
+#     - libexpat=2.7.0=h5888daf_0
+#     - libffi=3.4.6=h2dba641_1
+#     - libgcc=15.1.0=h767d61c_2
+#     - libgcc-ng=15.1.0=h69a702a_2
+#     - libgfortran=15.1.0=h69a702a_2
+#     - libgfortran5=15.1.0=hcea5267_2
+#     - libgomp=15.1.0=h767d61c_2
+#     - liblapack=3.9.0=31_h7ac8fdf_openblas
+#     - liblzma=5.8.1=hb9d3cd8_2
+#     - libmpdec=4.0.0=hb9d3cd8_0
+#     - libopenblas=0.3.29=pthreads_h94d23a6_0
+#     - libsqlite=3.50.1=hee588c1_0
+#     - libstdcxx=15.1.0=h8f9b012_2
+#     - libuuid=2.38.1=h0b41bf4_0
+#     - libzlib=1.3.1=hb9d3cd8_2
+#     - mmh3=5.1.0=py313h46c70d0_1
+#     - ncurses=6.5=h2d0b736_3
+#     - numpy=2.3.0=py313h17eae1a_0
+#     - openssl=3.5.0=h7b32b05_1
+#     - pandas=2.3.0=py313ha87cce1_0
+#     - pip=25.1.1=pyh145f28c_0
+#     - python=3.13.3=hf636f53_101_cp313
+#     - python-dateutil=2.9.0.post0=pyhff2d567_1
+#     - python-tzdata=2025.2=pyhd8ed1ab_0
+#     - python_abi=3.13=7_cp313
+#     - pytz=2025.2=pyhd8ed1ab_0
+#     - readline=8.2=h8c095d6_2
+#     - scikit-learn=1.7.0=py313h8ef605b_1
+#     - scipy=1.15.2=py313h86fcf2b_0
+#     - setuptools=80.9.0=pyhff2d567_0
+#     - six=1.17.0=pyhd8ed1ab_0
+#     - threadpoolctl=3.6.0=pyhecae5ae_0
+#     - tk=8.6.13=noxft_hd72426e_102
+#     - tzdata=2025b=h78e105d_0
+#   
+#   prefix: "/mnt/ffs24/home/robe1195/.local/share/mamba/envs/click"
+RUN mkdir -p /conda-envs/55db855fcbcb181f72a773503cd0cf15
+COPY envs/cbf.yaml /conda-envs/55db855fcbcb181f72a773503cd0cf15/environment.yaml
+
+# Conda environment:
+#   source: envs/datasets.yaml
+#   prefix: /conda-envs/3284ee146a4590758b62c61b3d500d64
+#   name: datasets
+#   dependencies:
+#     - ca-certificates=2025.4.26=hbd8a1cb_0
+#     - ncbi-datasets-cli=18.3.0=ha770c72_0
+#   
+#   prefix: "/mnt/ffs24/home/robe1195/.local/share/mamba/envs/datasets"
+RUN mkdir -p /conda-envs/3284ee146a4590758b62c61b3d500d64
+COPY envs/datasets.yaml /conda-envs/3284ee146a4590758b62c61b3d500d64/environment.yaml
+
+# Conda environment:
 #   source: envs/discosnp.yaml
 #   prefix: /conda-envs/3975635716462ad8df8ab04bf69fe7de
 #   name: discosnp
@@ -535,6 +600,145 @@ COPY envs/iss.yaml /conda-envs/2e4ba807a7ac2e611167d2d417e0f994/environment.yaml
 #   prefix: /mnt/home/robe1195/anaconda3/envs/kmc
 RUN mkdir -p /conda-envs/163c323cc09b3de9d2436ff7e1af6d8a
 COPY envs/kmc.yaml /conda-envs/163c323cc09b3de9d2436ff7e1af6d8a/environment.yaml
+
+# Conda environment:
+#   source: envs/multiqc.yaml
+#   prefix: /conda-envs/94794a08bf472569a01e7cc3ad46a894
+#   name: multiqc
+#   channels:
+#     - bioconda
+#     - conda-forge
+#   dependencies:
+#     - _libgcc_mutex=0.1=conda_forge
+#     - _openmp_mutex=4.5=2_gnu
+#     - _python_abi3_support=1.0=hd8ed1ab_2
+#     - annotated-types=0.7.0=pyhd8ed1ab_1
+#     - attrs=25.3.0=pyh71513ae_0
+#     - brotli-python=1.1.0=py311hfdbb021_2
+#     - bzip2=1.0.8=h4bc722e_7
+#     - ca-certificates=2025.4.26=hbd8a1cb_0
+#     - certifi=2025.4.26=pyhd8ed1ab_0
+#     - cffi=1.17.1=py311hf29c0ef_0
+#     - charset-normalizer=3.4.2=pyhd8ed1ab_0
+#     - click=8.2.1=pyh707e725_0
+#     - colorama=0.4.6=pyhd8ed1ab_1
+#     - coloredlogs=15.0.1=pyhd8ed1ab_4
+#     - colormath=3.0.0=pyhd8ed1ab_4
+#     - cpython=3.11.12=py311hd8ed1ab_0
+#     - expat=2.7.0=h5888daf_0
+#     - font-ttf-dejavu-sans-mono=2.37=hab24e00_0
+#     - font-ttf-inconsolata=3.000=h77eed37_0
+#     - font-ttf-source-code-pro=2.038=h77eed37_0
+#     - font-ttf-ubuntu=0.83=h77eed37_3
+#     - fontconfig=2.15.0=h7e30c49_1
+#     - fonts-conda-forge=1=0
+#     - freetype=2.13.3=ha770c72_1
+#     - h2=4.2.0=pyhd8ed1ab_0
+#     - hpack=4.1.0=pyhd8ed1ab_0
+#     - humanfriendly=10.0=pyh707e725_8
+#     - humanize=4.12.3=pyhd8ed1ab_0
+#     - hyperframe=6.1.0=pyhd8ed1ab_0
+#     - idna=3.10=pyhd8ed1ab_1
+#     - importlib-metadata=8.7.0=pyhe01879c_1
+#     - importlib_resources=6.5.2=pyhd8ed1ab_0
+#     - jinja2=3.1.6=pyhd8ed1ab_0
+#     - jsonschema=4.24.0=pyhd8ed1ab_0
+#     - jsonschema-specifications=2025.4.1=pyh29332c3_0
+#     - kaleido-core=0.2.1=h3644ca4_0
+#     - lcms2=2.17=h717163a_0
+#     - ld_impl_linux-64=2.43=h712a8e2_4
+#     - lerc=4.0.0=h0aef613_1
+#     - libblas=3.9.0=31_h59b9bed_openblas
+#     - libcblas=3.9.0=31_he106b2a_openblas
+#     - libdeflate=1.24=h86f0d12_0
+#     - libexpat=2.7.0=h5888daf_0
+#     - libffi=3.4.6=h2dba641_1
+#     - libfreetype=2.13.3=ha770c72_1
+#     - libfreetype6=2.13.3=h48d6fc4_1
+#     - libgcc=15.1.0=h767d61c_2
+#     - libgcc-ng=15.1.0=h69a702a_2
+#     - libgfortran=15.1.0=h69a702a_2
+#     - libgfortran5=15.1.0=hcea5267_2
+#     - libgomp=15.1.0=h767d61c_2
+#     - libjpeg-turbo=3.1.0=hb9d3cd8_0
+#     - liblapack=3.9.0=31_h7ac8fdf_openblas
+#     - liblzma=5.8.1=hb9d3cd8_1
+#     - libnsl=2.0.1=hd590300_0
+#     - libopenblas=0.3.29=pthreads_h94d23a6_0
+#     - libpng=1.6.47=h943b412_0
+#     - libsqlite=3.50.0=hee588c1_0
+#     - libstdcxx=15.1.0=h8f9b012_2
+#     - libtiff=4.7.0=hf01ce69_5
+#     - libuuid=2.38.1=h0b41bf4_0
+#     - libwebp-base=1.5.0=h851e524_0
+#     - libxcb=1.17.0=h8a09558_0
+#     - libxcrypt=4.4.36=hd590300_1
+#     - libzlib=1.3.1=hb9d3cd8_2
+#     - markdown=3.8=pyhd8ed1ab_0
+#     - markdown-it-py=3.0.0=pyhd8ed1ab_1
+#     - markupsafe=3.0.2=py311h2dc5d0c_1
+#     - mathjax=2.7.7=ha770c72_3
+#     - mdurl=0.1.2=pyhd8ed1ab_1
+#     - multiqc=1.29=pyhdfd78af_0
+#     - narwhals=1.41.0=pyhe01879c_0
+#     - natsort=8.4.0=pyh29332c3_1
+#     - ncurses=6.5=h2d0b736_3
+#     - networkx=3.4.2=pyh267e887_2
+#     - nspr=4.36=h5888daf_0
+#     - nss=3.112=h159eef7_0
+#     - numpy=2.2.6=py311h5d046bc_0
+#     - openjpeg=2.5.3=h5fbd93e_0
+#     - openssl=3.5.0=h7b32b05_1
+#     - packaging=25.0=pyh29332c3_1
+#     - pillow=11.2.1=py311h1322bbf_0
+#     - pip=25.1.1=pyh8b19718_0
+#     - pkgutil-resolve-name=1.3.10=pyhd8ed1ab_2
+#     - plotly=6.1.2=pyhd8ed1ab_0
+#     - polars=1.30.0=default_h1443d73_0
+#     - polars-default=1.30.0=py39hfac2b71_0
+#     - pthread-stubs=0.4=hb9d3cd8_1002
+#     - pyaml-env=1.2.2=pyhd8ed1ab_0
+#     - pycparser=2.22=pyh29332c3_1
+#     - pydantic=2.11.4=pyh3cfb1c2_0
+#     - pydantic-core=2.33.2=py311hdae7d1d_0
+#     - pygments=2.19.1=pyhd8ed1ab_0
+#     - pysocks=1.7.1=pyha55dd90_7
+#     - python=3.11.12=h9e4cc4f_0_cpython
+#     - python-dotenv=1.1.0=pyh29332c3_1
+#     - python-gil=3.11.12=hd8ed1ab_0
+#     - python-kaleido=0.2.1=pyhd8ed1ab_0
+#     - python_abi=3.11=7_cp311
+#     - pyyaml=6.0.2=py311h2dc5d0c_2
+#     - readline=8.2=h8c095d6_2
+#     - referencing=0.36.2=pyh29332c3_0
+#     - regex=2024.11.6=py311h9ecbd09_0
+#     - requests=2.32.3=pyhd8ed1ab_1
+#     - rich=14.0.0=pyh29332c3_0
+#     - rich-click=1.8.9=pyhd8ed1ab_0
+#     - rpds-py=0.25.1=py311hdae7d1d_0
+#     - setuptools=80.9.0=pyhff2d567_0
+#     - spectra=0.0.11=pyhd8ed1ab_2
+#     - sqlite=3.50.0=h9eae976_0
+#     - tiktoken=0.9.0=py311hf1706b8_0
+#     - tk=8.6.13=noxft_hd72426e_102
+#     - tqdm=4.67.1=pyhd8ed1ab_1
+#     - typeguard=4.4.2=pyhd8ed1ab_0
+#     - typing-extensions=4.13.2=h0e9735f_0
+#     - typing-inspection=0.4.1=pyhd8ed1ab_0
+#     - typing_extensions=4.13.2=pyh29332c3_0
+#     - tzdata=2025b=h78e105d_0
+#     - urllib3=2.4.0=pyhd8ed1ab_0
+#     - wheel=0.45.1=pyhd8ed1ab_1
+#     - xorg-libxau=1.0.12=hb9d3cd8_0
+#     - xorg-libxdmcp=1.1.5=hb9d3cd8_0
+#     - yaml=0.2.5=h7f98852_2
+#     - zipp=3.22.0=pyhd8ed1ab_0
+#     - zstandard=0.23.0=py311h9ecbd09_2
+#     - zstd=1.5.7=hb8e6e7a_2
+#   
+#   prefix: "/mnt/ffs24/home/robe1195/.local/share/mamba/envs/multiqc"
+RUN mkdir -p /conda-envs/94794a08bf472569a01e7cc3ad46a894
+COPY envs/multiqc.yaml /conda-envs/94794a08bf472569a01e7cc3ad46a894/environment.yaml
 
 # Conda environment:
 #   source: envs/poolsnp.yaml
@@ -778,6 +982,81 @@ RUN mkdir -p /conda-envs/ac6e0663d3c2604df3006ff1e3857de9
 COPY envs/smudgeplot.yaml /conda-envs/ac6e0663d3c2604df3006ff1e3857de9/environment.yaml
 
 # Conda environment:
+#   source: envs/sra.yaml
+#   prefix: /conda-envs/886de284fdc212d3809d472b03c24751
+#   name: sra-tools
+#   channels:
+#     - bioconda
+#     - conda-forge
+#   dependencies:
+#     - _libgcc_mutex=0.1=conda_forge
+#     - _openmp_mutex=4.5=2_gnu
+#     - c-ares=1.34.5=hb9d3cd8_0
+#     - ca-certificates=2025.11.12=hbd8a1cb_0
+#     - curl=8.17.0=h4e3cde8_0
+#     - icu=75.1=he02047a_0
+#     - keyutils=1.6.3=hb9d3cd8_0
+#     - krb5=1.21.3=h659f571_0
+#     - libcurl=8.17.0=h4e3cde8_0
+#     - libedit=3.1.20250104=pl5321h7949ede_0
+#     - libev=4.33=hd590300_2
+#     - libgcc=15.2.0=h767d61c_7
+#     - libgcc-ng=15.2.0=h69a702a_7
+#     - libgomp=15.2.0=h767d61c_7
+#     - libiconv=1.18=h3b78370_2
+#     - liblzma=5.8.1=hb9d3cd8_2
+#     - libnghttp2=1.67.0=had1ee68_0
+#     - libssh2=1.11.1=hcf80075_0
+#     - libstdcxx=15.2.0=h8f9b012_7
+#     - libstdcxx-ng=15.2.0=h4852527_7
+#     - libxcrypt=4.4.36=hd590300_1
+#     - libxml2=2.14.6=h26afc86_2
+#     - libxml2-16=2.14.6=ha9997c6_2
+#     - libzlib=1.3.1=hb9d3cd8_2
+#     - ncbi-vdb=3.2.1=h9948957_0
+#     - ncurses=6.5=h2d0b736_3
+#     - openssl=3.6.0=h26f9b46_0
+#     - ossuuid=1.6.2=h5888daf_1001
+#     - perl=5.32.1=7_hd590300_perl5
+#     - perl-alien-build=2.84=pl5321h7b50bb2_1
+#     - perl-alien-build-plugin-download-gitlab=0.01=pl5321hdfd78af_0
+#     - perl-alien-libxml2=0.20=pl5321hd2ab53c_0
+#     - perl-business-isbn=3.007=pl5321hd8ed1ab_0
+#     - perl-business-isbn-data=20210112.006=pl5321hd8ed1ab_0
+#     - perl-capture-tiny=0.48=pl5321ha770c72_1
+#     - perl-carp=1.50=pl5321hd8ed1ab_0
+#     - perl-constant=1.33=pl5321hd8ed1ab_0
+#     - perl-exporter=5.74=pl5321hd8ed1ab_0
+#     - perl-extutils-makemaker=7.70=pl5321hd8ed1ab_0
+#     - perl-ffi-checklib=0.28=pl5321hdfd78af_0
+#     - perl-file-chdir=0.1011=pl5321hd8ed1ab_0
+#     - perl-file-path=2.18=pl5321hd8ed1ab_0
+#     - perl-file-temp=0.2304=pl5321hd8ed1ab_0
+#     - perl-file-which=1.24=pl5321hd8ed1ab_0
+#     - perl-importer=0.026=pl5321hd8ed1ab_0
+#     - perl-parent=0.243=pl5321hd8ed1ab_0
+#     - perl-path-tiny=0.124=pl5321hd8ed1ab_0
+#     - perl-pathtools=3.75=pl5321hb9d3cd8_2
+#     - perl-scope-guard=0.21=pl5321hd8ed1ab_0
+#     - perl-sub-info=0.002=pl5321hd8ed1ab_0
+#     - perl-term-table=0.027=pl5321hdfd78af_0
+#     - perl-test-fatal=0.016=pl5321ha770c72_0
+#     - perl-test-warnings=0.031=pl5321ha770c72_0
+#     - perl-test2-suite=0.000163=pl5321hdfd78af_0
+#     - perl-try-tiny=0.31=pl5321ha770c72_0
+#     - perl-uri=5.34=pl5321ha770c72_0
+#     - perl-xml-libxml=2.0210=pl5321hd2ab53c_1
+#     - perl-xml-namespacesupport=1.12=pl5321hd8ed1ab_0
+#     - perl-xml-sax=1.02=pl5321hd8ed1ab_0
+#     - perl-xml-sax-base=1.09=pl5321hd8ed1ab_0
+#     - sra-tools=3.2.1=h4304569_1
+#     - zstd=1.5.7=hb8e6e7a_2
+#   
+#   prefix: "/global/home/users/milesroberts/.local/share/mamba/envs/sra-tools"
+RUN mkdir -p /conda-envs/886de284fdc212d3809d472b03c24751
+COPY envs/sra.yaml /conda-envs/886de284fdc212d3809d472b03c24751/environment.yaml
+
+# Conda environment:
 #   source: envs/unitig-caller.yaml
 #   prefix: /conda-envs/c3426142ab2478501bd2794e9bc90f87
 #   name: unitig-caller
@@ -909,21 +1188,39 @@ COPY envs/unitig-caller.yaml /conda-envs/c3426142ab2478501bd2794e9bc90f87/enviro
 RUN mkdir -p /conda-envs/00ac27dafb55868320e892d08cfe5ee2
 COPY envs/varscan.yaml /conda-envs/00ac27dafb55868320e892d08cfe5ee2/environment.yaml
 
+# Conda environment:
+#   source: envs/vg.yaml
+#   prefix: /conda-envs/7ef36989942043e8e5d4340db58bfd0f
+#   name: vg
+#   channels:
+#     - bioconda
+#   dependencies:
+#     - vg=1.67.0=h9ee0642_0
+#   
+#   prefix: "/global/home/users/milesroberts/.local/share/mamba/envs/vg"
+RUN mkdir -p /conda-envs/7ef36989942043e8e5d4340db58bfd0f
+COPY envs/vg.yaml /conda-envs/7ef36989942043e8e5d4340db58bfd0f/environment.yaml
+
 # Step 3: Generate conda environments
 
 RUN conda env create --prefix /conda-envs/3c74495c6c8f8b13c8f5e41bfa52b11d --file /conda-envs/3c74495c6c8f8b13c8f5e41bfa52b11d/environment.yaml && \
     conda env create --prefix /conda-envs/0950501a46653d5a4ebb8880d7116ac1 --file /conda-envs/0950501a46653d5a4ebb8880d7116ac1/environment.yaml && \
     conda env create --prefix /conda-envs/bdb938750e65e4dee08a317c9e6fbe39 --file /conda-envs/bdb938750e65e4dee08a317c9e6fbe39/environment.yaml && \
     conda env create --prefix /conda-envs/99d0271927f7937d98d4440f823b63a1 --file /conda-envs/99d0271927f7937d98d4440f823b63a1/environment.yaml && \
+    conda env create --prefix /conda-envs/55db855fcbcb181f72a773503cd0cf15 --file /conda-envs/55db855fcbcb181f72a773503cd0cf15/environment.yaml && \
+    conda env create --prefix /conda-envs/3284ee146a4590758b62c61b3d500d64 --file /conda-envs/3284ee146a4590758b62c61b3d500d64/environment.yaml && \
     conda env create --prefix /conda-envs/3975635716462ad8df8ab04bf69fe7de --file /conda-envs/3975635716462ad8df8ab04bf69fe7de/environment.yaml && \
     conda env create --prefix /conda-envs/d312f6eece184817d7aedaca2303e131 --file /conda-envs/d312f6eece184817d7aedaca2303e131/environment.yaml && \
     conda env create --prefix /conda-envs/e8cc18ea695f8068a63a8cd92b5f1140 --file /conda-envs/e8cc18ea695f8068a63a8cd92b5f1140/environment.yaml && \
     conda env create --prefix /conda-envs/2e4ba807a7ac2e611167d2d417e0f994 --file /conda-envs/2e4ba807a7ac2e611167d2d417e0f994/environment.yaml && \
     conda env create --prefix /conda-envs/163c323cc09b3de9d2436ff7e1af6d8a --file /conda-envs/163c323cc09b3de9d2436ff7e1af6d8a/environment.yaml && \
+    conda env create --prefix /conda-envs/94794a08bf472569a01e7cc3ad46a894 --file /conda-envs/94794a08bf472569a01e7cc3ad46a894/environment.yaml && \
     conda env create --prefix /conda-envs/34a74f1453a9c99997060d397590a03c --file /conda-envs/34a74f1453a9c99997060d397590a03c/environment.yaml && \
     conda env create --prefix /conda-envs/6e9cd389f1fb5d23ad614dc7f172bfe7 --file /conda-envs/6e9cd389f1fb5d23ad614dc7f172bfe7/environment.yaml && \
     conda env create --prefix /conda-envs/5d8d7dec5540d725ad3e6cb69c16b0a2 --file /conda-envs/5d8d7dec5540d725ad3e6cb69c16b0a2/environment.yaml && \
     conda env create --prefix /conda-envs/ac6e0663d3c2604df3006ff1e3857de9 --file /conda-envs/ac6e0663d3c2604df3006ff1e3857de9/environment.yaml && \
+    conda env create --prefix /conda-envs/886de284fdc212d3809d472b03c24751 --file /conda-envs/886de284fdc212d3809d472b03c24751/environment.yaml && \
     conda env create --prefix /conda-envs/c3426142ab2478501bd2794e9bc90f87 --file /conda-envs/c3426142ab2478501bd2794e9bc90f87/environment.yaml && \
     conda env create --prefix /conda-envs/00ac27dafb55868320e892d08cfe5ee2 --file /conda-envs/00ac27dafb55868320e892d08cfe5ee2/environment.yaml && \
+    conda env create --prefix /conda-envs/7ef36989942043e8e5d4340db58bfd0f --file /conda-envs/7ef36989942043e8e5d4340db58bfd0f/environment.yaml && \
     conda clean --all -y

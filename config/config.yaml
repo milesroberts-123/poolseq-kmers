@@ -1,10 +1,14 @@
+###############
+# SIMULATIONS #
+###############
+
 # k-mer length/minimum read trim length
 k: 31
 
 # genome length
 L: 2000000
 
-# multinomial probabilities for generating genome
+# multinomial probabilities for generating k-mers for synthetic genomes
 pA: 0.25
 
 pC: 0.25
@@ -12,6 +16,10 @@ pC: 0.25
 pG: 0.25
 
 pT: 0.25
+
+#################
+# READ TRIMMING #
+#################
 
 # unqualified_percent_limit for fastp: how many percents of bases are allowed to be unqualified in terms of quality score
 unqualLimit: 40
@@ -22,11 +30,136 @@ qualThresh: 30
 # window length for read trimming
 windowLength: 1
 
+##################
+# K-MER COUNTING #
+##################
+
 # minimum k-mer count threshold
-mincount: 5
+mincount: 3
 
 # maximum k-mer count recorded
 maxcount: 1000000
 
 # e-value for blast
 blastEvalue: 0.0000000001
+
+# bloom filter parameters
+array_size: 10000
+
+num_hash: 3
+
+##########################
+# REAL DATA - REAL POOLS #
+##########################
+
+## grene-net seedmix
+
+
+###########################
+# REAL DATA - PSEUDOPOOLS #
+###########################
+
+## Arabidopsis thaliana - 7 genomes
+real_fasta: "/global/scratch/users/milesroberts/tmp/arabidopsis_thaliana_tair10_ncbi/data/GCF_000001735.4/at_upper.fa"
+real_vcf: "/global/scratch/users/milesroberts/tmp/arabidopsis_thaliana_plantpan_data/at.genetics.variation/final.vcf.gz"
+num_reads: 
+ - 3200000
+ - 1600000
+ - 800000
+ - 400000
+ - 200000
+poolsize: 14
+chroms:
+ - "NC_003070.9"
+ - "NC_003071.7"
+ - "NC_003074.8"
+ - "NC_003075.7"
+ - "NC_003076.8" 
+real_accessions:
+ - "ERR3624579"
+ - "ERR3624577"
+ - "ERR3624578"
+ - "ERR3624573"
+ - "ERR3624576"
+ - "ERR3624574"
+ - "ERR3624575"
+
+## Brassica rapa
+#real_fasta: "/global/scratch/users/milesroberts/tmp/brassica_rapa_plantpan_data/br.genome.gene/Chiifu.genome.fasta"
+#real_vcf: "/global/scratch/users/milesroberts/tmp/brassica_rapa_plantpan_data/br.genetics.variation/final.vcf.gz"
+#num_reads: 25000000
+#poolsize: 12
+#chroms:
+#real_accessions:
+# - "SRR14584034"
+# - "SRR14584045"
+# - "SRR14584052"
+# - "SRR14583938"
+# - "SRR14583939"
+# - "SRR14583940"
+# - "SRR14584002"
+# - "SRR14584000"
+# - "SRR14583941"
+# - "SRR14583942"
+# - "SRR14583943"
+# - "SRR14583999"
+# - "SRR14583998"
+# - "SRR14583944"
+# - "SRR14583945"
+# - "SRR14583912"
+# - "SRR14583964"
+# - "SRR14583903"
+# - "SRR14583946"
+# - "SRR14583947"
+# - "SRR14583997"
+# - "SRR14583949"
+# - "SRR14583950"
+# - "SRR14583951"
+# - "SRR14583996"
+# - "SRR14583995"
+# - "SRR14583952"
+# - "SRR14584025"
+# - "SRR14584026"
+# - "SRR14584027"
+# - "SRR14583991"
+# - "SRR14583990"
+# - "SRR14583989"
+# - "SRR14583976"
+# - "SRR14583984"
+# - "SRR14584066"
+# - "SRR14584030"
+# - "SRR14584031"
+# - "SRR14584032"
+# - "SRR14583953"
+# - "SRR14583954"
+# - "SRR14584023"
+# - "SRR14583994"
+# - "SRR14583993"
+# - "SRR14583992"
+# - "SRR14583988"
+# - "SRR14584028"
+# - "SRR14584029"
+
+## Brassica napus
+#real_fasta:
+#real_vcf:
+#num_reads:
+#poolsize:
+#chroms:
+#real_accessions:
+
+
+###################################
+# KMER HISTOGRAM FOR REAL GENOMES #
+###################################
+
+k_zeta:
+ - 27
+ - 31
+ - 41
+ - 51
+ - 61
+
+ncbi_taxa:
+ - "metazoa"
+ - "viridiplantae"

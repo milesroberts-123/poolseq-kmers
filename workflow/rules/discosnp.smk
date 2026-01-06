@@ -66,8 +66,6 @@ rule discosnp:
         corres=temp("discoRes_{SID}_{PID}_read_files_correspondance.txt"),
     conda:
         "../envs/discosnp.yaml"
-    log:
-        "logs/discosnp/{SID}_{PID}.log",
     benchmark:
         "benchmarks/discosnp/{SID}_{PID}.bench"
     params:
@@ -107,7 +105,7 @@ rule discosnp:
         # run discosnp, with results for mapping SNPs to reference
         cd tmp_discosnp_{wildcards.SID}_{wildcards.PID}
 
-        run_discoSnp++.sh -r ../{output.fof} -c {params.mincount} -k {params.k} -G ../{input.ref} -p {params.prefix} &> ../{log}
+        run_discoSnp++.sh -r ../{output.fof} -c {params.mincount} -k {params.k} -G ../{input.ref} -p {params.prefix}
 
         # move output from temp directory
         mv {params.prefix}* ..

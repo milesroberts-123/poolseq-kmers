@@ -1,13 +1,11 @@
 rule seqkit_get_ref:
     input:
-        slimfasta="slim_results/{ID}.fasta",
+        slimfasta="slim_results/{SID}.fasta",
     output:
-        reffasta="seqkit_results/ref_{ID}.fasta",
-        samplefasta="seqkit_results/samples_{ID}.fasta",
+        reffasta="seqkit_results/ref_{SID}.fasta",
+        samplefasta="seqkit_results/samples_across_pop_{SID}.fasta",
     conda:
         "../envs/seqkit.yaml"
-    log:
-        "logs/seqkit/{ID}.log",
     shell:
         """
         # get a haploid reference genome

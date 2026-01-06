@@ -2,9 +2,9 @@
 import pandas as pd
 import os
 from snakemake.utils import validate
-#from snakemake.utils import Paramspace
 from snakemake.utils import min_version
 
+# check snakemake version
 min_version("9.3.3")
 
 # configuration
@@ -24,146 +24,225 @@ parameters = pd.read_table(
 ).set_index(["ID"], drop=False)
 validate(parameters, "../config/parameters.schema.yaml")
 
-
-# declare a dataframe to be a paramspace
-#parameters = Paramspace(parameters)
-
-
 # split into paired-end and single-end
 one_pop_params = parameters[
-    (parameters["simtype"] == "onepop") | (parameters["simtype"] == "sweep")
+    (parameters["simtype"] == "onepop")
+]
+
+sweep_params = parameters[
+    (parameters["simtype"] == "sweep")
 ]
 
 two_pop_params = parameters[
-    (parameters["simtype"] == "twopop") | (parameters["simtype"] == "bsa")
+    (parameters["simtype"] == "twopop")
 ]
 
 
 wildcard_constraints:
-    ID="\\d+",
+    ID="[a-zA-Z0-9]+",
+    SID="[a-zA-Z0-9]+",
+    PID="[a-zA-Z0-9]+",
+    num="[0-9]+"
+    #chr="[a-zA-Z0-9]+"
 
-localrules: all_per_sim, all
+localrules: all_per_sim
 
-# rule report:
-#    input:
-#        expand("{ID}.done", ID=one_pop_params.index.get_level_values("ID")),
-# 	expand("{ID}_p1p2.done", ID=two_pop_params.index.get_level_values("ID")),
-#    output:
-#        "report.html"
-#    params:
-#        wd = get_wd
-#    conda:
-#        "../envs/r_markdown.yaml"
-#    log:
-#        "logs/r_markdown.log"
-#    shell:
-#        """
-#        Rscript -e 'parameters <- list(root_directory = "{params.wd}");
-#                    rmarkdown::render("notebooks/kmer_poolseq_maf_prediction.Rmd",
-#                                      params      = parameters,
-#                                      output_dir  = "{params.wd}",
-#                                      output_file = "{output}")'
-#        """
+#
+# create histograms across reference genomes
+# input function for the rule aggregate
+def aggregate_histos(wildcards):
+    checkpoint_output = checkpoints.datasets_rehydrate.get(**wildcards).output[0]
+    print(checkpoint_output)
+    return expand("kmc_histo_results/{species}_{k}.histo", species = glob_wildcards(os.path.join(checkpoint_output, "{i}.fna")).i, k = config["k_zeta"])
 
+def aggregate_stats(wildcards):
+    checkpoint_output = checkpoints.datasets_rehydrate.get(**wildcards).output[0]
+    print(checkpoint_output)
+    return expand("seqkit_stats_results/{species}.txt", species = glob_wildcards(os.path.join(checkpoint_output, "{i}.fna")).i)
 
+#
 rule all:
     input:
-        expand("{SID}_0.done", SID=one_pop_params.index.get_level_values("ID")),
-        expand("{SID}_{PID}.done", SID=two_pop_params.index.get_level_values("ID"), PID=[0,1]),
+        "calls.txt",
+        aggregate_histos,
+        aggregate_stats,
+        #expand("kmc_histo_results/{species}_{k}.histo", species = config["species"], k = config["k_zeta"]),
+        expand("finished/{SID}_0.done", SID=one_pop_params.index.get_level_values("ID")),
+        expand("finished/{SID}_0.done", SID=sweep_params.index.get_level_values("ID")),
+        expand("finished/{SID}_{PID}.done", SID=two_pop_params.index.get_level_values("ID"), PID=[0,1]),
         "multiqc_report.html"
+        #expand("calls_{chr}.vcf", chr = ["A01", "A02", "A03", "A04", "A05", "A06", "A07", "A08", "A09", "A10"])
+
+# rule to apply freqk and vg giraffe to real data 
+rule all_empirical:
+    input:
+        expand("real_freqk_results/{num}/calls.txt", num = config["num_reads"]),
+        expand("real_bcftools_call_results/{num}_{chr}.vcf", chr = config["chroms"], num = config["num_reads"]),
+        expand("real_freebayes_results/{num}_{chr}.vcf", chr = config["chroms"], num = config["num_reads"]),
+        expand("real_varscan_results/{num}_{chr}.tsv", chr = config["chroms"], num = config["num_reads"]),
+        expand("{chr}_{num}_real_poolsnp_results.vcf.gz", chr = config["chroms"], num = config["num_reads"])
+        #"real.vcf"
+
+# create histograms across reference genomes
+rule all_histos:
+    input:
+        aggregate_histos,
+        aggregate_stats
+        #expand("kmc_histo_results/{species}_{k}.histo", species = config["species"], k = config["k_zeta"])
+
+# perform simulations
+# additional rule helps with batching
+rule all_sims:
+    input:
+        expand("finished/{SID}_0.done", SID=one_pop_params.index.get_level_values("ID")),
+        expand("finished/{SID}_0.done", SID=sweep_params.index.get_level_values("ID")),
+        expand("finished/{SID}_{PID}.done", SID=two_pop_params.index.get_level_values("ID"), PID=[0,1]),
+        "multiqc_report.html"
+
+rule all_neutral_sims:
+    input:
+        expand("finished/{SID}_0.done", SID=one_pop_params.index.get_level_values("ID")),
+
+rule all_sweep_sims:
+    input:
+        expand("finished/{SID}_0.done", SID=sweep_params.index.get_level_values("ID")),
+
+rule all_two_sims:
+    input:
+        expand("finished/{SID}_{PID}.done", SID=two_pop_params.index.get_level_values("ID"), PID=[0,1]),
+
+#rule all_per_sim:
+#    input:
+#        "varscan_results/{SID}_{PID}.tsv",
+#        "smudgeplot_results/{SID}_{PID}_coverages.tsv",
+#        "disco_results/{SID}_{PID}.txt",
+#        "slim_results/allele_freqs_{SID}_{PID}.txt",
+#        "poolsnp_results/{SID}_{PID}.txt",
+#        "freebayes_de_novo_results/{SID}_{PID}.txt",
+#        "freebayes_a_priori_results/{SID}_{PID}.txt",
+#        "freebayes_vg_results/{SID}_{PID}.txt",
+#        "blast_results/{SID}_{PID}.txt",
+#        "hetmers_results/{SID}_{PID}_counts.csv",
+#        "seqkit_results/center_kmer_pairs_{SID}.txt",   
+#        "freqk_results/{SID}_{PID}_counts.txt",
+#        branch(
+#            lookup(query="ID == '{SID}'", within=parameters, cols="simtype") == "twopop",
+#            then="distances_{SID}.txt",
+#            otherwise=None
+#        )
+#    output:
+#        touch("finished/{SID}_{PID}.done")
+
+#def test_if_twopop(wildcards):
+#    simtype = parameters.loc[parameters["ID"] == wildcards.SID, "simtype"]
+#    simtype = str(simtype.iloc[0])
+#    return(simtype == "twopop")
 
 #rule all_per_sim:
 #    input:
 #        branch(
-#            lookup(query="ID == '{SID}'", within=parameters, cols="simtype"),
-#            cases={
-#                "onepop": ["varscan_results/{SID}_{PID}.tsv", "smudgeplot_results/{SID}_{PID}_coverages.tsv", "disco_results/{SID}_{PID}.txt", "slim_results/allele_freqs_{SID}_{PID}.txt", "poolsnp_results/{SID}_{PID}.txt", "freebayes_results/{SID}_{PID}.txt", "blast_results/{SID}_{PID}.txt", "hetmers_results/{SID}_{PID}_counts.csv", "seqkit_results/center_kmer_pairs_{SID}.txt"],
-#                "twopop": ["dissimilarity_results/{SID}.txt", "varscan_results/{SID}_{PID}.tsv", "smudgeplot_results/{SID}_{PID}_coverages.tsv", "disco_results/{SID}_{PID}.txt", "slim_results/allele_freqs_{SID}_{PID}.txt", "poolsnp_results/{SID}_{PID}.txt", "freebayes_results/{SID}_{PID}.txt", "blast_results/{SID}_{PID}.txt", "hetmers_results/{SID}_{PID}_counts.csv", "seqkit_results/center_kmer_pairs_{SID}.txt"],
-#                "sweep": ["varscan_results/{SID}_{PID}.tsv", "smudgeplot_results/{SID}_{PID}_coverages.tsv", "disco_results/{SID}_{PID}.txt", "slim_results/allele_freqs_{SID}_{PID}.txt", "poolsnp_results/{SID}_{PID}.txt", "freebayes_results/{SID}_{PID}.txt", "blast_results/{SID}_{PID}.txt", "hetmers_results/{SID}_{PID}_counts.csv", "seqkit_results/center_kmer_pairs_{SID}.txt"],
-#                "bsa": ["dissimilarity_results/{SID}.txt", "varscan_results/{SID}_{PID}.tsv", "smudgeplot_results/{SID}_{PID}_coverages.tsv", "disco_results/{SID}_{PID}.txt", "slim_results/allele_freqs_{SID}_{PID}.txt", "poolsnp_results/{SID}_{PID}.txt", "freebayes_results/{SID}_{PID}.txt", "blast_results/{SID}_{PID}.txt", "hetmers_results/{SID}_{PID}_counts.csv", "seqkit_results/center_kmer_pairs_{SID}.txt"],
-#            }
-#        )      
+#            condition=test_if_twopop,
+#            then=["varscan_results/{SID}_{PID}.tsv",
+#                "smudgeplot_results/{SID}_{PID}_coverages.tsv",
+#                "disco_results/{SID}_{PID}.txt",
+#                "slim_results/allele_freqs_{SID}_{PID}.txt",
+#                "poolsnp_results/{SID}_{PID}.txt",
+#                "freebayes_de_novo_results/{SID}_{PID}.txt",
+#                "freebayes_a_priori_results/{SID}_{PID}.txt",
+#                "freebayes_vg_results/{SID}_{PID}.txt",
+#                "blast_results/{SID}_{PID}.txt",
+#                "hetmers_results/{SID}_{PID}_counts.csv",
+#                "seqkit_results/center_kmer_pairs_{SID}.txt",
+#                "freqk_results/{SID}_{PID}_counts.txt",
+#                "distances_{SID}.txt"],
+#            otherwise=["varscan_results/{SID}_{PID}.tsv",
+#                "smudgeplot_results/{SID}_{PID}_coverages.tsv",
+#                "disco_results/{SID}_{PID}.txt",
+#                "slim_results/allele_freqs_{SID}_{PID}.txt",
+#                "poolsnp_results/{SID}_{PID}.txt",
+#                "freebayes_de_novo_results/{SID}_{PID}.txt",
+#                "freebayes_a_priori_results/{SID}_{PID}.txt",
+#                "freebayes_vg_results/{SID}_{PID}.txt",
+#                "blast_results/{SID}_{PID}.txt",
+#                "hetmers_results/{SID}_{PID}_counts.csv",
+#                "seqkit_results/center_kmer_pairs_{SID}.txt",
+#                "freqk_results/{SID}_{PID}_counts.txt"]
+#            )
 #    output:
-#        touch("{SID}_{PID}.done")
+#        touch("finished/{SID}_{PID}.done")
+
+def get_simtype(wildcards):
+    simtype = parameters.loc[parameters["ID"] == wildcards.SID, "simtype"]
+    simtype = str(simtype.iloc[0])
+    return(simtype)
 
 rule all_per_sim:
     input:
-        "varscan_results/{SID}_{PID}.tsv",
-        "smudgeplot_results/{SID}_{PID}_coverages.tsv",
-        "disco_results/{SID}_{PID}.txt",
-        "slim_results/allele_freqs_{SID}_{PID}.txt",
-        "poolsnp_results/{SID}_{PID}.txt",
-        "freebayes_results/{SID}_{PID}.txt",
-        "blast_results/{SID}_{PID}.txt",
-        "hetmers_results/{SID}_{PID}_counts.csv",
-        "seqkit_results/center_kmer_pairs_{SID}.txt",   
-        "dissimilarity_results/{SID}.txt"
+        branch(
+            get_simtype,
+            cases={
+                "onepop": ("varscan_results/{SID}_{PID}.tsv",
+                    #"smudgeplot_results/{SID}_{PID}_coverages.tsv",
+                    #"disco_results/{SID}_{PID}.txt",
+                    "slim_results/allele_freqs_{SID}_{PID}.txt",
+                    "poolsnp_results/{SID}_{PID}.txt",
+                    #"freebayes_de_novo_results/{SID}_{PID}.txt",
+                    #"freebayes_a_priori_results/{SID}_{PID}.txt",
+                    "freebayes_vg_results/{SID}_{PID}.txt",
+                    #"blast_results/{SID}_{PID}.txt",
+                    #"hetmers_results/{SID}_{PID}_counts.csv",
+                    #"seqkit_results/center_kmer_pairs_{SID}.txt",
+                    "freqk_results/{SID}_{PID}_counts.txt"),
+                "sweep": ("blast_results/{SID}_{PID}.txt", 
+                    "slim_results/allele_freqs_{SID}_{PID}.txt"),
+                "twopop": ("slim_results/allele_freqs_{SID}_{PID}.txt",
+                    "distances_{SID}.txt")
+            }
+        )
     output:
-        touch("{SID}_{PID}.done")
+        touch("finished/{SID}_{PID}.done")
 
 # helper functions
 include: "rules/common.smk"
 
+# shape parameter analysis
+include: "rules/datasets.smk"
+
+# empirical data
+include: "rules/empirical.smk"
+
 # other rules
 include: "rules/ancestral_genome.smk"
 include: "rules/bcftools_discosnp.smk"
-#include: "rules/bcftools_discosnp_one_pop.smk"
-#include: "rules/bcftools_discosnp_two_pop.smk"
-#include: "rules/bcftools_poolsnp_masked.smk"
 include: "rules/bcftools_poolsnp.smk"
-#include: "rules/bcftools_poolsnp_one_pop.smk"
-#include: "rules/bcftools_poolsnp_two_pop.smk"
-#include: "rules/bcftools_slim_one_pop.smk"
 include: "rules/bcftools_remove_ref.smk"
 include: "rules/bcftools_get_samples.smk"
 include: "rules/bcftools_fill_tags.smk"
 include: "rules/bcftools_freebayes.smk"
-#include: "rules/bcftools_slim_two_pop.smk"
-# include: "rules/bedtools.smk"
 include: "rules/blast.smk"
 include: "rules/makeblastdb.smk"
-# include: "rules/bwa_masked.smk"
 include: "rules/bwa_index.smk"
 include: "rules/bwa_mem.smk"
-#include: "rules/bwa_one_pop.smk"
-#include: "rules/bwa_two_pop.smk"
-# include: "rules/bwa.smk"
 include: "rules/compress.smk"
 include: "rules/discosnp.smk"
-#include: "rules/discosnp_one_pop.smk"
-#include: "rules/discosnp_two_pop.smk"
-include: "rules/dissimilarity.smk"
 include: "rules/fastp.smk"
 include: "rules/freebayes.smk"
-#include: "rules/fastp_one_pop.smk"
-#include: "rules/fastp_two_pop.smk"
 include: "rules/hetmers.smk"
-#include: "rules/hetmers_one_pop.smk"
-#include: "rules/hetmers_two_pop.smk"
+include: "rules/freqk.smk"
 include: "rules/iss.smk"
-#include: "rules/iss_two_pop.smk"
 include: "rules/kmc.smk"
-#include: "rules/kmc_one_pop.smk"
-#include: "rules/kmc_two_pop.smk"
-# include: "rules/poolsnp_masked.smk"
 include: "rules/multiqc.smk"
-include: "rules/poolsnp.smk"
-#include: "rules/poolsnp_one_pop.smk"
-#include: "rules/poolsnp_two_pop.smk"
+#include: "rules/poolsnp.smk"
 include: "rules/samtools_faidx.smk"
 include: "rules/seqkit_get_ref.smk"
 include: "rules/seqkit_get_samples.smk"
-#include: "rules/seqkit_get_ref_one_pop.smk"
 include: "rules/seqkit_hetmer_key.smk"
 include: "rules/seqkit_rename.smk"
-#include: "rules/seqkit_get_ref_two_pop.smk"
-#include: "rules/seqkit_hetmer_key_two_pop.smk"
 include: "rules/slim.smk"
 include: "rules/smudgeplot.smk"
-#include: "rules/smudgeplot_one_pop.smk"
-#include: "rules/smudgeplot_two_pop.smk"
 include: "rules/unitig_caller.smk"
-# include: "rules/varscan_masked.smk"
-include: "rules/varscan.smk"
-#include: "rules/varscan_one_pop.smk"
-#include: "rules/varscan_two_pop.smk"
+#include: "rules/varscan.smk"
+include: "rules/vg.smk"
+include: "rules/kmer_distances.smk"
+include: "rules/counting_bloom_filter.smk"
+include: "rules/cbind.smk"

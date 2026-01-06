@@ -9,12 +9,10 @@ rule bwa_index:
         sa=temp("seqkit_results/ref_{ID}.fasta.sa"),
     conda:
         "../envs/bwa.yaml"
-    log:
-        "logs/bwa_index/{ID}.log",
     benchmark:
         "benchmarks/bwa_index/{ID}.bench"
     shell:
         """
         # index reference
-        bwa index {input.reffasta} &>> {log}
+        bwa index {input.reffasta}
         """

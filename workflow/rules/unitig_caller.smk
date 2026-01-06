@@ -12,8 +12,6 @@ rule unitig_caller:
         rtab_prefix="unitig_caller_results/unitigs_{SID}_{PID}",
     benchmark:
         "benchmarks/unitig_caller/{SID}_{PID}.bench"
-    log:
-        "logs/unitig_caller/{SID}_{PID}.log",
     shell:
         r"""
         # turn k-mer counts into fasta

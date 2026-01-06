@@ -7,8 +7,6 @@ rule hetmers:
         "hetmers_results/{SID}_{PID}_bayes_states.csv",
         "hetmers_results/{SID}_{PID}_hashes.csv",
         "hetmers_results/{SID}_{PID}_seqs.csv",
-    log:
-        "logs/hetmers/{SID}_{PID}.log",
     benchmark:
         "benchmarks/hetmers/{SID}_{PID}.bench"
     params:
@@ -22,7 +20,7 @@ rule hetmers:
             mkdir hetmers_results
         fi
 
-        ./scripts/hetmers --inputs {input} --outputs {wildcards.SID}_{wildcards.PID} --coverages {params.cov} --pools {params.pool} --alphas 1 --betas 1 --minimums {params.mincount} &> {log}
+        ./scripts/hetmers --inputs {input} --outputs {wildcards.SID}_{wildcards.PID} --coverages {params.cov} --pools {params.pool} --alphas 1 --betas 1 --minimums {params.mincount}
 
         # move output to directory
         mv {wildcards.SID}_{wildcards.PID}_counts.csv hetmers_results/

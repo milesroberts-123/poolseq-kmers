@@ -3,39 +3,51 @@ title: "R Notebook"
 output: html_notebook
 ---
 
-# Ideas
-
-* Allele frequencies: identify snps not in reference, identify erroneous snp frequencies by total coverage
-
-* SFS: distribution of allele frequencies, diversity, tajimas' D, demographic inference
-
-* FST
-
-* Selective sweeps
-
-# packages
+# set-up environment
 
 ```{r}
+# clear env
 rm(list = ls())
+gc()
 
+# packages
+library(vcfR)
 library(ggplot2)
 library(plyr)
 library(MASS)
 library(reshape)
 library(ggpubr)
-
-# library(fitdistrplus)
-
-library(rjson)
-
+library(ggforce)
+library(VGAM)
+library(fitPS)
 library(scico)
+library(stringr)
+library(XML)
 
+# date to mark plots/outputs
 today = Sys.Date()
+
+# global ggplot2 theme
+theme_set( 
+  theme_minimal() +
+  theme(text = element_text(size = 16, 
+                            family = "Helvetica", 
+                            colour = "black"),
+        axis.text = element_text(colour = "black"),
+        plot.title = element_text(hjust = 0.5),
+        strip.text = element_text(colour = 'black'))
+)
 ```
 
-# functions
+# common functions
 
 ```{r}
+
+# Source - https://stackoverflow.com/a
+# Posted by Zheyuan Li, modified by community. See post 'Timeline' for change history
+# Retrieved 2025-12-29, License - CC BY-SA 4.0
+rsq <- function (x, y) cor(x, y, use = "pairwise.complete.obs") ^ 2
+
 # expected number of segregating sites
 ES = function(N, mu, L, n){
   4*N*mu*L*sum( 1/(1:(n-1)) )
@@ -139,7 +151,7 @@ posterior_min_kmer_count = function(x,z,n,C,c,alpha,beta){
 #posterior_min_kmer_count(5, 200, 200, 1, 5, 1, 1)
 ```
 
-# Simulations
+# DEPRECATED: Simulations
 
 ## k-mer counts in pool-seq
 
@@ -818,12 +830,496 @@ add_mesh(p, x= ~maf/n, y= ~cov, z = ~cutoff, data = results, opacity = 0.3, colo
 
 ```
 
-# process single population metrics
+# Get genome size statistics from NCBI
+```{r message=FALSE, warning=FALSE, include=FALSE}
+
+assembly_info <- read.table("../../data/ncbi_dataset_2025-12-11.tsv", header = T, sep = "\t", fill = T)
+
+results = NULL
+
+for(i in 1:nrow(assembly_info)){
+  
+  taxid <- assembly_info$Organism.Taxonomic.ID[i]
+  
+  assembly_length <- assembly_info$Assembly.Stats.Total.Sequence.Length[i]
+  
+  testfile <- "/global/home/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/notebooks/test.xml"
+
+  url <- paste("https://api.ncbi.nlm.nih.gov/genome/v0/expected_genome_size?species_taxid=", taxid, "&length=", assembly_length, sep = "")
+
+  download.file(url, testfile, mode="wb") # get data into test
+
+  data <- xmlParse(testfile)
+
+  xml_data <- xmlToList(data)
+  
+  expected_ungapped_length = xml_data$expected_ungapped_length
+  
+  if(is.null(expected_ungapped_length)){
+    #minimum_ungapped_length = as.numeric(xml_data$minimum_ungapped_length)
+    #maximum_ungapped_length = as.numeric(xml_data$maximum_ungapped_length)
+    #expected_ungapped_length = (minimum_ungapped_length + maximum_ungapped_length)/2
+    #if(is.null(expected_ungapped_length)){
+      expected_ungapped_length = NA 
+    #}
+  }
+  
+  result = data.frame(
+    Organism.Taxonomic.ID = taxid,
+    assembly_percent_complete = assembly_length/as.numeric(expected_ungapped_length)*100,
+    expected_ungapped_length = expected_ungapped_length,
+    length_status = xml_data$length_status
+  )
+
+  results <- rbind(results, result)
+  
+  random_wait <- rexp(1, 1/3)
+  
+  Sys.sleep(random_wait)
+}
+
+write.table(results, paste("assembly_completeness_stats_", today, ".tsv", sep = ""), sep = "\t", row.names = F, quote = F)
+```
+
+# Fit zeta distributions to k-mer count histograms and compare to genome size estimates
 ```{r}
-params = read.table("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/config/parameters.tsv", header = T)
+my_histos = list.files(path = "/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/kmc_histo_results/", pattern = ".histo")
 
-#dones = sort(as.numeric(gsub(".txt", "", gsub("discoRes_ad_", "",list.files(path = "/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow", pattern = "discoRes_ad_")))))
+ref_seq_ids_to_plot = c("GCF_000001735.4", "GCF_902167145", "GCF_036512215", "GCF_000001405.40", "GCF_000001215.4", "GCF_000002985.6")
 
+histos_to_plot = my_histos[grepl(paste(ref_seq_ids_to_plot, collapse = "|"), my_histos)]
+
+results = NULL
+num_skipped = 0
+
+for(one_histo in my_histos) {
+#for(one_histo in histos_to_plot) {
+  # Initialize a flag to indicate if an error occurred in this iteration
+  skip_to_next <- FALSE 
+  
+  histo = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/kmc_histo_results/", one_histo, sep = ""), header = F)
+  
+  #plot(log10(histo$V1), log10(histo$V2))
+  
+  data = histo$V2
+  
+  data = data[1:(pmin( min(which( data == 0 )) - 1, length(data)) )]
+  
+  p1 = makePSData(n = 1:length(data), count = data, type = "S")
+
+  tryCatch(
+    expr = {
+      fit <- fitDist(p1)
+    },
+    error = function(e) {
+      # If an error occurs, set the flag to TRUE
+      message(paste("Error in iteration:", one_histo, e$message))
+      num_skipped <<- num_skipped + 1
+      skip_to_next <<- TRUE # Use superassignment to modify the flag in the enclosing environment
+    },
+    warning = function(w) {}
+  )
+  
+  if(skip_to_next){
+    next
+  }
+  
+  s <- fit$shape
+  
+  # genome length
+  L = sum(data)
+  
+  prob_mass = data/L
+  
+  # calculate r-squared on log-log scale
+  compare = data.frame(
+      x = 1:length(data),
+      data = prob_mass,
+      zeta = dzeta(1:length(data), shape = s)
+  )
+  
+  r2 <- rsq(log10(compare$data), log10(compare$zeta))
+  
+  #sse = sum( (compare$data - compare$zeta)^2 )
+  #sst = sum( (compare$data - mean(compare$data))^2 )
+    
+  #r2 = 1 - sse/sst
+  
+  # plot some fits
+  if(one_histo %in% histos_to_plot){
+    
+    print("Plotting...")
+    
+    compare = melt(compare, id = "x")
+
+    plot_point_zeta_example <- ggplot(compare, aes(x = x, y = value, group = variable)) +
+      geom_point(shape = 16) +
+      geom_line(aes(linetype = variable)) +
+      scale_y_log10() +
+      scale_x_log10() +
+      theme(
+        legend.title = element_blank(), 
+        legend.position = c(0.8, 0.8),
+        plot.title = element_text(hjust = 0.5)
+      ) +
+      labs(x = "k-mer count in genome", y = "Probability mass", title = bquote(R^2 == .(signif(r2, 3))))
+    
+    ggsave(paste("../../results/", today, "/", gsub(".histo", "", one_histo), "_zeta_vs_data.pdf", sep = ""), device = cairo_pdf, width = 6, height = 4)
+  }
+
+  result = data.frame(
+    genome = one_histo,
+    perc_uniq_kmers = prob_mass[1],
+    shape = s,
+    length = L,
+    r2 = r2
+  )
+
+  results = rbind(results, result)
+}
+
+# separate data by k
+results$k = NA
+results[grepl("_27.histo", results$genome),"k"] <- 27
+results[grepl("_31.histo", results$genome),"k"] <- 31
+results[grepl("_41.histo", results$genome),"k"] <- 41
+results[grepl("_51.histo", results$genome),"k"] <- 51
+results[grepl("_61.histo", results$genome),"k"] <- 61
+
+# separate plants and animals
+plants = read.table("../../data/viridiplantae_ncbi_ids_2025-12-12.tsv", fill = T, header = T, sep = "\t")
+
+animals = read.table("../../data/metazoa_ncbi_ids_2025-12-13.tsv", fill = T, header = T, sep = "\t")
+
+plants$Assembly.Accession = gsub("\\.[0-9]", "", plants$Assembly.Accession)
+
+results$Assembly.Accession = gsub("\\.[0-9]_.*", "", results$genome)
+
+results$kingdom = NA
+
+results$kingdom[(results$Assembly.Accession %in% plants$Assembly.Accession)] = "Plants"
+
+results$kingdom[is.na(results$kingdom)] = "Animals"
+
+table(results$kingdom)
+
+# get three values for sweep sims
+summary(results[, "shape"])
+summary(results[(results$k == 27), "shape"])
+summary(results[(results$k == 31), "shape"])
+summary(results[(results$k == 41), "shape"])
+summary(results[(results$k == 51), "shape"])
+summary(results[(results$k == 61), "shape"])
+
+# label specific species to orient reader
+extra_point_data <- data.frame(
+      k = c(27, 27, 27,
+            31, 31, 31,
+            41, 41, 41,
+            51, 51, 51,
+            61, 61, 61,
+            27, 27, 27,
+            31, 31, 31,
+            41, 41, 41,
+            51, 51, 51,
+            61, 61, 61),
+      shape = c(1.660557, 2.753124, 3.824493,
+                1.727444, 2.940929, 3.946757,
+                1.885970, 3.298644, 4.193795,
+                2.031053, 3.564381, 4.382319,
+                2.168866, 3.767132, 4.546686,
+                2.875324, 3.528856, 4.023279,
+                2.938262, 3.560309, 4.122031,
+                3.061762, 3.550773, 4.292060,
+                3.153887, 3.585911, 4.447315,
+                3.230458, 3.603063, 4.554442),
+      species = c("maize", "tomato", "arabidopsis",
+                  "maize", "tomato", "arabidopsis",
+                  "maize", "tomato", "arabidopsis",
+                  "maize", "tomato", "arabidopsis",
+                  "maize", "tomato", "arabidopsis",
+                  "human", "fly", "worm",
+                  "human", "fly", "worm",
+                  "human", "fly", "worm",
+                  "human", "fly", "worm",
+                  "human", "fly", "worm"),
+      kingdom = c("Plants", "Plants", "Plants",
+                  "Plants", "Plants", "Plants",
+                  "Plants", "Plants", "Plants",
+                  "Plants", "Plants", "Plants",
+                  "Plants", "Plants", "Plants",
+                  "Animals", "Animals", "Animals",
+                  "Animals", "Animals", "Animals",
+                  "Animals", "Animals", "Animals",
+                  "Animals", "Animals", "Animals",
+                  "Animals", "Animals", "Animals")
+)
+
+# distribution of shape parameter
+shape_sample_size = results %>% dplyr::count(k, kingdom) 
+
+plot_violin_boxplot_shape <- ggplot(results, aes(x = as.factor(k), y = shape)) +
+  geom_violin(lwd = 1.1) +
+  facet_wrap(~ kingdom, ncol = 1) +
+  geom_point(data = extra_point_data, 
+             mapping = aes(x = as.factor(k), 
+                           y = shape, 
+                           color = species), 
+             size = 3) +
+  scale_color_manual(
+    values = c("maize" = "yellow3", 
+               "tomato" = "pink2",
+               "arabidopsis" = "green1",
+               "human" = "black",
+               "fly" = "grey40",
+               "worm" = "grey80"
+               )
+    ) +
+  geom_boxplot(width = 0.25, color="grey", alpha=0.4) +
+  geom_text(data = shape_sample_size, aes(as.factor(k), 17.5, label = paste("n =", n)), vjust = 1.25) +
+  theme(legend.position = "None",axis.title.y = element_text(angle = 0, vjust = 0.5)) +
+  labs(x = "k", y = "\u03b6 shape parameter") +
+  coord_flip()
+
+ggsave(paste("../../results/", today, "/shape_dist.pdf", sep = ""), device = cairo_pdf, width = 5, height = 5)
+
+# percent unique k-mers
+# ggplot(results, aes(x = as.factor(k), y = perc_uniq_kmers)) +
+#   geom_violin(lwd = 1.1) +
+#   facet_wrap(~ kingdom, ncol = 1) +
+#   theme_minimal() +
+#   theme(text = element_text(size = 20, family = "Helvetica", colour = "black"),
+#         axis.text = element_text(colour = "black"), 
+#         legend.position = "None",
+#         axis.title.y = element_text(angle = 0, vjust = 0.5)) +
+#   labs(x = "k", y = "Percent uni-mers") +
+#   coord_flip()
+
+# compare plants vs animals
+median( results[(results$k == 31) & (results$kingdom == "Plants"), "shape"] )
+median( results[(results$k == 31) & (results$kingdom == "Animals"), "shape"] )
+
+wilcox.test(results[(results$k == 31) & (results$kingdom == "Plants"), "shape"], results[(results$k == 31) & (results$kingdom == "Animals"), "shape"])
+
+# zeta model fits
+summary(results$r2)
+sum(results$r2 > 0.9)/nrow(results)
+
+# compare genome sizes to shape parameter
+genome_sizes <- read.table("assembly_completeness_stats_2025-12-11.tsv", header = T)
+
+summary(genome_sizes$expected_ungapped_length)
+
+plant_ids_genome_size <- merge(plants, genome_sizes, by = "Organism.Taxonomic.ID")
+
+results_genome_size <- merge(results, plant_ids_genome_size, by = "Assembly.Accession")
+
+plot_point_size_shape <- ggplot(results_genome_size, aes(x = expected_ungapped_length, y = shape)) +
+  geom_point() +
+  geom_smooth(color = "red", lwd = 1.5) +
+  facet_wrap(. ~ k, ncol = 5, labeller = label_both) +
+  theme_minimal() +
+  scale_x_log10() +
+  theme(text = element_text(size = 16, 
+                                family = "Helvetica", 
+                                colour = "black"), 
+        axis.text = element_text(colour = "black")) +
+  scale_y_continuous(limits = c(1, 7)) +
+  labs(x = "Expected genome size (bp)", y = "\u03b6 shape parameter")
+
+ggsave(paste("../../results/", today, "/shape_vs_genome_size.pdf", sep = ""), device = cairo_pdf, width = 9, height = 3)
+
+# shape vs genome size for only k = 31
+r2_size_shape_k31 <- rsq(log10(results_genome_size[(results_genome_size$k == 31),"expected_ungapped_length"]), results_genome_size[(results_genome_size$k == 31),"shape"])
+
+plot_point_size_shape_k31 <- ggplot(results_genome_size[(results_genome_size$k == 31),], aes(x = expected_ungapped_length, y = shape)) +
+  geom_point() +
+  geom_smooth(method = "lm",color = "red", lwd = 1.5) +
+  #facet_wrap(. ~ k, ncol = 5, labeller = label_both) +
+  theme_minimal() +
+  scale_x_log10() +
+  theme(text = element_text(size = 16, 
+                                family = "Helvetica", 
+                                colour = "black"), 
+        axis.text = element_text(colour = "black")) +
+  scale_y_continuous(limits = c(1, 6)) +
+  labs(x = "Expected genome size (bp)", y = "\u03b6 shape parameter", title = bquote(R^2 == .(signif(r2_size_shape_k31, 3))))
+
+ggsave(paste("../../results/", today, "/shape_vs_genome_size_k31.pdf", sep = ""), device = cairo_pdf, width = 9, height = 3)
+
+# demonstrate how zeta distribution sampling creates small genomes with power-law k-mer count distributions
+# these will be examples of the frequency distributions for the genomes in the simulations
+# except the simulated genomes will have additional unique k-mers because I'm not counting the k-mers at the junctions between chunks 
+# so the simulated genomes will still probably have lots of unique k-mers than the shape parameter alone would suggest, but the shape parameter still captures relative repeat content
+zeta_sampling = expand.grid(
+  k = c(27, 31, 41),
+  L = c(1e6, 2e6, 4e6),
+  #s = c(3.591, 1e6)
+  s = c(2.854, 3.591, 4.772, 1e6)
+)
+
+zeta_sampling_results = NULL
+
+for (i in 1:nrow(zeta_sampling)) {
+  print(i)
+  
+  k = zeta_sampling[i,1]
+  L = zeta_sampling[i,2]
+  s = zeta_sampling[i,3]
+  
+  zeta_samples = c()
+  total = 0
+  
+  if (s < 1e6){
+    while(total < L) {
+      result = suppressWarnings(rzeta(1, s))
+      zeta_samples = c(zeta_samples, result)
+      total = total + result*k
+    }
+    result = data.frame(
+      k = k,
+      L = L,
+      s = s,
+      ranks = table(zeta_samples)
+    )
+    # assume all k-mers at junctions are unique
+    result$ranks.Freq[(result$ranks.zeta_samples == 1)] = result$ranks.Freq[(result$ranks.zeta_samples == 1)] + (sum(result$ranks.Freq) - 1)*(k-1)
+  } else {
+    result = data.frame(
+      k = k,
+      L = L,
+      s = s,
+      ranks.zeta_samples = 1,
+      ranks.Freq = L - k + 1
+    )
+  }
+  zeta_sampling_results = rbind(zeta_sampling_results, result)
+}
+
+# compare zeta distribution by L and s and k
+# first reorder points to plot no-repeats first
+zeta_sampling_results <- zeta_sampling_results[order(zeta_sampling_results$s, decreasing = T),]
+
+plot_point_zeta_sampling <- ggplot(zeta_sampling_results, aes(x = as.numeric(ranks.zeta_samples), y = as.numeric(ranks.Freq), shape = as.factor(k), color = as.factor(s), size = as.factor(s))) +
+  geom_point() +
+  scale_x_log10() +
+  scale_y_log10() +
+  scale_color_scico_d(palette = "lajolla", begin = 0, end = 0.9, direction = -1) +
+  scale_shape_manual(values=c(16, 17, 18)) +
+  scale_size_manual(values=c(1.5,1.5,1.5,3)) + # emphasize no-repeat
+  facet_wrap( ~ L, labeller = label_both) +
+  guides(size = "none") +
+  theme(plot.title = element_text(hjust = 1)) +
+  labs(x = "k-mer count in genome", y = "Number of k-mers", color = "s", shape = "k")
+
+ggsave(paste("../../results/", today, "/zeta_ksL.pdf", sep = ""), device = cairo_pdf, width = 9, height = 3)
+
+# combine zeta plots into one figure
+plot_fig1 <- grid.arrange(plot_point_zeta_example, plot_violin_boxplot_shape, plot_point_size_shape_k31, plot_point_zeta_sampling, layout_matrix = matrix(c(1, 4, 2, 4, 3, 4), nrow = 2), heights = c(1,0.75)) 
+
+#plot_fig1_patchwork <- ((plot_point_zeta_example + plot_violin_boxplot_shape + plot_point_size_shape_k31) / plot_point_zeta_sampling) + plot_annotation(tag_levels = "A") 
+
+ggsave(paste("../../results/", today, "/fig1.pdf", sep = ""), plot_fig1, device = cairo_pdf, width = 10, height = 7)
+```
+
+# DEPRECATED: Demonstrate zeta distribution sampling to make small, realistic genomes
+```{r}
+pA = 0.25
+pC = 0.25
+pG = 0.25
+pT = 0.25
+shape = 3.369
+k = 31
+L = 1e6
+
+shuffleKmers = TRUE
+
+alphabet = c("A", "C", "G", "T")
+
+print("Generating genome...")
+
+custom_probs = c(pA, pC, pG, pT)
+
+total_genome = c()
+
+while(k*length(total_genome) < L){
+
+  # generate random k-mer
+  kmer = paste(sample(alphabet, size = k, replace = T, prob = custom_probs), collapse = "")
+
+  # detmerine frequency of k-mer
+  freq = rzeta(1, shape)
+
+  # copy k-mer
+  kmers = rep(kmer, freq)
+
+  # add k-mers to total_genome
+  total_genome = c(total_genome, kmers)
+}
+
+# randomly order vector elements
+if(shuffleKmers){
+        print("Randomly ordering k-mers...")
+        total_genome = sample(total_genome, replace = F)
+}
+
+# concatenate k-mers together
+print("Concatenating shuffled k-mers...")
+total_genome = paste(total_genome, collapse = "")
+
+# trim genome to target length
+print("Trimming genome to target length...")
+total_genome = substring(total_genome, 1, L)
+
+# count k-mers in synthetic genome to confirm zipf distribution
+print("Counting k-mers genome...")
+start = 1
+stop = k
+
+kmer_list = list()
+
+while(stop <= L){
+
+  kmer = substring(total_genome, start, stop)
+
+  if(is.null(kmer_list[[kmer]])){
+     kmer_list[[kmer]] = 1
+ } else {
+   kmer_list[[kmer]] = kmer_list[[kmer]] + 1
+ }
+
+ start = start + 1
+ stop = stop + 1
+}
+
+# plot zipf distribution
+print("Plotting power-law distribution...")
+kmer_freqs = table(unlist(kmer_list))
+
+plotdata = data.frame(
+ dist = kmer_freqs
+)
+
+ggplot(plotdata, aes(x = as.numeric(dist.Var1), y = as.numeric(dist.Freq))) +
+  geom_point() +
+  scale_x_log10() +
+  scale_y_log10() +
+  labs(x = "k-mer count", y = "Number of unique k-mers with count")
+
+ggsave(paste("../../results/", today, "/zeta_sampling_k31_L1e6_s4.33.pdf", sep = ""), device = cairo_pdf, width = 9, height = 3)
+```
+
+# process single population simulations
+```{r}
+params = read.table("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/config/parameters.tsv", header = T)
+
+dones = sort(as.numeric(gsub("_0", "", gsub(".done", "",list.files(path = "/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/finished/", pattern = ".done")))))
+
+# if looking at data before workflow is finished, may need to separate out all simulations that are done
+#dones = read.table("/global/scratch/users/milesroberts/poolseq-kmers/workflow/dones.txt")
+#dones = dones$V1
+
+# empty frame to store results
 results = NULL
 
 # get list of simulation ids
@@ -835,18 +1331,20 @@ results = NULL
 # 
 # simids = c(two_pop_ids, simids)
 
-simids = params$ID[(params$simtype == "onepop")]
+#simids = params$ID[(params$simtype == "onepop")]
+
+simids = params$ID[(params$simtype == "onepop") & (params$ID %in% dones)]
 
 k = 31
 
-thresh = 5
+thresh = 3
 
 G = 2e6
 
 #for(i in dones){
 #for(i in params$ID[(params$simtype == "onepop") | (params$simtype == "sweep")]){
-for(i in 127:512){
-#for(i in simids){
+#for(i in 127:512){
+for(i in simids){
   print(paste("Processing simulation ", i, "...", sep = ""))
   
 # get sequencing coverage data
@@ -868,9 +1366,9 @@ for(i in 127:512){
 # nC = n*C # total base coverage
 
 # load pairs of k-mers
-kmer_pairs = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/", "kmerpairs_", i, "_sequences.tsv", sep = ""), col.names = c("k1"))
+kmer_pairs = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/smudgeplot_results/", i, "_0_sequences.tsv", sep = ""), col.names = c("k1"))
 
-kmer_covs = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/kmerpairs_", i, "_coverages.tsv", sep = ""), col.names = c("c1", "c2"))
+kmer_covs = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/smudgeplot_results/", i, "_0_coverages.tsv", sep = ""), col.names = c("c1", "c2"))
 kmer_pairs = cbind(kmer_pairs, kmer_covs)
 
 # choose kmer count cutoff
@@ -916,21 +1414,21 @@ kmer_pairs$kmer_maf = pmin(kmer_pairs$c1, kmer_pairs$c2)/(kmer_pairs$c1 + kmer_p
 #   theme_classic()
 
 # load from my hetmers script
-hetmers_seqs = read.csv(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/hetmers_", i, "_seqs.csv", sep = ""), col.names = c("k1", "k2"))
+hetmers_seqs = read.csv(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/hetmers_results/", i, "_0_seqs.csv", sep = ""), col.names = c("k1", "k2"))
 
-hetmers_counts = read.csv(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/hetmers_", i, "_counts.csv", sep = ""), col.names = c("c1", "c2"))
+hetmers_counts = read.csv(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/hetmers_results/", i, "_0_counts.csv", sep = ""), col.names = c("c1", "c2"))
 
-hetmers_bayes = read.csv(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/hetmers_", i, "_bayes_states.csv", sep = ""), col.names = c("bc"))
+hetmers_bayes = read.csv(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/hetmers_results/", i, "_0_bayes_states.csv", sep = ""), col.names = c("bc"))
 
 hetmers = cbind(hetmers_seqs, hetmers_counts, hetmers_bayes)
 
 # calculate minor allele counts/frequencies
 hetmers$hetmer_maf = pmin(hetmers$c1, hetmers$c2)/(hetmers$c1 + hetmers$c2)
 
-#hetmers$hetmer_mac_bayes = pmin(hetmers$bc, 2*n - hetmers$bc)
+hetmers$hetmer_maf_bayes = pmin(hetmers$bc, 2*n - hetmers$bc)/(2*n)
 
 # load in actual allele freqs from simulations
-true_af = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/slim_allele_freqs_", i, ".txt", sep = ""), col.names = c("chrom", "pos", "ref", "alt", "ns", "af", "ac"))
+true_af = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/slim_results/allele_freqs_", i, "_0.txt", sep = ""), col.names = c("chrom", "pos", "ref", "alt", "ns", "af", "ac"))
 
 true_af$ac = as.numeric(true_af$ac)
 
@@ -951,7 +1449,7 @@ true_af$snp_mac = pmin(true_af$ac, 2*n - true_af$ac)
 true_af = true_af[(true_af$af < 1) & (true_af$af > 0),]
 
 # load discosnp results, calculate maf
-disco = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/discoRes_ad_", i, ".txt", sep = ""), col.names = c("chrom", "pos", "ref", "alt", "c1", "c2"))
+disco = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/disco_results/", i, "_0.txt", sep = ""), col.names = c("chrom", "pos", "ref", "alt", "c1", "c2"))
 
 disco = disco[(disco$c1 >= thresh) & (disco$c2 >= thresh),]
 
@@ -964,7 +1462,7 @@ disco$disco_maf = pmin(disco$c1, disco$c2)/(disco$c1 + disco$c2)
 #   j = i
 # }
 
-pos_kmer_key = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/center_kmer_pairs_", i, ".txt", sep = ""), fill = T, col.names = c("pos", "k1", "k2", "k3", "k4"))
+pos_kmer_key = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/seqkit_results/center_kmer_pairs_", i, ".txt", sep = ""), fill = T, col.names = c("pos", "k1", "k2", "k3", "k4"))
 
 pos_kmer_key$leftk = substr(pos_kmer_key$k1, 1, 15)
 pos_kmer_key$rightk = substr(pos_kmer_key$k1, 17, 31)
@@ -1022,7 +1520,7 @@ compare_maf_hetmer = merge(true_af[,c("pos", "snp_maf", "snp_mac")], pos_hetmers
 #compare_maf_kmer_no_na$kmer_mac = unlist(mapply(posterior_min_kmer_count, x = compare_maf_kmer_no_na$c1, z = compare_maf_kmer_no_na$c1 + compare_maf_kmer_no_na$c2, MoreArgs = list(n = 100, C = 2*0.9, c = 5, alpha = 1, beta = 1)))
 
 # include varscan calls
-varscan = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/calls_", i, ".tsv", sep = ""), header = T)
+varscan = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/varscan_results/", i, "_0.tsv", sep = ""), header = T)
 
 varscan = varscan[(varscan$Reads1 >= thresh) & (varscan$Reads2 >= thresh),]
 
@@ -1031,17 +1529,27 @@ varscan$snp_maf_varscan = pmin(varscan$Reads1, varscan$Reads2)/(varscan$Reads1 +
 names(varscan)[2] = "pos"
 
 # load poolsnp calls
-poolsnp = read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/poolsnp_final_", i, ".txt", sep = ""), col.names = c("chrom", "pos", "ref", "alt", "c1", "t"), fill = T, na.strings = "")
+poolsnp = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/poolsnp_results/", i, "_0.txt", sep = ""), col.names = c("chrom", "pos", "ref", "alt", "c1", "t"), fill = T, na.strings = "")
 
 poolsnp = poolsnp[(poolsnp$c1 >= thresh),]
 
 poolsnp$snp_maf_poolsnp = pmin(poolsnp$c1/poolsnp$t, 1 - poolsnp$c1/poolsnp$t)
+
+# include freebayes calls
+freebayes = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/freebayes_de_novo_results/", i, "_0.txt", sep = ""), col.names = c("chrom", "pos", "ref", "alt", "ns", "af", "ac"), fill = T, na.strings = "")
+
+freebayes$snp_maf_freebayes = pmin(freebayes$af, 1 - freebayes$af)
+
+#freebayes = freebayes[(freebayes$af > 0) & (freebayes$af < 1),]
 
 # compare varscan and ground truth
 compare_maf_varscan = merge(true_af[,c("pos", "snp_maf")], varscan, by = "pos", all.x = T, all.y = T)
 
 # compare poolsnp and ground truth
 compare_maf_poolsnp = merge(true_af[,c("pos", "snp_maf")], poolsnp, by = "pos", all.x = T, all.y = T)
+
+# compare freebayes to ground truth
+compare_maf_freebayes = merge(true_af[,c("pos", "snp_maf")], freebayes, by = "pos", all.x = T, all.y = T)
 
 # compare discosnp and ground truth
 compare_maf_disco = merge(true_af[,c("pos", "snp_maf")], disco, by = "pos", all.x = T, all.y = T)
@@ -1066,9 +1574,13 @@ poolsnp_vs_truth_maf_cor = tryCatch(
   cor.test(compare_maf_poolsnp$snp_maf, compare_maf_poolsnp$snp_maf_poolsnp, method = "pearson")$estimate, 
   error=function(err) NA)
 
+freebayes_vs_truth_maf_cor = cor.test(compare_maf_freebayes$snp_maf, compare_maf_freebayes$snp_maf_freebayes, method = "pearson")$estimate
+
 varscan_rates = calc_rates(true_af$pos, varscan$pos, 1:G)
 
 poolsnp_rates = calc_rates(true_af$pos, poolsnp$pos, 1:G)
+
+freebayes_rates = calc_rates(true_af$pos, freebayes$pos, 1:G)
 
 kmer_rates = calc_rates(true_af$pos, c(pos_kmer_pairs$pos,rep(1e9, times = nrow(kmer_pairs) - nrow(pos_kmer_pairs))), 1:G)
 
@@ -1146,7 +1658,20 @@ result = data.frame(
   poolsnp_tpr = poolsnp_rates[8],
   poolsnp_fpr = poolsnp_rates[9],
   poolsnp_tnr = poolsnp_rates[10],
-  poolsnp_fnr = poolsnp_rates[11]
+  poolsnp_fnr = poolsnp_rates[11],
+  freebayes_div = sum(diversity(freebayes$snp_maf_freebayes))/G,
+  freebayes_vs_truth_maf_cor = freebayes_vs_truth_maf_cor,
+  freebayes_pos = freebayes_rates[1],
+  freebayes_neg = freebayes_rates[2],
+  freebayes_tp = freebayes_rates[3],
+  freebayes_fp = freebayes_rates[4],
+  freebayes_tn = freebayes_rates[5],
+  freebayes_fn = freebayes_rates[6],
+  freebayes_acc = freebayes_rates[7],
+  freebayes_tpr = freebayes_rates[8],
+  freebayes_fpr = freebayes_rates[9],
+  freebayes_tnr = freebayes_rates[10],
+  freebayes_fnr = freebayes_rates[11]
 )
 
 results = rbind(results, result)
@@ -1157,7 +1682,7 @@ rm(compare_maf_kmer, compare_maf_varscan, compare_maf_poolsnp, poolsnp, poolsnp_
 
 pares = merge(params, results, by = "ID")
 
-write.table(pares, paste("/mnt/ufs18/home-010/robe1195/Josephs_Lab_Projects/poolseq-kmers/results/", today, "/performance_metrics.txt",sep = ""), sep = " ")
+write.table(pares, paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/results/", today, "/performance_metrics.txt",sep = ""), sep = " ")
 ```
 
 # site frequency spectrum
@@ -1165,42 +1690,59 @@ write.table(pares, paste("/mnt/ufs18/home-010/robe1195/Josephs_Lab_Projects/pool
 # compare accuracy of allele frequency estimates
 plotdata_af_cor = melt(pares[,c("ID", "cov", "n", "kmer_vs_truth_maf_cor", "hetmer_vs_truth_maf_cor", "disco_vs_truth_maf_cor", "varscan_vs_truth_maf_cor", "poolsnp_vs_truth_maf_cor")], id = c("ID", "cov", "n"))
 
+plotdata_af_cor$variable = gsub("_vs_truth_maf_cor", "", plotdata_af_cor$variable)
+
+plotdata_af_cor$variable[plotdata_af_cor$variable == "kmer"] = "smudgeplot"
+
 ggplot(plotdata_af_cor, aes(x = as.factor(cov), color = variable, y = value)) +
   geom_boxplot() +
-  theme_classic()
+  theme_classic() +
+  labs(x = "Coverage", y = "Cor. bw true and estimated maf", color = "method")
+
+ggsave(paste("../results/", today, "/maf_cor.png"))
 
 # compare diversity estimates
 #melt(pares[,c("ID", "cov", "n", "true_div", "kmer_div", "disco_div", "varscan_div", "poolsnp_div")], id = c("ID", "cov", "n"))
 
 # percent error on diversity
-percent_error = function(truth, measurement){
-  (measurement - truth)/truth * 100
-}
-
-pares$pe_div_kmer = percent_error(pares$true_div, pares$kmer_div)
-
-pares$pe_div_hetmer = percent_error(pares$true_div, pares$hetmer_div)
-
-pares$pe_div_disco = percent_error(pares$true_div, pares$disco_div)
-
-pares$pe_div_varscan = percent_error(pares$true_div, pares$varscan_div)
-
-pares$pe_div_poolsnp = percent_error(pares$true_div, pares$poolsnp_div)
-
-plotdata_div = melt(pares[,c("ID", "cov", "n", "pe_div_kmer", "pe_div_hetmer", "pe_div_disco", "pe_div_varscan", "pe_div_poolsnp")], id = c("ID", "cov", "n"))
-
-plotdata_div$variable = gsub("pe_div", "", plotdata_div$variable)
-
-ggplot(plotdata_div, aes(x = as.factor(cov), y = value, color = as.factor(variable))) +
-  geom_boxplot() +
-  theme_classic()
-
-
-# ggplot(pares, aes(x = log10(true_div), y = log10(kmer_div), color = as.factor(cov))) +
-#   geom_point() +
-#   geom_abline(slope = 1, intercept = 0) +
-#   theme_classic()
+# percent_error = function(truth, measurement){
+#   (measurement - truth)/truth * 100
+# }
 # 
+# pares$pe_div_kmer = percent_error(pares$true_div, pares$kmer_div)
+# 
+# pares$pe_div_hetmer = percent_error(pares$true_div, pares$hetmer_div)
+# 
+# pares$pe_div_disco = percent_error(pares$true_div, pares$disco_div)
+# 
+# pares$pe_div_varscan = percent_error(pares$true_div, pares$varscan_div)
+# 
+# pares$pe_div_poolsnp = percent_error(pares$true_div, pares$poolsnp_div)
+
+plotdata_div = melt(pares[,c("ID", "cov", "n", "true_div","kmer_div", "hetmer_div", "disco_div", "varscan_div", "poolsnp_div")], id = c("ID", "cov", "n", "true_div"))
+
+plotdata_div$variable = gsub("_div", "", plotdata_div$variable)
+
+plotdata_div$variable[plotdata_div$variable == "kmer"] = "smudgeplot"
+
+plotdata_div = plotdata_div[(plotdata_div$variable %in% c("hetmer", "varscan", "disco")),]
+
+# ggplot(plotdata_div, aes(x = as.factor(cov), y = value, color = as.factor(variable))) +
+#   geom_boxplot() +
+#   theme_classic()
+
+ggplot(plotdata_div, aes(x = log10(true_div), y = log10(value), color = as.factor(cov), shape = as.factor(variable))) +
+  geom_point(size = 2) +
+  geom_abline(slope = 1, intercept = 0) +
+  theme_classic() +
+  theme(text = element_text(size = 16, family = "Helvetica", color = "black"),
+        axis.text.x = element_text(color = "black"),
+        axis.text.y = element_text(color = "black")) +
+  scale_colour_scico_d(palette = "hawaii", name = "Coverage") +
+  labs(y = "Estimated diversity", x = "True diversity", color = "Coverage", shape = "Method")
+
+ggsave(paste("../../results/", today, "/estimated_vs_true_diversity.pdf", sep = ""), height = 6, width = 7)
+
 # ggplot(pares, aes(x = log10(true_div), y = log10(hetmer_div), color = as.factor(cov))) +
 #   geom_point() +
 #   geom_abline(slope = 1, intercept = 0) +
@@ -1393,11 +1935,15 @@ plot_max_dist_sweep = ggplot(plotdata, aes(x = n, y = max_dist, color = as.facto
 #   labs(x = "Pool size", y = "Distance between snps at sweep/mean distance", color = "Selection", title = "Ground truth")
 
 # Hypothesis: after a selective sweep, the longest unitigs in a population graph are more likely to be near the sweep site, compared to neutral scenario
-unitig_files = list.files(path = "/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/blast_results", pattern = ".*txt", full.names = T)
+unitig_files = list.files(path = "/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/blast_results", pattern = ".*txt", full.names = T)
 
-unitig_files_ids = as.numeric(gsub(".txt", "", gsub("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/blast_results/", "", unitig_files)))
+#unitig_files = sample(unitig_files, size = 1000)
+
+unitig_files_ids = as.numeric(gsub("_0.txt", "", gsub("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/blast_results/", "", unitig_files)))
 
 unitig_files = lapply(unitig_files, read.table, col.names = c("qid", "sid", "pid", "alen", "mm", "go", "qs", "qe", "ss", "se", "ev", "bs"))
+
+#unitig_files = lapply(unitig_files, fread, col.names = c("qid", "sid", "pid", "alen", "mm", "go", "qs", "qe", "ss", "se", "ev", "bs"))
 
 max_len = function(x){
   max(x$alen)
@@ -1482,12 +2028,18 @@ plot_unitigs_n_breakdown = ggplot(plotdata_unitigs, aes(x = sc, color = as.facto
   labs(x = "Center of longest unitig", color = "Nes", title = "Pool size")
 
 plot_unitigs_shape_breakdown = ggplot(plotdata_unitigs, aes(x = sc, color = as.factor(Nes))) +
-  geom_density() +
-  theme_classic() +
-  theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) +
-  facet_grid(shape + shuffle ~ .) +
+  geom_density(lwd = 1.25) +
+  theme_minimal() +
+  theme(text = element_text(size = 16, family = "Helvetica", color = "black"),
+        axis.text.x = element_blank(),
+        axis.text.y = element_text(color = "black")) +
+  facet_grid(shuffle ~ shape) +
+  scale_color_scico_d(palette = "buda") +
+  #facet_grid( ~ shape) +
   geom_vline(xintercept = 2e6/2, lty = 2, lwd = 1) +
-  labs(x = "Center of longest unitig", color = "Nes", title = "Shape parameter breakdown")
+  labs(x = "Center of longest unitig", color = "Nes")
+
+ggsave(paste("../../results/", today, "/unitig_mapping_shape_breakdown.pdf", sep = ""), plot_unitigs_shape_breakdown, dpi = 400, height = 7, width = 11, unit = "in")
 
 plot_unitigs_h_breakdown = ggplot(plotdata_unitigs, aes(x = sc, color = as.factor(Nes))) +
   geom_density() +
@@ -1808,11 +2360,479 @@ for(i in 137:160){
 
 ```
 
+# Allele frequencies of known variants
+
+## Simulations
+```{r}
+
+results = NULL
+
+sims_to_plot = c(1, 4, 7, 10, 13, 25, 37, 49)
+
+for(i in params$ID){
+  print(i)
+  
+  kmer_counts = tryCatch({
+    read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/freqk_results/", i, "_0_freqs.txt", sep = ""), sep = "|")
+  }, error = function(e) {
+    message(paste("Error at iteration", i, ":", e$message))
+    return(NA) # Or some other indicator for error
+  })
+  
+  if (all(is.na(kmer_counts))){
+    next
+  }
+
+  kmer_counts$kmer_maf = pmin(kmer_counts$V1, kmer_counts$V2)/(kmer_counts$V1 + kmer_counts$V2)
+  
+  kmer_index = tryCatch({
+    read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/freqk_ref_dedup/", i, "_0.txt", sep = ""), sep = ",")
+  }, error = function(e) {
+    message(paste("Error at iteration", i, ":", e$message))
+    return(NA) # Or some other indicator for error
+  })
+
+  slim = tryCatch({
+    read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/slim_results/allele_freqs_", i, "_0.txt", sep = ""), sep = " ")
+    }, error = function(e) {
+    message(paste("Error at iteration", i, ":", e$message))
+    return(NA) # Or some other indicator for error
+  })
+  
+  if (all(is.na(slim))){
+    next
+  }
+  
+  names(slim)[1:2] =  c("Chrom", "Position")
+  
+  slim$slim_maf = pmin(slim$V6, 1 - slim$V6)
+
+  kmer_counts = cbind(kmer_index, kmer_counts)
+  
+  names(kmer_counts)[2:3] =  c("Chrom", "Position")
+  
+  # shift position to vcf convention
+  kmer_counts$Position = kmer_counts$Position + 2
+  
+  slim_vs_kmer = merge(slim, kmer_counts, by = c("Chrom", "Position"))
+  
+  cor_coeff_freqk = signif(cor.test(slim_vs_kmer$kmer_maf, slim_vs_kmer$slim_maf)$estimate, digits = 3)
+  
+  #print(cor_coeff)
+  
+  #varscan = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/varscan_results/", i, "_0.tsv", sep = ""), header = T)
+  
+  #varscan$maf = pmin(varscan$Reads1, varscan$Reads2)/(varscan$Reads1 + varscan$Reads2)
+  
+  # freebayes = tryCatch({
+  #   read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/freebayes_a_priori_results/", i, "_0.txt", sep = ""), header = F)
+  # }, error = function(e) {
+  #   message(paste("Error at iteration", i, ":", e$message))
+  #   return(NA) # Or some other indicator for error
+  # })
+  # 
+  # if (all(is.na(freebayes))){
+  #   next
+  # }
+  # 
+  # names(freebayes)[c(1:2,6)] = c("Chrom", "Position", "af")
+  # 
+  # freebayes$maf = pmin(freebayes$af, 1 - freebayes$af)
+  # 
+  # slim_freebayes = merge(slim, freebayes, by = c("Chrom", "Position"))
+  # 
+  # cor_coeff_freebayes = signif(cor.test(slim_freebayes$maf.x, slim_freebayes$maf.y)$estimate, digits = 3)
+  
+  ## vg giraffe + freebayes
+  vg = tryCatch({
+    read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/freebayes_vg_results/", i, "_0.txt", sep = ""), header = F)
+  }, error = function(e) {
+    message(paste("Error at iteration", i, ":", e$message))
+    return(NA) # Or some other indicator for error
+  })
+  
+  if (all(is.na(vg))){
+    next
+  }
+  
+  # load benchmarks
+  
+  names(vg)[c(1:2,6)] = c("Chrom", "Position", "af")
+  
+  vg$vg_maf = pmin(vg$af, 1 - vg$af)
+  
+  slim_vg = merge(slim, vg, by = c("Chrom", "Position"))
+  
+  cor_coeff_vg = signif(cor.test(slim_vg$slim_maf, slim_vg$vg_maf)$estimate, digits = 3)
+  
+  ## bwa mem + freebayes
+  #bench_bwa_mem = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks/bwa_mem/", i, "_0.bench", sep = ""), header = T)
+  
+  #bench_freebayes_a_priori = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks/freebayes_a_priori/", i, "_0.bench", sep = ""), header = T)
+  
+  ## vg giraffe + freebayes
+  bench_vg_index = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks/vg_autoindex/", i, "_0.bench", sep = ""), header = T)
+  
+  bench_vg_giraffe = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks/vg_giraffe/", i, "_0.bench", sep = ""), header = T)
+  
+  bench_vg_surject_paired = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks/vg_surject/paired_", i, "_0.bam", sep = ""), header = T)
+  
+  bench_vg_surject_r1 = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks/vg_surject/R1_", i, "_0.bam", sep = ""), header = T)
+  
+  bench_vg_surject_r2 = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks/vg_surject/R2_", i, "_0.bam", sep = ""), header = T)
+    
+  bench_vg_sort_paired = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks/samtools_sort/paired_", i, "_0.bam", sep = ""), header = T)
+  
+  bench_vg_sort_r1 = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks/samtools_sort/R1_", i, "_0.bam", sep = ""), header = T)
+  
+  bench_vg_sort_r2 = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks/samtools_sort/R2_", i, "_0.bam", sep = ""), header = T)
+  
+  bench_vg_merge = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks/samtools_merge/", i, "_0.bam", sep = ""), header = T)
+  
+  bench_freebayes_vg = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks/freebayes_vg/", i, "_0.bench", sep = ""), header = T)
+  
+  ## kmer counts
+  bench_freqk_index = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks/freqk_index/", i, "_0.bench", sep = ""), header = T)
+  
+  bench_freqk_var_dedup = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks/freqk_var_dedup/", i, "_0.bench", sep = ""), header = T)
+  
+  bench_freqk_ref_dedup = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks/freqk_ref_dedup/", i, "_0.bench", sep = ""), header = T)
+  
+  bench_freqk_count = read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks/freqk_count/", i, "_0.bench", sep = ""), header = T)
+  
+  # combine all stats in a frame
+  result = data.frame(
+    ID = i,
+    cor_coeff_freqk = cor_coeff_freqk,
+    #cor_coeff_freebayes = cor_coeff_freebayes,
+    cor_coeff_vg = cor_coeff_vg,
+    t_freqk = bench_freqk_count$s,
+    mem_freqk = max(bench_freqk_count$max_rss),
+    t_freqk_index = bench_freqk_index$s + bench_freqk_var_dedup$s + bench_freqk_ref_dedup$s,
+    mem_freqk_index = max(bench_freqk_index$max_rss, bench_freqk_var_dedup$max_rss, bench_freqk_ref_dedup$max_rss),
+    #t_freebayes = bench_bwa_mem$s + bench_freebayes_a_priori$s,
+    #mem_freebayes = max(bench_bwa_mem$max_rss, bench_freebayes_a_priori$max_rss),
+    t_vg = bench_vg_giraffe$s + max(c(bench_vg_surject_paired$s, bench_vg_surject_r1$s, bench_vg_surject_r2$s)) + max(c(bench_vg_sort_paired$s, bench_vg_sort_r1$s, bench_vg_sort_r2$s)) + bench_vg_merge$s + bench_freebayes_vg$s,
+    mem_vg = max(bench_vg_giraffe$max_rss, bench_vg_surject_paired$max_rss, bench_vg_surject_r1$max_rss, bench_vg_surject_r2$max_rss, bench_vg_sort_paired$max_rss, bench_vg_sort_r1$max_rss, bench_vg_sort_r2$max_rss, bench_vg_merge$max_rss, bench_freebayes_vg$max_rss),
+    t_vg_index = bench_vg_index$s,
+    mem_vg_index = bench_vg_index$max_rss
+  )
+  
+  results = rbind(results, result)
+  
+  # make a plot of some individual simulations
+  if(i %in% sims_to_plot){
+    plotdata_known_var = data.frame(kmer_maf = kmer_counts$maf, slim_maf = slim$maf)
+
+ggplot(plotdata_known_var, aes(x = slim_maf, y = kmer_maf)) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0, lwd = 2) +
+  theme_minimal() +
+  theme(text = element_text(size = 16, family = "Helvetica")) +
+  labs(x = "True MAF", y = "k-mer counts MAF estiamte", title = paste("r = ", cor_coeff_freqk, sep = ""))
+
+ggsave(paste("../../results/", today, "/", i, ".pdf", sep = ""), width = 7, height = 7)
+  }
+  
+}
+
+
+# compare mapping approaches to freqk
+params_res = merge(params, results, by = "ID")
+
+# ggplot(results, aes(x = cor_coeff_freebayes, y = cor_coeff_freqk)) +
+#   geom_point(shape = 16) +
+#   geom_abline(slope = 1, intercept = 0, lwd = 2) +
+#   theme_minimal() +
+#   theme(text = element_text(size = 16, family = "Helvetica")) +
+#   labs(x = "Pearson Corr. of MAF\nbwa+Freebayes vs SLiM", y = "Pearson Corr. of MAF\nK-mers vs SLiM")
+
+ggplot(params_res, aes(x = cor_coeff_vg, y = cor_coeff_freqk, color = as.factor(cov))) +
+  geom_point(shape = 16) +
+  geom_abline(slope = 1, intercept = 0, lwd = 2) +
+  theme_minimal() +
+  theme(text = element_text(size = 16, family = "Helvetica")) +
+  scale_colour_scico_d(palette = "hawaii", name = "Coverage") +
+  labs(x = "Pearson Corr.\nvg+Freebayes vs SLiM MAF", y = "Pearson Corr.\nk-mers vs SLiM MAF")
+
+ggsave(paste("../../results/", today, "/", "vg_vs_freqk.pdf", sep = ""), height = 6, width = 7, device = cairo_pdf)
+
+# compare run times per sample
+time_res = melt(params_res[,c("ID", "cov", "n", "t_freqk", "t_vg")], id = c("ID", "cov", "n"))
+
+mem_res = melt(params_res[,c("ID", "cov", "n", "mem_freqk", "mem_vg")], id = c("ID", "cov", "n"))
+
+names(mem_res)[4] = "tool"
+names(mem_res)[5] = "mem"
+mem_res$tool = gsub("mem_","", mem_res$tool)
+
+names(time_res)[4] = "tool"
+names(time_res)[5] = "time"
+time_res$tool = gsub("t_","", time_res$tool)
+
+res_summary = merge(time_res, mem_res, by =  c("ID", "cov", "n", "tool"))
+
+# compare time and memory
+plot_time = ggplot(res_summary, aes(x = tool, y = time, fill = as.factor(cov))) +
+  geom_boxplot() +
+  theme_minimal() +
+  theme(text = element_text(size = 16, family = "Helvetica")) +
+  scale_fill_scico_d(palette = "hawaii", name = "Coverage") +
+  #facet_zoom(ylim = c(0,750)) +
+  #stat_compare_means(method = "wilcox", paired = TRUE) +
+  #ylim(0,1000) +
+  labs(x = "Workflow", y = "Wall Time (s)", fill = "Coverage")
+
+plot_mem = ggplot(res_summary, aes(x = tool, y = mem, fill = as.factor(cov))) +
+  geom_boxplot() +
+  theme_minimal() +
+  theme(text = element_text(size = 16, family = "Helvetica")) +
+  scale_fill_scico_d(palette = "hawaii", name = "Coverage") +
+  labs(x = "Workflow", y = "Maximum\nResident Set Size (MB)", fill = "Coverage")
+
+ggarrange(plot_time, plot_mem, nrow = 1, ncol = 2, labels = c("A", "B"), font.label = list(size = 16, family = "Helvetica"), common.legend = T)
+
+ggsave(paste("../../results/", today, "/", "resources_freqk_vs_vg.pdf", sep = ""), height = 4, width = 9)
+
+# compare index times
+time_index = melt(params_res[,c("ID", "cov", "n", "t_freqk_index", "t_vg_index")], id = c("ID", "cov", "n"))
+
+mem_index = melt(params_res[,c("ID", "cov", "n", "mem_freqk_index", "mem_vg_index")], id = c("ID", "cov", "n"))
+
+names(mem_index)[4] = "tool"
+names(mem_index)[5] = "mem"
+mem_index$tool = gsub("mem_","", mem_index$tool)
+mem_index$tool = gsub("_index","", mem_index$tool)
+
+names(time_index)[4] = "tool"
+names(time_index)[5] = "time"
+time_index$tool = gsub("t_","", time_index$tool)
+time_index$tool = gsub("_index","", time_index$tool)
+
+res_index = merge(time_index, mem_index, by =  c("ID", "cov", "n", "tool"))
+
+plot_time_index = ggplot(res_index, aes(x = tool, y = time, fill = as.factor(n))) +
+  geom_boxplot() +
+  theme_minimal() +
+  theme(text = element_text(size = 16, family = "Helvetica")) +
+  scale_fill_scico_d(palette = "acton", name = "Pool size") +
+  labs(x = "Workflow", y = "Wall Time (s)", fill = "Pool size")
+
+plot_mem_index = ggplot(res_index, aes(x = tool, y = mem, fill = as.factor(n))) +
+  geom_boxplot() +
+  theme_minimal() +
+  theme(text = element_text(size = 16, family = "Helvetica")) +
+  scale_fill_scico_d(palette = "acton", name = "Coverage") +
+  labs(x = "Workflow", y = "Maximum\nResident Set Size (MB)", fill = "Pool size")
+
+ggarrange(plot_time_index, plot_mem_index, nrow = 1, ncol = 2, labels = c("A", "B"), font.label = list(size = 16, family = "Helvetica"), common.legend = T)
+
+ggsave(paste("../../results/", today, "/", "resources_index_freqk_vs_vg.pdf", sep = ""), height = 4, width = 7)
+
+```
+
+## Empirical data
+```{r}
+#real_counts = read.table("/global/scratch/users/milesroberts/tmp/arabidopsis_thaliana_plantpan_data/freqs.txt", sep = " ")
+#real_counts = read.table("/global/scratch/users/milesroberts/tmp/brassica_rapa_plantpan_data/calls.txt", sep = " ")
+real_counts = read.table("/global/scratch/users/milesroberts/tmp/arabidopsis_thaliana_plantpan_data/calls.txt", sep = " ")
+
+real_counts = str_split(real_counts$V1, "\\|")
+
+#real_counts = lapply(real_counts, as.numeric)
+
+num_cols = max(unlist(lapply(real_counts, length)))
+
+real_col_names =  paste("f", 1:num_cols, sep = "")
+
+#real_counts = read.table("/global/scratch/users/milesroberts/tmp/arabidopsis_thaliana_plantpan_data/freqs.txt", sep = "|", col.names =real_col_names, fill = T)
+#real_counts = read.table("/global/scratch/users/milesroberts/tmp/brassica_rapa_plantpan_data/calls.txt", sep = "|", col.names =real_col_names, fill = T)
+real_counts = read.table("/global/scratch/users/milesroberts/tmp/arabidopsis_thaliana_plantpan_data/calls.txt", sep = "|", col.names =real_col_names, fill = T)
+
+#real_index = read.table("/global/scratch/users/milesroberts/tmp/arabidopsis_thaliana_plantpan_data/at_ref_index.txt", sep = ",", fill = T)
+#real_index = read.table("/global/scratch/users/milesroberts/tmp/brassica_rapa_plantpan_data/ref_index.txt", sep = ",", fill = T)
+real_index = read.table("/global/scratch/users/milesroberts/tmp/arabidopsis_thaliana_plantpan_data/ref_index.txt", sep = ",", fill = T)
+
+real_counts = cbind(real_index, real_counts)
+
+real_counts$V3 = real_counts$V3 + 2
+
+# divide counts by number of k-mers
+#num_kmers = str_split(real_counts$V7, "\\|")
+
+#num_kmers = lapply(num_kmers, as.numeric)
+
+# alternate allele frequency
+#real_counts$af = 1 - real_counts$c1/rowSums(real_counts[,real_col_names], na.rm = T)
+
+# load in vcf
+#real_vcf <- read.vcfR("/global/scratch/users/milesroberts/tmp/arabidopsis_thaliana_plantpan_data/at.genetics.variation/final.vcf.gz")
+#real_vcf <- read.vcfR("/global/scratch/users/milesroberts/tmp/brassica_rapa_plantpan_data/br.genetics.variation/final.vcf.gz")
+real_vcf <- read.vcfR("/global/scratch/users/milesroberts/tmp/arabidopsis_thaliana_plantpan_data/at.genetics.variation/all_nonoverlap_norm.vcf.gz")
+
+gt <- apply(real_vcf@gt[,-1], 2, as.numeric)
+
+pos = real_vcf@fix
+
+#chrom_pos = paste(pos[,"CHROM"], pos[,"POS"], sep = " ") 
+
+#to_keep = paste(pos[,"CHROM"], pos[,"POS"], sep = " ") %in% paste(real_counts$V2, real_counts$V3, sep = " ")
+
+#gt = gt[to_keep,]
+
+#pos = pos[to_keep,]
+
+#real_counts = real_counts[to_keep,]
+
+# remove duplicates
+#to_keep = !duplicated(paste(pos[,"CHROM"], pos[,"POS"], sep = " "))
+
+#gt = gt[to_keep,]
+
+#pos = pos[to_keep,]
+
+allele_counts <- rowSums(gt == 0)
+
+pos = cbind(pos, allele_counts)
+
+names(real_counts)[2:3] = c("CHROM", "POS")
+
+real_plot_data = merge(real_counts, pos, by = c("CHROM", "POS"))
+
+real_plot_data$allele_counts = as.numeric(real_plot_data$allele_counts)
+
+# round here based on number of genomes in pool
+real_plot_data$estim_af = real_plot_data$f1*7
+real_plot_data$estim_rounded_af = round(real_plot_data$f1*7)
+  
+#real_plot_data = data.frame(
+#  estim_af = real_counts$f1*7,
+#  estim_rounded_af = round(real_counts$f1*7),
+#  true_af = allele_counts
+#)
+
+# type of variant
+real_plot_data$var_type = "foobar"
+real_plot_data$var_type[(rowSums(sapply(c("SNP", "INS", "DEL"), grepl, real_plot_data$ID)) > 1)] = "MIXED"
+real_plot_data$var_type[grepl("SNP", real_plot_data$ID) & (real_plot_data$var_type != "MIXED")] = "SNP"
+real_plot_data$var_type[grepl("INS", real_plot_data$ID) & (real_plot_data$var_type != "MIXED")] = "INS"
+real_plot_data$var_type[grepl("DEL", real_plot_data$ID) & (real_plot_data$var_type != "MIXED")] = "DEL"
+real_plot_data$var_type[real_plot_data$var_type == "foobar"] = "HDR"
+
+table(real_plot_data$var_type)
+
+
+# number of alleles
+num_alleles = str_split(real_plot_data$V5, "\\|")
+num_alleles = unlist(lapply(num_alleles, length))
+
+real_plot_data$num_alleles = num_alleles
+
+# remove cases where the number of allele-specific k-mer for at least 1 allele is 0
+all_greater_than_zero = function(x){
+  all(x > 0)
+}
+
+real_plot_data = real_plot_data[unlist(lapply(lapply(str_split(real_plot_data$V7, "\\|"), as.numeric), all_greater_than_zero)),]
+
+# whether estimated = true frequency
+real_plot_data$match = (real_plot_data$estim_rounded_af == real_plot_data$allele_counts)
+
+cor_estim <- signif(cor.test(real_plot_data$estim_rounded_af, real_plot_data$allele_counts, method = "spearman")$estimate, 3)
+
+# ggplot(real_plot_data, aes(x = as.factor(true_af), y = estim_af)) +
+#   geom_boxplot() +
+#   geom_point(aes(x=1, y=2), colour="red", size = 3, shape = 16) +
+#   geom_point(aes(x=2, y=3), colour="red", size = 3, shape = 16) +
+#   geom_point(aes(x=3, y=4), colour="red", size = 3, shape = 16) +
+#   geom_point(aes(x=4, y=5), colour="red", size = 3, shape = 16) +
+#   theme_minimal() +
+#   theme(text = element_text(size = 16, family = "Helvetica")) +
+#   labs(x = "True allele frequency", y = "Estimated allele frequency", title = paste("r = ", cor_estim, sep = ""))
+# 
+# estim_by_counts = table(real_plot_data$true_af, real_plot_data$estim_rounded_af)
+# 
+# estim_by_counts = melt(estim_by_counts)
+# 
+# estim_by_counts$bar_color = ifelse(estim_by_counts$Var.1 == estim_by_counts$Var.2, "red", "grey")
+
+# plot number of estimates for each af class
+ggplot(real_plot_data, aes(x = estim_rounded_af, fill = match)) +
+  geom_bar() +
+  facet_wrap(var_type ~ allele_counts, scales = "free", ncol = 7) +
+  scale_fill_manual(values = c("black", "grey")) +
+  theme_minimal() +
+  theme(text = element_text(size = 16, family = "Helvetica", colour = "black"), axis.text = element_text(color = "black"), legend.position = "None") +
+  labs(x = "Estimated REF allele frequency", y = "Number of variants")
+
+ggsave(paste("../../results/", today, "/", "true_vs_estimated_arabidopsis_thaliana_7_genomes.pdf", sep = ""), width = 9, height = 9)
+
+ggplot(real_plot_data[(real_plot_data$num_alleles == 2),], aes(x = estim_rounded_af, fill = match)) +
+  geom_bar() +
+  facet_wrap(var_type ~ allele_counts, scales = "free", ncol = 7) +
+  scale_fill_manual(values = c("black", "grey")) +
+  theme_minimal() +
+  theme(text = element_text(size = 16, family = "Helvetica", colour = "black"), axis.text = element_text(color = "black"), legend.position = "None") +
+  labs(x = "Estimated REF allele frequency", y = "Number of variants")
+
+ggsave(paste("../../results/", today, "/", "true_vs_estimated_biallelic_arabidopsis_thaliana_7_genomes.pdf", sep = ""), height = 9, width = 9)
+
+# vg performance
+vg_results = list.files(path="/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/",full.names = T,pattern = "calls_A.*.vcf")
+
+vg_results <- lapply(vg_results, read.vcfR)
+
+get_allele_counts <- function(vcf){
+  gt <- vcf@gt[,-1]
+  
+  gt <- gsub(":.*", "", gt)
+  
+  print(head(gt))
+
+  pos <- vcf@fix
+  
+  allele_counts <- str_count(gt, pattern = "0")
+  
+  pos <- cbind(pos, allele_counts)
+
+  return(pos)
+}
+
+vg_allele_counts <- lapply(vg_results, get_allele_counts)
+
+vg_allele_counts = do.call("rbind", vg_allele_counts)
+
+#vg_allele_counts[,"allele_counts"] = as.numeric(vg_allele_counts[,"allele_counts"])
+
+#pos[,"allele_counts"] = 2*as.numeric(pos[,"allele_counts"])
+
+vg_vs_real <- merge(pos, vg_allele_counts, by = c("CHROM", "POS"))
+
+vg_vs_real$allele_counts.x = 2*as.numeric(vg_vs_real$allele_counts.x)
+
+#vg_vs_real$allele_counts.y = round(as.numeric(vg_vs_real$allele_counts.y)/2)
+vg_vs_real$allele_counts.y = as.numeric(vg_vs_real$allele_counts.y)
+
+cor.test(vg_vs_real$allele_counts.x, vg_vs_real$allele_counts.y, method = "spearman")
+
+vg_vs_real$MATCH = (vg_vs_real$allele_counts.x == vg_vs_real$allele_counts.y)
+
+ggplot(vg_vs_real, aes(x = allele_counts.y, fill = MATCH)) +
+  geom_bar() +
+  theme_minimal() +
+  scale_fill_manual(values = c("black", "grey")) +
+  facet_wrap(~allele_counts.x, scales = "free") +
+  theme(text = element_text(size = 16, family = "Helvetica", colour = "black"), axis.text = element_text(color = "black"), legend.position = "None") +
+  labs(x = "Estimated REF allele count", y = "Number of variants")
+
+ggsave(paste("../../results/", today, "/", "true_vs_vg_brassica_napus.pdf", sep = ""), height = 7, width = 9)
+```
+
 # benchmarks
 ```{r}
-bench_file_names = list.files(path = "/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/benchmarks", recursive = T, full.names = T)
+bench_file_names = list.files(path = "/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks", recursive = T, full.names = T)
 
-bench_file_names = bench_file_names[!grepl("masked", bench_file_names)] # remove benchmarks from masked experiments for now
+#bench_file_names = bench_file_names[!grepl("masked", bench_file_names)] # remove benchmarks from masked experiments for now
 
 bench_files = lapply(bench_file_names, read.table, header = T, sep = "\t")
 
@@ -1821,9 +2841,9 @@ bench_files = do.call("rbind", bench_files)
 #
 bench_files$files = bench_file_names
 
-bench_files$tool = gsub("/.*", "", gsub("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/benchmarks/","",bench_files$files))
+bench_files$tool = gsub("/.*", "", gsub("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks/","",bench_files$files))
 
-bench_files$ID = as.numeric(gsub(".*/|.bench", "", gsub("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/benchmarks/","",bench_files$files)))
+bench_files$ID = as.numeric(gsub(".*/|.bench|_0.bench", "", gsub("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks/","",bench_files$files)))
 
 # merge with workflow parameters
 bench_params = merge(params[(params$simtype == "onepop"),c("ID", "cov", "n")], bench_files, by = "ID")
@@ -1845,7 +2865,8 @@ workflow_summary = function(x, lev_col, resource_col){
   
   results = NULL
   for(lev in levs){
-    bwa = x[(x$tool == "bwa") & (x[,lev_col] == lev),resource_col]
+    
+    bwa_mem = x[(x$tool == "bwa_mem") & (x[,lev_col] == lev),resource_col]
     
     varscan = x[(x$tool == "varscan") & (x[,lev_col] == lev),resource_col]
  
@@ -1863,8 +2884,8 @@ workflow_summary = function(x, lev_col, resource_col){
     
     result = data.frame(
       lev_col = lev,
-      bwa_varscan = bwa+varscan,
-      bwa_poolsnp = bwa+poolsnp,
+      bwa_varscan = bwa_mem+varscan,
+      bwa_poolsnp = bwa_mem+poolsnp,
       kmc_smudgeplot = kmc+smudgeplot,
       kmc_hetmers=kmc+hetmers,
       kmc_unitig_caller = kmc+unitig_caller,
@@ -1886,8 +2907,8 @@ workflow_summary = function(x, lev_col, resource_col){
 bench_summary_cpu_time_by_flow = workflow_summary(bench_summary_cpu_time, "cov", "cpu_time")
 bench_summary_cpu_time_by_flow = melt(bench_summary_cpu_time_by_flow, id = "lev_col")
 
-# bench_summary_max_rss_by_flow = workflow_summary(bench_summary_max_rss, "cov", "max_rss")
-# bench_summary_max_rss_by_flow = melt(bench_summary_max_rss_by_flow, id = "lev_col")
+#bench_summary_max_rss_by_flow = workflow_summary(bench_summary_max_rss, "cov", "max_rss")
+#bench_summary_max_rss_by_flow = melt(bench_summary_max_rss_by_flow, id = "lev_col")
 # 
 # bench_summary_max_vms_by_flow = workflow_summary(bench_summary_max_vms, "cov", "max_vms")
 # bench_summary_max_vms_by_flow = melt(bench_summary_max_vms_by_flow, id = "lev_col")
@@ -1930,7 +2951,7 @@ plot_time = ggplot(bench_summary_cpu_time_by_flow, aes(x = variable, y = value, 
 # memory plots
 bench_summary_max_rss$tool[(bench_summary_max_rss$tool == "unitig_caller")] = "unitig-caller"
 
-bench_summary_max_rss$tool = factor(bench_summary_max_rss$tool, levels = c("bwa", "varscan", "poolsnp", "kmc", "smudgeplot", "hetmers", "unitig-caller", "discosnp"))
+bench_summary_max_rss$tool = factor(bench_summary_max_rss$tool, levels = c("bwa_index", "bwa_mem", "varscan", "poolsnp", "freebayes", "kmc", "smudgeplot", "hetmers", "unitig-caller", "discosnp"))
 
 plot_memory = ggplot(bench_summary_max_rss, aes(x = tool, y = max_rss*1.04858, fill = as.factor(cov))) +
   geom_bar(stat = "identity", position = "dodge") +
@@ -2447,7 +3468,9 @@ ggplot(data.frame(x=c(0:10)), aes(x)) +
     geom_point(aes(y=dpois(x, 1)), colour="red")
 ```
 
-#
+
+
+# DEPRECATED
 ```{r}
 disco = read.table("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/discoRes_840_ad.txt", col.names = c("CHROM", "POS", "c1", "c2"))
 
@@ -2467,7 +3490,7 @@ ggplot(all_min_af, aes(x = snp_min_af, y = kmer_min_af)) +
   geom_abline(slope = 1, intercept = 0)
 ```
 
-# Test zeta distribution
+# DEPRECATED: Test zeta distribution
 ```{r}
 pA = 0.25
 pC = 0.25
