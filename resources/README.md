@@ -1,3 +1,5 @@
+# Resources
+
 This directory contains two resources:
 
 1. An example R script for generating config/parameters.tsv

@@ -1,9 +1,9 @@
-## Inputs
+# Configuration
 
-### config/config.yaml
+## config/config.yaml
 
 see `config.schema.yaml`
 
-### config/parameters.tsv
+## config/parameters.tsv
 
 see `parameters.schema.yaml`
