@@ -2,6 +2,6 @@ name: vg
 channels:
   - bioconda
 dependencies:
-  - vg=1.67.0=h9ee0642_0
+  - vg=1.70.0=h9ee0642_0
 
 prefix: "/global/home/users/milesroberts/.local/share/mamba/envs/vg"
