@@ -42,7 +42,8 @@ wildcard_constraints:
     ID="[a-zA-Z0-9]+",
     SID="[a-zA-Z0-9]+",
     PID="[a-zA-Z0-9]+",
-    num="[0-9]+"
+    num="[0-9]+",
+    read="[a-zA-Z0-9]+",
     #chr="[a-zA-Z0-9]+"
 
 localrules: all_per_sim

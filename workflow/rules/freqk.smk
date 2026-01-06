@@ -50,11 +50,9 @@ rule freqk_ref_dedup:
         "freqk_ref_dedup/{SID}_{PID}.txt"
     benchmark:
         "benchmarks/freqk_ref_dedup/{SID}_{PID}.bench"
-    params:
-        k=config["k"]
     shell:
         """
-        ./scripts/freqk ref-dedup --index {input.index} --fasta {input.fasta} --vcf {input.vcf} --kmer {params.k} --output {output}
+        ./scripts/freqk ref-dedup --index {input.index} --fasta {input.fasta} --vcf {input.vcf} --output {output}
         """
 
 rule combine_fastqs:
