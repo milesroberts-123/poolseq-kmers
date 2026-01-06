@@ -1,4 +1,4 @@
-library("dplyr") 
+library("dplyr")
 
 # number of replicates per simulation
 replicates <- 1:2
@@ -37,7 +37,7 @@ recombination_rates <- c(5e-9, 1e-8, 2e-8)
 # large number = effectively no repeats
 shapes <- c(2.854, 3.591, 4.772, 1e6)
 
-# whether identical k-mer copies should be shuffled (TRUE) or concatenated (FALSE) 
+# whether identical k-mer copies should be shuffled (TRUE) or concatenated (FALSE)
 shuffles <- c(TRUE, FALSE)
 
 # create data frame of workflow parameters
@@ -85,7 +85,7 @@ two_pop_params <- expand.grid(
 )
 
 # convert tau in units of N generations to generations
-two_pop_params$tau <- two_pop_params$tau*(two_pop_params$N1 + two_pop_params$N2)
+two_pop_params$tau <- two_pop_params$tau * (two_pop_params$N1 + two_pop_params$N2)
 
 sweep_params <- expand.grid(
   rep = replicates,
@@ -109,12 +109,12 @@ sweep_params <- expand.grid(
 )
 
 # convert Nes to selection coefficient
-sweep_params$s <- sweep_params$Nes/sweep_params$N
+sweep_params$s <- sweep_params$Nes / sweep_params$N
 
 params <- bind_rows(one_pop_params, sweep_params, two_pop_params)
 
 # if needed, subset to one simulation type
-params <- params[(params$simtype == "onepop"),]
+params <- params[(params$simtype == "onepop"), ]
 
 # replace all NA with 0, so that snakemake stays happy
 params[is.na(params)] <- 0
@@ -123,8 +123,8 @@ params[is.na(params)] <- 0
 params$ID <- 1:nrow(params)
 
 # add initial random seeds so that each simulation is completely reproducible
-params$slimseed <- sample(1:((2^31)-1), size = nrow(params), replace = F)
-params$issseed <- sample(1:((2^31)-1), size = nrow(params), replace = F)
+params$slimseed <- sample(1:((2^31) - 1), size = nrow(params), replace = F)
+params$issseed <- sample(1:((2^31) - 1), size = nrow(params), replace = F)
 
 # save
 write.table(params, "../config/parameters.tsv", sep = "\t", quote = F, row.names = F)
