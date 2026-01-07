@@ -7,7 +7,7 @@ rule iss:
     conda:
         "../envs/iss.yaml"
     params:
-        L=lookup(query="ID == '{SID}'", within=parameters, cols="L"),,
+        L=lookup(query="ID == '{SID}'", within=parameters, cols="L"),
         cov=lookup(query="ID == '{SID}'", within=parameters, cols="cov"),
         sequencer=lookup(query="ID == '{SID}'", within=parameters, cols="sequencer"),
         issseed=lookup(query="ID == '{SID}'", within=parameters, cols="issseed")
