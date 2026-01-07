@@ -12,7 +12,7 @@ rule fastp:
         "../envs/fastp.yaml"
     params:
         unqualLimit=config["unqualLimit"],
-        k=config["k"],
+        k=lookup(query="ID == '{ID}'", within=parameters, cols="k"),
         qualThresh=config["qualThresh"],
         windowLength=config["windowLength"],
     shell:

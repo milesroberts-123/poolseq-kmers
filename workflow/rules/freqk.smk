@@ -21,7 +21,7 @@ rule freqk_index:
     benchmark:
         "benchmarks/freqk_index/{SID}_{PID}.bench"
     params:
-        k=config["k"]
+        k=lookup(query="ID == '{ID}'", within=parameters, cols="k"), 
     shell:
         """
         # index panel of variants
