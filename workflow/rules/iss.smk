@@ -30,24 +30,6 @@ rule iss:
         nreads=calc_nreads
     shell:
         """
-        # read length = 300 bp
-        #if [ "{params.sequencer}" == "miseq" ] || [ "{params.sequencer}" == "nextseq" ]; then
-            # calculate number of reads for desired coverage level
-        #    nreads=$(({params.L}*{params.cov}/300))
-        #fi
-
-        # read length 150 bp
-        #if [ "{params.sequencer}" == "novaseq" ]; then
-            # calculate number of reads for desired coverage level
-        #    nreads=$(({params.L}*{params.cov}/150))
-        #fi
-        
-        # read length 125 bp
-        #if [ "{params.sequencer}" == "hiseq" ]; then
-            # calculate number of reads for desired coverage level
-        #    nreads=$(({params.L}*{params.cov}/125))
-        #fi
-
         echo Number of reads to simulate: 
         echo {params.nreads}
 
