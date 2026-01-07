@@ -187,7 +187,6 @@ rule all_per_sim:
                     #"disco_results/{SID}_{PID}.txt",
                     "slim_results/allele_freqs_{SID}_{PID}.txt",
                     "poolsnp_results/{SID}_{PID}.txt",
-                    "bcftools_call_vg_results/{SID}_{PID}.vcf",
                     #"freebayes_de_novo_results/{SID}_{PID}.txt",
                     #"freebayes_a_priori_results/{SID}_{PID}.txt",
                     "freebayes_vg_results/{SID}_{PID}.txt",

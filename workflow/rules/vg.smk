@@ -148,26 +148,6 @@ rule freebayes_vg:
     shell:
         "freebayes -f {input.reffasta} -p {params.n} --use-best-n-alleles 2 --variant-input {input.vcf} --only-use-input-alleles --pooled-discrete {input.trimbam} 1> {output}"
 
-
-rule bcftools_call_vg:
-    input:
-        reffasta="seqkit_results/ref_{SID}.fasta",
-        index="seqkit_results/ref_{SID}.fasta.fai",
-        trimbam="samtools_markdup_results/{SID}_{PID}.bam",
-    output:
-        "bcftools_call_vg_results/{SID}_{PID}.vcf",
-    conda:
-        "../envs/bcftools.yaml"
-    benchmark:
-        "benchmarks/bcftools_call_vg/{SID}_{PID}.bench"
-    params:
-        n=get_pool,
-        mincount=config["mincount"],
-        minfreq=config["minfreq"]
-    shell:
-        "bcftools mpileup -Ou -d 1000 -f {input.reffasta} {input.trimbam} | bcftools call --ploidy {params.n} -mv -Ou | bcftools view --min-af {params.minfreq} -i 'MIN(DP)>{params.mincount}' -o {output}"
-
-
 rule varscan_vg:
     input:
         reffasta="seqkit_results/ref_{SID}.fasta",
