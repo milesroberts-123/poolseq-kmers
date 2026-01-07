@@ -16,7 +16,10 @@ windowLength: 1
 ##################
 
 # minimum k-mer count threshold
-mincount: 3
+mincount: 5
+
+# minor allele frequency threshold
+minfreq: 0.01
 
 # maximum k-mer count recorded
 maxcount: 1000000

@@ -120,12 +120,21 @@ rule samtools_merge:
     shell:
         "samtools merge -o {output} {input}"
 
+rule samtools_markdup:
+    input:
+        "samtools_merge_results/{SID}_{PID}.bam"
+    output:
+        temp("samtools_markdup_results/{SID}_{PID}.bam")
+    conda:
+        "../envs/bcftools.yaml"
+    shell:
+        "samtools collate -@ {threads} -O -u {input} | samtools fixmate -@ {threads} -m -u - - | samtools sort -@ {threads} -u - | samtools markdup -@ {threads} - {output}"
 
 rule freebayes_vg:
     input:
         reffasta="seqkit_results/ref_{SID}.fasta",
         index="seqkit_results/ref_{SID}.fasta.fai",
-        trimbam="samtools_merge_results/{SID}_{PID}.bam",
+        trimbam="samtools_markdup_results/{SID}_{PID}.bam",
         vcf="slim_results/samples_{SID}_{PID}.vcf.gz",
         tbi="slim_results/samples_{SID}_{PID}.vcf.gz.tbi",
     output:
@@ -144,7 +153,7 @@ rule bcftools_call_vg:
     input:
         reffasta="seqkit_results/ref_{SID}.fasta",
         index="seqkit_results/ref_{SID}.fasta.fai",
-        trimbam="samtools_merge_results/{SID}_{PID}.bam",
+        trimbam="samtools_markdup_results/{SID}_{PID}.bam",
     output:
         "bcftools_call_vg_results/{SID}_{PID}.vcf",
     conda:
@@ -153,30 +162,35 @@ rule bcftools_call_vg:
         "benchmarks/bcftools_call_vg/{SID}_{PID}.bench"
     params:
         n=get_pool,
+        mincount=config["mincount"],
+        minfreq=config["minfreq"]
     shell:
-        "bcftools mpileup -Ou -f {input.reffasta} {input.trimbam} | bcftools call --ploidy {params.n} -mv -o {output}"
+        "bcftools mpileup -Ou -d 1000 -f {input.reffasta} {input.trimbam} | bcftools call --ploidy {params.n} -mv -Ou | bcftools view --min-af {params.minfreq} -i 'MIN(DP)>{params.mincount}' -o {output}"
 
 
 rule varscan_vg:
     input:
         reffasta="seqkit_results/ref_{SID}.fasta",
         index="seqkit_results/ref_{SID}.fasta.fai",
-        trimbam="samtools_merge_results/{SID}_{PID}.bam",
+        trimbam="samtools_markdup_results/{SID}_{PID}.bam",
     output:
         "varscan_results/{SID}_{PID}.tsv",
     conda:
         "../envs/varscan.yaml"
     benchmark:
         "benchmarks/varscan/{SID}_{PID}.bench"
+    params:
+        mincount=config["mincount"],
+        minfreq=config["minfreq"]
     shell:
-        "samtools mpileup -f {input.reffasta} {input.trimbam} | varscan pileup2snp 1> {output}"
+        "samtools mpileup -f {input.reffasta} {input.trimbam} | varscan pileup2snp --min-coverage {params.mincount} --min-var-freq {params.minfreq} 1> {output}"
 
 
 rule poolsnp_vg:
     input:
         reffasta="seqkit_results/ref_{SID}.fasta",
         index="seqkit_results/ref_{SID}.fasta.fai",
-        trimbam="samtools_merge_results/{SID}_{PID}.bam",
+        trimbam="samtools_markdup_results/{SID}_{PID}.bam",
     output:
         vcf=temp("{SID}_{PID}_poolsnp_output.vcf.gz"),
         cov=temp("{SID}_{PID}_poolsnp_output-cov-0.9999.txt"),
@@ -185,6 +199,7 @@ rule poolsnp_vg:
     params:
         wd=get_wd,
         mincount=config["mincount"],
+        minfreq=config["minfreq"]
     conda:
         "../envs/poolsnp.yaml"
     benchmark:
@@ -199,8 +214,8 @@ rule poolsnp_vg:
         names={wildcards.SID} \
         max-cov=0.9999 \
         min-cov={params.mincount} \
-        min-count={params.mincount} \
-        min-freq=0.01 \
+        min-count=1 \
+        min-freq={params.minfreq} \
         miss-frac=0 \
         badsites=1 \
         allsites=0 \
