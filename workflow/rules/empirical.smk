@@ -6,7 +6,6 @@ rule sra:
     conda:
         "../envs/sra.yaml"
     params:
-        k=config["k"],
         N=config["num_reads"],
     shell:
         """
