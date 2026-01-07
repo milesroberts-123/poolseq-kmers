@@ -8,7 +8,7 @@ rule kmc:
         counts=temp("kmc_results/kmer_counts_{SID}_{PID}.txt"),
         list=temp("{SID}_{PID}.list"),
         pre=temp("tmp_counts_{SID}_{PID}.kmc_pre"),
-        suf=temp("tmp_counts_{SID}_{PID}.kmc_suf")
+        suf=temp("tmp_counts_{SID}_{PID}.kmc_suf"),
     conda:
         "../envs/kmc.yaml"
     benchmark:

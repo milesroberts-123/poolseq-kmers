@@ -1,10 +1,10 @@
 rule datasets_download:
     output:
-        directory("contam_genomes")
+        directory("contam_genomes"),
     conda:
         "../envs/datasets.yaml"
     params:
-        taxa = config["ncbi_taxa"]
+        taxa=config["ncbi_taxa"],
     shell:
         r"""
         if [ -d "contam_genomes" ]; then
@@ -18,11 +18,12 @@ rule datasets_download:
         unzip contam.zip -d contam_genomes
         """
 
+
 checkpoint datasets_rehydrate:
     input:
-        "contam_genomes/"
+        "contam_genomes/",
     output:
-        directory("ncbi_datasets_results")
+        directory("ncbi_datasets_results"),
     conda:
         "../envs/datasets.yaml"
     shell:
@@ -40,23 +41,23 @@ checkpoint datasets_rehydrate:
         # rm -r contam_genomes/
         """
 
+
 rule seqkit_stats:
     input:
-        "ncbi_datasets_results/{species}.fna"
+        "ncbi_datasets_results/{species}.fna",
     output:
-        "seqkit_stats_results/{species}.txt"
+        "seqkit_stats_results/{species}.txt",
     conda:
         "../envs/seqkit.yaml"
     shell:
         "seqkit stats --all {input} > {output}"
 
+
 rule kmc_histo:
     input:
-        "ncbi_datasets_results/{species}.fna"
+        "ncbi_datasets_results/{species}.fna",
     output:
         histo="kmc_histo_results/{species}_{k}.histo",
-        #pre=temp("counts_{species}.kmc_pre"),
-        #suf=temp("counts_{species}.kmc_suf")
     conda:
         "../envs/kmc.yaml"
     shell:
@@ -74,4 +75,3 @@ rule kmc_histo:
 
         rm -r tmp_kmc_{wildcards.species}_{wildcards.k}
         """
-

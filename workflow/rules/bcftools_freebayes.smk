@@ -62,4 +62,3 @@ rule bcftools_freebayes_vg:
         # output allele depths
         bcftools view -m2 -M2 -v snps {output.vcfgz} | bcftools query -f '%CHROM %POS %REF %ALT %NS %AF %AC\n' > {output.final}
         """
-

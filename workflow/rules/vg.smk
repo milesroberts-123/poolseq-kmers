@@ -1,12 +1,12 @@
 rule vg_autoindex:
     input:
         fasta="ancestral_genome_results/{SID}.fasta",
-        vcf="slim_results/samples_{SID}_{PID}.vcf.gz"
+        vcf="slim_results/samples_{SID}_{PID}.vcf.gz",
     output:
-        dist = temp("{SID}_{PID}.dist"),
-        gbz = temp("{SID}_{PID}.giraffe.gbz"),
-        min = temp("{SID}_{PID}.shortread.withzip.min"),
-        zip = temp("{SID}_{PID}.shortread.zipcodes")
+        dist=temp("{SID}_{PID}.dist"),
+        gbz=temp("{SID}_{PID}.giraffe.gbz"),
+        min=temp("{SID}_{PID}.shortread.withzip.min"),
+        zip=temp("{SID}_{PID}.shortread.zipcodes"),
     benchmark:
         "benchmarks/vg_autoindex/{SID}_{PID}.bench"
     conda:
@@ -14,14 +14,15 @@ rule vg_autoindex:
     shell:
         "vg autoindex -w giraffe -r {input.fasta} -v {input.vcf} -p {wildcards.SID}_{wildcards.PID}"
 
+
 rule vg_giraffe_paired:
     input:
-        dist = "{SID}_{PID}.dist",
-        gbz = "{SID}_{PID}.giraffe.gbz",
-        min = "{SID}_{PID}.shortread.withzip.min",
-        zip = "{SID}_{PID}.shortread.zipcodes",
-        pread1 = "fastp_results/trimmed_paired_R1_{SID}_{PID}.fastq",
-        pread2 = "fastp_results/trimmed_paired_R2_{SID}_{PID}.fastq",
+        dist="{SID}_{PID}.dist",
+        gbz="{SID}_{PID}.giraffe.gbz",
+        min="{SID}_{PID}.shortread.withzip.min",
+        zip="{SID}_{PID}.shortread.zipcodes",
+        pread1="fastp_results/trimmed_paired_R1_{SID}_{PID}.fastq",
+        pread2="fastp_results/trimmed_paired_R2_{SID}_{PID}.fastq",
     output:
         temp("vg_giraffe_results/paired_{SID}_{PID}.gam"),
     conda:
@@ -31,15 +32,16 @@ rule vg_giraffe_paired:
     shell:
         "vg giraffe -Z {input.gbz} -d {input.dist} -m {input.min} -z {input.zip} -t {threads} -f {input.pread1} -f {input.pread2} > {output}"
 
+
 rule vg_giraffe_unpaired:
     input:
-        dist = "{SID}_{PID}.dist",
-        gbz = "{SID}_{PID}.giraffe.gbz",
-        min = "{SID}_{PID}.shortread.withzip.min",
-        zip = "{SID}_{PID}.shortread.zipcodes",
-        uread = "fastp_results/trimmed_unpaired_{read}_{SID}_{PID}.fastq",
+        dist="{SID}_{PID}.dist",
+        gbz="{SID}_{PID}.giraffe.gbz",
+        min="{SID}_{PID}.shortread.withzip.min",
+        zip="{SID}_{PID}.shortread.zipcodes",
+        uread="fastp_results/trimmed_unpaired_{read}_{SID}_{PID}.fastq",
     output:
-        temp("vg_giraffe_results/unpaired_{read}_{SID}_{PID}.gam")
+        temp("vg_giraffe_results/unpaired_{read}_{SID}_{PID}.gam"),
     conda:
         "../envs/vg.yaml"
     benchmark:
@@ -47,10 +49,11 @@ rule vg_giraffe_unpaired:
     shell:
         "vg giraffe -Z {input.gbz} -d {input.dist} -m {input.min} -z {input.zip} -t {threads} -f {input.uread} > {output}"
 
+
 rule vg_surject_unpaired:
     input:
-        gbz = "{SID}_{PID}.giraffe.gbz",
-        gam = "vg_giraffe_results/unpaired_{read}_{SID}_{PID}.gam",
+        gbz="{SID}_{PID}.giraffe.gbz",
+        gam="vg_giraffe_results/unpaired_{read}_{SID}_{PID}.gam",
     output:
         temp("vg_surject_results/unpaired_{read}_{SID}_{PID}.bam"),
     conda:
@@ -60,10 +63,11 @@ rule vg_surject_unpaired:
     shell:
         "vg surject -x {input.gbz} -t {threads} -b {input.gam} > {output}"
 
+
 rule vg_surject_paired:
     input:
-        gbz = "{SID}_{PID}.giraffe.gbz",
-        gam = "vg_giraffe_results/paired_{SID}_{PID}.gam",
+        gbz="{SID}_{PID}.giraffe.gbz",
+        gam="vg_giraffe_results/paired_{SID}_{PID}.gam",
     output:
         temp("vg_surject_results/paired_{SID}_{PID}.bam"),
     conda:
@@ -73,11 +77,12 @@ rule vg_surject_paired:
     shell:
         "vg surject -x {input.gbz} -t {threads} -b {input.gam} > {output}"
 
+
 rule samtools_sort_unpaired:
     input:
-        "vg_surject_results/unpaired_{read}_{SID}_{PID}.bam"
+        "vg_surject_results/unpaired_{read}_{SID}_{PID}.bam",
     output:
-        temp("samtools_sort_results/unpaired_{read}_{SID}_{PID}.bam")
+        temp("samtools_sort_results/unpaired_{read}_{SID}_{PID}.bam"),
     conda:
         "../envs/bcftools.yaml"
     benchmark:
@@ -85,11 +90,12 @@ rule samtools_sort_unpaired:
     shell:
         "samtools sort {input} -o {output}"
 
+
 rule samtools_sort_paired:
     input:
-        "vg_surject_results/paired_{SID}_{PID}.bam"
+        "vg_surject_results/paired_{SID}_{PID}.bam",
     output:
-        temp("samtools_sort_results/paired_{SID}_{PID}.bam")
+        temp("samtools_sort_results/paired_{SID}_{PID}.bam"),
     conda:
         "../envs/bcftools.yaml"
     benchmark:
@@ -97,12 +103,16 @@ rule samtools_sort_paired:
     shell:
         "samtools sort {input} -o {output}"
 
+
 rule samtools_merge:
     input:
         "samtools_sort_results/paired_{SID}_{PID}.bam",
-        expand("samtools_sort_results/unpaired_{read}_{{SID}}_{{PID}}.bam", read = ["R1", "R2"])
+        expand(
+            "samtools_sort_results/unpaired_{read}_{{SID}}_{{PID}}.bam",
+            read=["R1", "R2"],
+        ),
     output:
-        temp("samtools_merge_results/{SID}_{PID}.bam")
+        temp("samtools_merge_results/{SID}_{PID}.bam"),
     benchmark:
         "benchmarks/samtools_merge/{SID}_{PID}.bam"
     conda:
@@ -110,13 +120,14 @@ rule samtools_merge:
     shell:
         "samtools merge -o {output} {input}"
 
+
 rule freebayes_vg:
     input:
         reffasta="seqkit_results/ref_{SID}.fasta",
         index="seqkit_results/ref_{SID}.fasta.fai",
         trimbam="samtools_merge_results/{SID}_{PID}.bam",
         vcf="slim_results/samples_{SID}_{PID}.vcf.gz",
-        tbi="slim_results/samples_{SID}_{PID}.vcf.gz.tbi"
+        tbi="slim_results/samples_{SID}_{PID}.vcf.gz.tbi",
     output:
         "freebayes_vg_results/{SID}_{PID}.vcf",
     conda:
@@ -124,9 +135,10 @@ rule freebayes_vg:
     benchmark:
         "benchmarks/freebayes_vg/{SID}_{PID}.bench"
     params:
-        n=get_pool
+        n=get_pool,
     shell:
         "freebayes -f {input.reffasta} -p {params.n} --use-best-n-alleles 2 --variant-input {input.vcf} --only-use-input-alleles --pooled-discrete {input.trimbam} 1> {output}"
+
 
 rule bcftools_call_vg:
     input:
@@ -134,15 +146,16 @@ rule bcftools_call_vg:
         index="seqkit_results/ref_{SID}.fasta.fai",
         trimbam="samtools_merge_results/{SID}_{PID}.bam",
     output:
-        "bcftools_call_vg_results/{SID}_{PID}.vcf"
+        "bcftools_call_vg_results/{SID}_{PID}.vcf",
     conda:
         "../envs/bcftools.yaml"
     benchmark:
         "benchmarks/bcftools_call_vg/{SID}_{PID}.bench"
     params:
-        n=get_pool
+        n=get_pool,
     shell:
         "bcftools mpileup -Ou -f {input.reffasta} {input.trimbam} | bcftools call --ploidy {params.n} -mv -o {output}"
+
 
 rule varscan_vg:
     input:
@@ -157,6 +170,7 @@ rule varscan_vg:
         "benchmarks/varscan/{SID}_{PID}.bench"
     shell:
         "samtools mpileup -f {input.reffasta} {input.trimbam} | varscan pileup2snp 1> {output}"
+
 
 rule poolsnp_vg:
     input:

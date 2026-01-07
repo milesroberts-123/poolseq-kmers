@@ -6,7 +6,8 @@ def sample_start(wildcards):
     # get population
     p = int(wildcards.PID)
 
-    return 1+n*p
+    return 1 + n * p
+
 
 def sample_end(wildcards):
     # get sample size
@@ -16,7 +17,8 @@ def sample_end(wildcards):
     # get population
     p = int(wildcards.PID)
 
-    return n*(p+1)
+    return n * (p + 1)
+
 
 rule seqkit_get_samples:
     input:
@@ -25,8 +27,8 @@ rule seqkit_get_samples:
         tempsamplefasta=temp("seqkit_results/temp_{SID}_{PID}.fasta"),
         pop1="seqkit_results/samples_{SID}_{PID}.fasta",
     params:
-        start = sample_start,
-        end = sample_end
+        start=sample_start,
+        end=sample_end,
     conda:
         "../envs/seqkit.yaml"
     shell:

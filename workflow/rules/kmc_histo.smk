@@ -1,14 +1,14 @@
 rule exact_kmc_histo:
     input:
-        "ancestral_genome_results/{ID}.fasta"
+        "ancestral_genome_results/{ID}.fasta",
     output:
         histo="kmc_histo_results/{ID}.histo",
         pre=temp("counts_{ID}.kmc_pre"),
-        suf=temp("counts_{ID}.kmc_suf")
+        suf=temp("counts_{ID}.kmc_suf"),
     conda:
         "../envs/kmc.yaml"
     params:
-        k=lookup(query="ID == '{ID}'", within=parameters, cols="k")
+        k=lookup(query="ID == '{ID}'", within=parameters, cols="k"),
     shell:
         """
         # create directory

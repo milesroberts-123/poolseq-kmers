@@ -1,8 +1,8 @@
 rule ancestral_samtools_faidx:
     input:
-        "ancestral_genome_results/{SID}.fasta"
+        "ancestral_genome_results/{SID}.fasta",
     output:
-        temp("ancestral_genome_results/{SID}.fasta.fai")
+        temp("ancestral_genome_results/{SID}.fasta.fai"),
     conda:
         "../envs/bcftools.yaml"
     shell:
@@ -11,28 +11,30 @@ rule ancestral_samtools_faidx:
         samtools faidx {input}
         """
 
+
 rule freqk_index:
     input:
         vcf="slim_results/samples_{SID}_{PID}.vcf.gz",
         fasta="ancestral_genome_results/{SID}.fasta",
-        fai="ancestral_genome_results/{SID}.fasta.fai"
+        fai="ancestral_genome_results/{SID}.fasta.fai",
     output:
-        index=temp("freqk_indices/{SID}_{PID}.txt")
+        index=temp("freqk_indices/{SID}_{PID}.txt"),
     benchmark:
         "benchmarks/freqk_index/{SID}_{PID}.bench"
     params:
-        k=lookup(query="ID == '{ID}'", within=parameters, cols="k"), 
+        k=lookup(query="ID == '{SID}'", within=parameters, cols="k"),
     shell:
         """
         # index panel of variants
         ./scripts/freqk index --fasta {input.fasta} --vcf {input.vcf} -k {params.k} --output {output.index}
         """
 
+
 rule freqk_var_dedup:
     input:
-        "freqk_indices/{SID}_{PID}.txt"
+        "freqk_indices/{SID}_{PID}.txt",
     output:
-        temp("freqk_var_dedup/{SID}_{PID}.txt")
+        temp("freqk_var_dedup/{SID}_{PID}.txt"),
     benchmark:
         "benchmarks/freqk_var_dedup/{SID}_{PID}.bench"
     shell:
@@ -40,20 +42,22 @@ rule freqk_var_dedup:
         ./scripts/freqk var-dedup --index {input} --output {output}
         """
 
+
 rule freqk_ref_dedup:
     input:
         index="freqk_var_dedup/{SID}_{PID}.txt",
         vcf="slim_results/samples_{SID}_{PID}.vcf.gz",
         fasta="ancestral_genome_results/{SID}.fasta",
-        fai="ancestral_genome_results/{SID}.fasta.fai"
+        fai="ancestral_genome_results/{SID}.fasta.fai",
     output:
-        "freqk_ref_dedup/{SID}_{PID}.txt"
+        "freqk_ref_dedup/{SID}_{PID}.txt",
     benchmark:
         "benchmarks/freqk_ref_dedup/{SID}_{PID}.bench"
     shell:
         """
         ./scripts/freqk ref-dedup --index {input.index} --fasta {input.fasta} --vcf {input.vcf} --output {output}
         """
+
 
 rule combine_fastqs:
     input:
@@ -62,9 +66,10 @@ rule combine_fastqs:
         uread1="fastp_results/trimmed_unpaired_R1_{SID}_{PID}.fastq",
         uread2="fastp_results/trimmed_unpaired_R2_{SID}_{PID}.fastq",
     output:
-        temp("all_{SID}_{PID}.fastq")
+        temp("all_{SID}_{PID}.fastq"),
     shell:
         "cat {input.pread1} {input.pread2} {input.uread1} {input.uread2} > {output}"
+
 
 rule freqk_count:
     input:
@@ -72,7 +77,7 @@ rule freqk_count:
         index="freqk_ref_dedup/{SID}_{PID}.txt",
     output:
         counts="freqk_results/{SID}_{PID}_counts.txt",
-        freqs="freqk_results/{SID}_{PID}_freqs.txt"
+        freqs="freqk_results/{SID}_{PID}_freqs.txt",
     benchmark:
         "benchmarks/freqk_count/{SID}_{PID}.bench"
     shell:

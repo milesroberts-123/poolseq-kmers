@@ -10,7 +10,7 @@ rule iss:
         L=lookup(query="ID == '{SID}'", within=parameters, cols="L"),
         cov=lookup(query="ID == '{SID}'", within=parameters, cols="cov"),
         sequencer=lookup(query="ID == '{SID}'", within=parameters, cols="sequencer"),
-        issseed=lookup(query="ID == '{SID}'", within=parameters, cols="issseed")
+        issseed=lookup(query="ID == '{SID}'", within=parameters, cols="issseed"),
     shell:
         """
         # read length = 300 bp
