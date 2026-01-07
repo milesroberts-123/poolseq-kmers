@@ -1,6 +1,6 @@
 executor: slurm
-jobs: 10000
-cores: 10000
+jobs: 100000
+cores: 100000
 
 # rules to execute locally, because they're too fast to bother with cluster submission
 # localrules: all_one_pops, all_two_pops, all
@@ -29,7 +29,7 @@ set-resources:
     bwa_mem:
         cpus_per_task: 4
     iss:
-        cpus_per_task: 2
+        cpus_per_task: 4
     fastp:
         cpus_per_task: 2
     freqk_count:
@@ -72,7 +72,7 @@ set-threads:
     real_freqk_ref_dedup: 1
     bwa_mem: 4
     fastp: 2
-    iss: 2
+    iss: 4
     freqk_count: 4
     real_freqk_count: 16
     vg_giraffe_paired: 4
