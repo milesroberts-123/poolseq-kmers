@@ -2,7 +2,7 @@ rule ancestral_genome:
     input:
         "../config/parameters.tsv",
     output:
-        "ancestral_genome_results/{ID}.fasta",
+        temp("ancestral_genome_results/{ID}.fasta"),
     params:
         pA=lookup(query="ID == '{ID}'", within=parameters, cols="pA"),
         pC=lookup(query="ID == '{ID}'", within=parameters, cols="pC"),
