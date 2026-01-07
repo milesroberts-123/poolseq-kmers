@@ -44,7 +44,7 @@ rule real_fastp:
         "../envs/fastp.yaml"
     params:
         unqualLimit=config["unqualLimit"],
-        k=config["k"],
+        k=config["real_k"],
         qualThresh=config["qualThresh"],
         windowLength=config["windowLength"],
     shell:
@@ -92,7 +92,7 @@ rule real_freqk_index:
     benchmark:
         "benchmarks/real_data/freqk_index.bench"
     params:
-        k=config["k"]
+        k=config["real_k"]
     shell:
         """
         ./scripts/freqk index --fasta {input.fasta} --vcf {input.vcf} -k {params.k} --output {output.index}
@@ -119,8 +119,6 @@ rule real_freqk_ref_dedup:
         "ref_index.txt"
     benchmark:
         "benchmarks/real_data/freqk_ref_dedup.bench"
-    params:
-        k=config["k"]
     shell:
         """
         ./scripts/freqk ref-dedup --index {input.index} --fasta {input.fasta} --vcf {input.vcf} --output {output}

@@ -40,6 +40,8 @@ num_hash: 3
 # REAL DATA - PSEUDOPOOLS #
 ###########################
 
+real_k: 31
+
 ## Arabidopsis thaliana - 7 genomes
 real_fasta: "/global/scratch/users/milesroberts/tmp/arabidopsis_thaliana_tair10_ncbi/data/GCF_000001735.4/at_upper.fa"
 real_vcf: "/global/scratch/users/milesroberts/tmp/arabidopsis_thaliana_plantpan_data/at.genetics.variation/final.vcf.gz"
