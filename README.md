@@ -14,9 +14,7 @@ Author: Miles Roberts
 
 [Outputs](#outputs)
 
-[Running the workflow](#running-the-workflow)
-
-[Statistical analysis and figure creation](#statistical-analysis-and-figure-creation)
+[Usage](#usage)
 
 [Citations](#citations)
  
@@ -34,7 +32,7 @@ Simulation workflow to investigate the utility of k-mers, het-mers, and k-unitig
 
 This is how to make new mamba environment named snakemake with snakemake and the slurm plugin installed. If you are not running the workflow on a SLURM cluster, you can install a different pluggin
 
-```
+```sh
 conda create -y -f snakemake-mamba-env.yaml
 
 conda activate snakemake
@@ -72,7 +70,7 @@ Example commands are given below.
 
 ### Run simulations in batches with conda envs on slurm cluster
 
-```
+```sh
 num_batch=50
 for num in {1..$num_batch}
 do
@@ -82,7 +80,7 @@ done
 
 *Tip:* Collapse logs folder into one archive to minimize number of files on your system
 
-```
+```sh
 # create initial archive
 tar -cvf logs.tar logs/
 rm -r logs/
@@ -100,13 +98,13 @@ Instead of downloading and building all of the conda environments, you can just 
 
 Need to pass `--use-singularity` to snakemake and also your snakemake working directory with `--singularity-args "--bind <SNAKEMAKE_WORKING_DIRECTORY>"`
 
-```
+```sh
 snakemake --sdm conda apptainer --singularity-args "--bind ~/Josephs_Lab_Projects/poolseq-kmers/workflow" --rerun-incomplete --rerun-triggers mtime --scheduler greedy --retries 1 --keep-going
 ```
 
 ### Run workflow in batches with singularity on slurm cluster
 
-```
+```sh
 for num in {1..50}
 do
   snakemake --sdm conda apptainer --singularity-args "--bind /mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow" --rerun-incomplete --rerun-triggers mtime --scheduler greedy --retries 1 --keep-going --batch all=$num/50
@@ -127,7 +125,7 @@ https://github.com/snakemake/snakemake/issues/2602
 
 Create docker file with `snakemake --containerize > Dockerfile`. Copy Dockerfile and envs to same directory. Then run these commands from a computer with docker:
 
-```
+```sh
 sudo docker build -t poolseq-kmers .
 sudo docker login -u milesroberts
 sudo docker tag poolseq-kmers milesroberts/poolseq-kmers

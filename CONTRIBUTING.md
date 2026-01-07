@@ -1,6 +1,10 @@
-# To do
+# Contributing
 
-## high priority
+Thank you for considering contributing to our project! We welcome contributions from the community and are grateful for your support.
+
+## To-do 
+
+### high priority
 
 - [ ] run final batch of simulations
 
@@ -112,7 +116,7 @@
 
 - [x] add freqk
 
-## lower priority
+### lower priority
 
 - [ ] add structural variants randomly to samples VCF file output from slim
 
@@ -153,10 +157,6 @@
 - [ ] update to smudgeplot >0.3.0, once we're able to get k-mer sequences again
 
 - [ ] figure out how to use unpaired reads in varscan
-
-# Contributing to Our Project
-
-Thank you for considering contributing to our project! We welcome contributions from the community and are grateful for your support.
 
 ## How to Contribute
 
