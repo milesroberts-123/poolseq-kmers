@@ -29,7 +29,7 @@ set-resources:
     bwa_mem:
         cpus_per_task: 4
     iss:
-        cpus_per_task: 4
+        cpus_per_task: 2
     fastp:
         cpus_per_task: 2
     freqk_count:
@@ -72,7 +72,7 @@ set-threads:
     real_freqk_ref_dedup: 1
     bwa_mem: 4
     fastp: 2
-    iss: 4
+    iss: 2
     freqk_count: 4
     real_freqk_count: 16
     vg_giraffe_paired: 4
