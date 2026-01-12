@@ -53,7 +53,7 @@ rule seqkit_stats:
         "seqkit stats --all {input} > {output}"
 
 
-rule kmc_histo:
+rule approx_kmc_histo:
     input:
         "ncbi_datasets_results/{species}.fna",
     output:
