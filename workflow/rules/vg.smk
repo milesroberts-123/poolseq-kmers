@@ -132,8 +132,8 @@ rule samtools_markdup:
 
 rule freebayes_vg:
     input:
-        reffasta="seqkit_results/ref_{SID}.fasta",
-        index="seqkit_results/ref_{SID}.fasta.fai",
+        reffasta="ancestral_genome_results/{SID}.fasta",
+        index="ancestral_genome_results/{SID}.fasta.fai",
         trimbam="samtools_markdup_results/{SID}_{PID}.bam",
         vcf="slim_results/samples_{SID}_{PID}.vcf.gz",
         tbi="slim_results/samples_{SID}_{PID}.vcf.gz.tbi",
@@ -150,8 +150,8 @@ rule freebayes_vg:
 
 rule varscan_vg:
     input:
-        reffasta="seqkit_results/ref_{SID}.fasta",
-        index="seqkit_results/ref_{SID}.fasta.fai",
+        reffasta="ancestral_genome_results/{SID}.fasta",
+        index="ancestral_genome_results/{SID}.fasta.fai",
         trimbam="samtools_markdup_results/{SID}_{PID}.bam",
     output:
         "varscan_results/{SID}_{PID}.tsv",
@@ -165,11 +165,10 @@ rule varscan_vg:
     shell:
         "samtools mpileup -f {input.reffasta} {input.trimbam} | varscan pileup2snp --min-coverage {params.mincount} --min-var-freq {params.minfreq} 1> {output}"
 
-
 rule poolsnp_vg:
     input:
-        reffasta="seqkit_results/ref_{SID}.fasta",
-        index="seqkit_results/ref_{SID}.fasta.fai",
+        reffasta="ancestral_genome_results/{SID}.fasta",
+        index="ancestral_genome_results/{SID}.fasta.fai",
         trimbam="samtools_markdup_results/{SID}_{PID}.bam",
     output:
         vcf=temp("{SID}_{PID}_poolsnp_output.vcf.gz"),
