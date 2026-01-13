@@ -1,5 +1,5 @@
 ---
-title: "R Notebook"
+title: "Testing the utility of allele-specific k-mer counts in pool-seq data"
 output: html_notebook
 ---
 

@@ -59,7 +59,7 @@ rule vg_surject_unpaired:
     conda:
         "../envs/vg.yaml"
     benchmark:
-        "benchmarks/vg_surject/unpaired_{read}_{SID}_{PID}.bam"
+        "benchmarks/vg_surject/unpaired_{read}_{SID}_{PID}.bench"
     shell:
         "vg surject -x {input.gbz} -t {threads} -b {input.gam} > {output}"
 
@@ -73,7 +73,7 @@ rule vg_surject_paired:
     conda:
         "../envs/vg.yaml"
     benchmark:
-        "benchmarks/vg_surject/paired_{SID}_{PID}.bam"
+        "benchmarks/vg_surject/paired_{SID}_{PID}.bench"
     shell:
         "vg surject -x {input.gbz} -t {threads} -b {input.gam} > {output}"
 
@@ -86,7 +86,7 @@ rule samtools_sort_unpaired:
     conda:
         "../envs/bcftools.yaml"
     benchmark:
-        "benchmarks/samtools_sort/unpaired_{read}_{SID}_{PID}.bam"
+        "benchmarks/samtools_sort/unpaired_{read}_{SID}_{PID}.bench"
     shell:
         "samtools sort {input} -o {output}"
 
@@ -99,7 +99,7 @@ rule samtools_sort_paired:
     conda:
         "../envs/bcftools.yaml"
     benchmark:
-        "benchmarks/samtools_sort/paired_{SID}_{PID}.bam"
+        "benchmarks/samtools_sort/paired_{SID}_{PID}.bench"
     shell:
         "samtools sort {input} -o {output}"
 
@@ -114,7 +114,7 @@ rule samtools_merge:
     output:
         temp("samtools_merge_results/{SID}_{PID}.bam"),
     benchmark:
-        "benchmarks/samtools_merge/{SID}_{PID}.bam"
+        "benchmarks/samtools_merge/{SID}_{PID}.bench"
     conda:
         "../envs/bcftools.yaml"
     shell:
@@ -127,6 +127,8 @@ rule samtools_markdup:
         temp("samtools_markdup_results/{SID}_{PID}.bam")
     conda:
         "../envs/bcftools.yaml"
+    benchmark:
+        "benchmarks/samtools_markdup/{SID}_{PID}.bench"
     shell:
         "samtools collate -@ {threads} -O -u {input} | samtools fixmate -@ {threads} -m -u - - | samtools sort -@ {threads} -u - | samtools markdup -@ {threads} - {output}"
 
