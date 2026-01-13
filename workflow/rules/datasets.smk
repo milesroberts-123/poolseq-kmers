@@ -57,7 +57,7 @@ rule approx_kmc_histo:
     input:
         "ncbi_datasets_results/{species}.fna",
     output:
-        histo="kmc_histo_results/{species}_{k}.histo",
+        histo="approx_kmc_histo_results/{species}_{k}.histo",
     conda:
         "../envs/kmc.yaml"
     shell:

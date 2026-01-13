@@ -2,7 +2,7 @@ rule exact_kmc_histo:
     input:
         "ancestral_genome_results/{ID}.fasta",
     output:
-        histo="kmc_histo_results/{ID}.histo",
+        histo="exact_kmc_histo_results/{ID}.histo",
         pre=temp("counts_{ID}.kmc_pre"),
         suf=temp("counts_{ID}.kmc_suf"),
     conda:
