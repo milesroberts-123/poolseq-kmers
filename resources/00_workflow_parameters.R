@@ -5,13 +5,13 @@ replicates <- 1:3
 
 # number of individuals to randomly sample at end of SLiM
 # number of genomes in pool will be twice this number
-sample_sizes <- c(10, 25, 50, 100)
+sample_sizes <- c(10, 25, 50, 100, 150)
 
 # sequencing coverage of entire pool = avg bp per read * num of reads / genome size
-coverages <- c(10, 25, 50, 100)
+coverages <- c(10, 25, 50, 100, 150)
 
 # insilico-seq error models
-sequencers <- c("hiseq", "novaseq", "miseq", "nextseq")
+sequencers <- c("hiseq", "miseq", "nextseq")
 
 # genome sizes
 L <- c(1e6, 2e6, 4e6)
@@ -35,7 +35,7 @@ recombination_rates <- c(1e-8)
 
 # shape parameter for zeta distribution
 # large number = effectively no repeats
-shapes <- c(2.854, 3.591, 4.772, 1e6)
+shapes <- c(2.575, 3.369, 4.812, 1e6)
 
 # whether identical k-mer copies should be shuffled (TRUE) or concatenated (FALSE)
 shuffles <- c(TRUE, FALSE)
