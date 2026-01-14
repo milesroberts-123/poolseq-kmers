@@ -213,40 +213,57 @@ include: "rules/datasets.smk"
 # empirical data
 include: "rules/empirical.smk"
 
-# other rules
-include: "rules/ancestral_genome.smk"
-include: "rules/kmc_histo.smk"
-include: "rules/bcftools.smk"
+# simulations
+include: "rules/simulations.smk"
+
+## sweep simulation specific rules
+include: "rules/sweep.smk"
+
+## two population simulation specific rules
+include: "rules/two_pop.smk"
+
+#include: "rules/ancestral_genome.smk"
+#include: "rules/kmc_histo.smk"
+#include: "rules/bcftools.smk"
+
 #include: "rules/bcftools_discosnp.smk"
 #include: "rules/bcftools_poolsnp.smk"
 #include: "rules/bcftools_remove_ref.smk"
 #include: "rules/bcftools_get_samples.smk"
 #include: "rules/bcftools_fill_tags.smk"
 #include: "rules/bcftools_freebayes.smk"
-include: "rules/blast.smk"
-include: "rules/makeblastdb.smk"
-include: "rules/bwa_index.smk"
-include: "rules/bwa_mem.smk"
+
+#include: "rules/blast.smk"
+#include: "rules/makeblastdb.smk"
+#include: "rules/bwa_index.smk"
+#include: "rules/bwa_mem.smk"
 #include: "rules/compress.smk"
 #include: "rules/discosnp.smk"
-include: "rules/fastp.smk"
+
+#include: "rules/fastp.smk"
+
 #include: "rules/freebayes.smk"
 #include: "rules/hetmers.smk"
-include: "rules/freqk.smk"
-include: "rules/iss.smk"
-#include: "rules/kmc.smk"
-include: "rules/multiqc.smk"
+
+#include: "rules/freqk.smk"
+#include: "rules/iss.smk"
+
+include: "rules/kmc.smk"
+
+#include: "rules/multiqc.smk"
+
 #include: "rules/poolsnp.smk"
-include: "rules/samtools_faidx.smk"
-include: "rules/seqkit_get_ref.smk"
-include: "rules/seqkit_get_samples.smk"
+#include: "rules/samtools_faidx.smk"
+#include: "rules/seqkit_get_ref.smk"
+#include: "rules/seqkit_get_samples.smk"
 #include: "rules/seqkit_hetmer_key.smk"
-include: "rules/seqkit_rename.smk"
-include: "rules/slim.smk"
+#include: "rules/seqkit_rename.smk"
+#include: "rules/slim.smk"
 #include: "rules/smudgeplot.smk"
 #include: "rules/unitig_caller.smk"
 #include: "rules/varscan.smk"
-include: "rules/vg.smk"
-include: "rules/kmer_distances.smk"
-include: "rules/counting_bloom_filter.smk"
-include: "rules/cbind.smk"
+#include: "rules/vg.smk"
+
+#include: "rules/kmer_distances.smk"
+#include: "rules/counting_bloom_filter.smk"
+#include: "rules/cbind.smk"
