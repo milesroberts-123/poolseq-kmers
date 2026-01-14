@@ -70,7 +70,7 @@ Example commands are given below.
 
 ```sh
 batches=50
-for i in {1..$batches}
+for i in $( eval echo {1..$batches} )
 do
   snakemake --sdm conda --rerun-incomplete --rerun-triggers mtime --scheduler greedy --keep-going --batch all_sims=$i/$batches all_sims
 done
@@ -90,7 +90,7 @@ snakemake --sdm conda apptainer --singularity-args "--bind <SNAKEMAKE_WORKING_DI
 
 ```sh
 batches=50
-for num in {1..$batches}
+for num in $( eval echo {1..$batches} )
 do
   snakemake --sdm conda apptainer --singularity-args "--bind <SNAKEMAKE_WORKING_DIRECTORY>" --rerun-incomplete --rerun-triggers mtime --scheduler greedy --retries 1 --keep-going --batch all_sims=$num/$batches all_sims
 done
