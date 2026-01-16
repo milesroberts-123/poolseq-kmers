@@ -14,9 +14,9 @@ rule kmc:
     benchmark:
         "benchmarks/kmc/{SID}_{PID}.bench"
     params:
-        mincount=config["mincount"],
-        maxcount=config["maxcount"],
-        k=config["k"],
+        mincount=1,
+        maxcount=10000,
+        k=lookup(query="ID == '{ID}'", within=parameters, cols="k"),
     shell:
         """
         # create directory
