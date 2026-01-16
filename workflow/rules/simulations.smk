@@ -18,6 +18,7 @@ rule ancestral_genome:
         """
         Rscript scripts/random_genome.R {params.pA} {params.pC} {params.pG} {params.pT} {params.shape} {params.k} {params.L} {wildcards.ID} {params.shuffleKmers}
         """
+
 rule exact_kmc_histo:
     input:
         "ancestral_genome_results/{ID}.fasta",
@@ -47,6 +48,7 @@ rule exact_kmc_histo:
         # rm tmp dir
         rm -r tmp_kmc_{wildcards.ID}
         """
+
 rule slim:
     input:
         "ancestral_genome_results/{ID}.fasta",
@@ -83,6 +85,7 @@ rule slim:
             slim -d ID={wildcards.ID} -d SLIMSEED={params.slimseed} -d N1={params.N1} -d N2={params.N2} -d mg1={params.mg1} -d mg2={params.mg2} -d mu={params.mu} -d R={params.R} -d n={params.n} -d tau={params.tau} scripts/two_pop.slim
         fi
         """
+
 rule bcftools_remove_ref:
     input:
         "slim_results/{ID}.vcf",
@@ -210,6 +213,7 @@ rule bcftools_poolsnp:
         # output allele depths
         bcftools view -m2 -M2 -v snps {input.vcf} | bcftools query -f '%CHROM %POS %REF %ALT [ %AD] [ %DP]\n' | sed 's:,:\t:g' > {output.final}     
         """
+
 def sample_start(wildcards):
     # get sample size
     n = parameters.loc[parameters["ID"] == wildcards.SID, "n"]
@@ -251,6 +255,7 @@ rule seqkit_get_samples:
         # get group of n individuals
         seqkit range -r {params.start}:{params.end} {output.tempsamplefasta} > {output.pop1}        
         """
+
 def calc_nreads(wildcards):
     L = parameters.loc[parameters["ID"] == wildcards.SID, "L"]
     cov = parameters.loc[parameters["ID"] == wildcards.SID, "cov"]
@@ -289,6 +294,7 @@ rule iss:
         # simulate reads
         iss generate -g {input} --seed {params.issseed} --cpus {threads} --model {params.sequencer} -n {params.nreads} --abundance uniform --output iss_results/reads_{wildcards.SID}_{wildcards.PID}
         """
+
 rule fastp:
     input:
         read1="iss_results/reads_{SID}_{PID}_R1.fastq",
@@ -312,6 +318,7 @@ rule fastp:
         # trim low quality bases
         fastp --thread {threads} -u {params.unqualLimit} -q {params.qualThresh} --correction -l {params.k} --cut_tail --cut_tail_window_size {params.windowLength} --cut_tail_mean_quality {params.qualThresh} --json {output.jsonR1R2} -i {input.read1} -I {input.read2} -o {output.pread1} -O {output.pread2} --unpaired1 {output.uread1} --unpaired2 {output.uread2}
         """
+
 rule ancestral_samtools_faidx:
     input:
         "ancestral_genome_results/{SID}.fasta",
@@ -398,6 +405,7 @@ rule freqk_count:
         """
         ./scripts/freqk count --nthreads {threads} --index {input.index} --reads {input.reads} --freq-output {output.freqs} --count-output {output.counts}
         """
+
 rule vg_autoindex:
     input:
         fasta="ancestral_genome_results/{SID}.fasta",
@@ -412,7 +420,7 @@ rule vg_autoindex:
     conda:
         "../envs/vg.yaml"
     shell:
-        "vg autoindex -w giraffe -r {input.fasta} -v {input.vcf} -p {wildcards.SID}_{wildcards.PID}"
+        "vg autoindex -w giraffe --threads {threads} -r {input.fasta} -v {input.vcf} -p {wildcards.SID}_{wildcards.PID}"
 
 
 rule vg_giraffe_paired:

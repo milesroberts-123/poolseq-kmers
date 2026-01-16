@@ -2501,6 +2501,7 @@ print(paste("P-value:", p_value))
 ```
 
 # DEPRECATED: correlations between true and predicted minor allele frequencies
+
 ```{r}
 # load pairs of k-mers
 kmer_pairs <- read.table(paste("/mnt/scratch/robe1195/Josephs_Lab_Projects/poolseq-kmers/workflow/", "kmerpairs_938_sequences.tsv", sep = ""), col.names = c("k1"))
