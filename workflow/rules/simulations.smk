@@ -3,6 +3,7 @@ rule ancestral_genome:
         "../config/parameters.tsv",
     output:
         temp("ancestral_genome_results/{ID}.fasta"),
+    group: "ancestor"
     params:
         pA=lookup(query="ID == '{ID}'", within=parameters, cols="pA"),
         pC=lookup(query="ID == '{ID}'", within=parameters, cols="pC"),
@@ -19,6 +20,20 @@ rule ancestral_genome:
         Rscript scripts/random_genome.R {params.pA} {params.pC} {params.pG} {params.pT} {params.shape} {params.k} {params.L} {wildcards.ID} {params.shuffleKmers}
         """
 
+rule ancestral_samtools_faidx:
+    input:
+        "ancestral_genome_results/{SID}.fasta",
+    output:
+        temp("ancestral_genome_results/{SID}.fasta.fai"),
+    group: "ancestor"
+    conda:
+        "../envs/bcftools.yaml"
+    shell:
+        """
+        # index reference genome
+        samtools faidx {input}
+        """
+
 rule exact_kmc_histo:
     input:
         "ancestral_genome_results/{ID}.fasta",
@@ -26,6 +41,7 @@ rule exact_kmc_histo:
         histo="exact_kmc_histo_results/{ID}.histo",
         pre=temp("counts_{ID}.kmc_pre"),
         suf=temp("counts_{ID}.kmc_suf"),
+    group: "ancestor"
     conda:
         "../envs/kmc.yaml"
     params:
@@ -55,6 +71,7 @@ rule slim:
     output:
         temp("slim_results/{ID}.vcf"),
         temp("slim_results/{ID}.fasta"),
+    group: "slimulation"
     params:
         simtype=lookup(query="ID == '{ID}'", within=parameters, cols="simtype"),
         slimseed=lookup(query="ID == '{ID}'", within=parameters, cols="slimseed"),
@@ -93,6 +110,7 @@ rule bcftools_remove_ref:
         vcf=temp("slim_results/{ID}.vcf.gz"),
         tbi=temp("slim_results/{ID}.vcf.gz.tbi"),
         samplevcf=temp("slim_results/samples_{ID}.vcf.gz")
+    group: "slimulation"
     conda:
         "../envs/bcftools.yaml"
     shell:
@@ -112,6 +130,7 @@ rule bcftools_get_samples:
         tbi=temp("slim_results/samples_{SID}_{PID}.vcf.gz.tbi"),
         filledvcf=temp("slim_results/filled_{SID}_{PID}.vcf.gz"),
         allelefreq="slim_results/allele_freqs_{SID}_{PID}.txt",
+    group: "slimulation"
     conda:
         "../envs/bcftools.yaml"
     params:
@@ -168,7 +187,6 @@ rule bcftools_freebayes_a_priori:
         bcftools view -m2 -M2 -v snps {output.vcfgz} | bcftools query -f '%CHROM %POS %REF %ALT %NS %AF %AC\n' > {output.final}
         """
 
-
 rule bcftools_freebayes_vg:
     input:
         vcf="freebayes_vg_results/{SID}_{PID}.vcf",
@@ -178,6 +196,7 @@ rule bcftools_freebayes_vg:
         final="freebayes_vg_results/{SID}_{PID}.txt",
     conda:
         "../envs/bcftools.yaml"
+    group: "freebayes"
     shell:
         """
         # recompress with bgzip
@@ -199,6 +218,7 @@ rule bcftools_poolsnp:
         final="poolsnp_results/{SID}_{PID}.txt",
     conda:
         "../envs/bcftools.yaml"
+    group: "poolsnp"
     shell:
         """
         # unpack gzip
@@ -245,6 +265,7 @@ rule seqkit_get_samples:
     params:
         start=sample_start,
         end=sample_end,
+    group: "slimulation"
     conda:
         "../envs/seqkit.yaml"
     shell:
@@ -282,6 +303,7 @@ rule iss:
         temp("iss_results/reads_{SID}_{PID}_R2.fastq"),
     conda:
         "../envs/iss.yaml"
+    group: "readsim"
     params:
         sequencer=lookup(query="ID == '{SID}'", within=parameters, cols="sequencer"),
         issseed=lookup(query="ID == '{SID}'", within=parameters, cols="issseed"),
@@ -307,6 +329,7 @@ rule fastp:
         jsonR1R2="fastp_results/{SID}_{PID}_R1R2.json",
     conda:
         "../envs/fastp.yaml"
+    group: "readsim"
     params:
         unqualLimit=config["unqualLimit"],
         k=lookup(query="ID == '{SID}'", within=parameters, cols="k"),
@@ -319,20 +342,6 @@ rule fastp:
         fastp --thread {threads} -u {params.unqualLimit} -q {params.qualThresh} --correction -l {params.k} --cut_tail --cut_tail_window_size {params.windowLength} --cut_tail_mean_quality {params.qualThresh} --json {output.jsonR1R2} -i {input.read1} -I {input.read2} -o {output.pread1} -O {output.pread2} --unpaired1 {output.uread1} --unpaired2 {output.uread2}
         """
 
-rule ancestral_samtools_faidx:
-    input:
-        "ancestral_genome_results/{SID}.fasta",
-    output:
-        temp("ancestral_genome_results/{SID}.fasta.fai"),
-    conda:
-        "../envs/bcftools.yaml"
-    shell:
-        """
-        # index reference genome
-        samtools faidx {input}
-        """
-
-
 rule freqk_index:
     input:
         vcf="slim_results/samples_{SID}_{PID}.vcf.gz",
@@ -342,6 +351,7 @@ rule freqk_index:
         index=temp("freqk_indices/{SID}_{PID}.txt"),
     benchmark:
         "benchmarks/freqk_index/{SID}_{PID}.bench"
+    group: "freqk_index"
     params:
         k=lookup(query="ID == '{SID}'", within=parameters, cols="k"),
     shell:
@@ -350,7 +360,6 @@ rule freqk_index:
         ./scripts/freqk index --fasta {input.fasta} --vcf {input.vcf} -k {params.k} --output {output.index}
         """
 
-
 rule freqk_var_dedup:
     input:
         "freqk_indices/{SID}_{PID}.txt",
@@ -358,11 +367,11 @@ rule freqk_var_dedup:
         temp("freqk_var_dedup/{SID}_{PID}.txt"),
     benchmark:
         "benchmarks/freqk_var_dedup/{SID}_{PID}.bench"
+    group: "freqk_index"
     shell:
         """
         ./scripts/freqk var-dedup --index {input} --output {output}
         """
-
 
 rule freqk_ref_dedup:
     input:
@@ -374,11 +383,11 @@ rule freqk_ref_dedup:
         "freqk_ref_dedup/{SID}_{PID}.txt",
     benchmark:
         "benchmarks/freqk_ref_dedup/{SID}_{PID}.bench"
+    group: "freqk_index"
     shell:
         """
         ./scripts/freqk ref-dedup --index {input.index} --fasta {input.fasta} --vcf {input.vcf} --output {output}
         """
-
 
 rule combine_fastqs:
     input:
@@ -388,9 +397,9 @@ rule combine_fastqs:
         uread2="fastp_results/trimmed_unpaired_R2_{SID}_{PID}.fastq",
     output:
         temp("all_{SID}_{PID}.fastq"),
+    group: "readsim"
     shell:
         "cat {input.pread1} {input.pread2} {input.uread1} {input.uread2} > {output}"
-
 
 rule freqk_count:
     input:
@@ -399,12 +408,25 @@ rule freqk_count:
     output:
         counts="freqk_results/{SID}_{PID}_counts.txt",
         freqs="freqk_results/{SID}_{PID}_freqs.txt",
+    group: "freqk_count"
     benchmark:
         "benchmarks/freqk_count/{SID}_{PID}.bench"
     shell:
         """
         ./scripts/freqk count --nthreads {threads} --index {input.index} --reads {input.reads} --freq-output {output.freqs} --count-output {output.counts}
         """
+
+rule freqk_call:
+    input:
+        counts="freqk_results/{SID}_{PID}_freqs.txt",
+        index="freqk_ref_dedup/{SID}_{PID}.txt",
+    output:
+        "freqk_results/{SID}_{PID}_calls.txt",
+    group: "freqk_count"
+    benchmark:
+        "benchmarks/freqk_call/{SID}_{PID}.bench"
+    shell:
+        "./scripts/freqk call --index {input.index} -c {input.counts} --output {output}"
 
 rule vg_autoindex:
     input:
@@ -422,7 +444,6 @@ rule vg_autoindex:
     shell:
         "vg autoindex -w giraffe --threads {threads} -r {input.fasta} -v {input.vcf} -p {wildcards.SID}_{wildcards.PID}"
 
-
 rule vg_giraffe_paired:
     input:
         dist="{SID}_{PID}.dist",
@@ -439,7 +460,6 @@ rule vg_giraffe_paired:
         "benchmarks/vg_giraffe/{SID}_{PID}.bench"
     shell:
         "vg giraffe -Z {input.gbz} -d {input.dist} -m {input.min} -z {input.zip} -t {threads} -f {input.pread1} -f {input.pread2} > {output}"
-
 
 rule vg_giraffe_unpaired:
     input:
@@ -466,6 +486,7 @@ rule vg_surject_unpaired:
         temp("vg_surject_results/unpaired_{read}_{SID}_{PID}.bam"),
     conda:
         "../envs/vg.yaml"
+    group: "vg_surject"
     benchmark:
         "benchmarks/vg_surject/unpaired_{read}_{SID}_{PID}.bench"
     shell:
@@ -480,6 +501,7 @@ rule vg_surject_paired:
         temp("vg_surject_results/paired_{SID}_{PID}.bam"),
     conda:
         "../envs/vg.yaml"
+    group: "vg_surject"
     benchmark:
         "benchmarks/vg_surject/paired_{SID}_{PID}.bench"
     shell:
@@ -493,6 +515,7 @@ rule samtools_sort_unpaired:
         temp("samtools_sort_results/unpaired_{read}_{SID}_{PID}.bam"),
     conda:
         "../envs/bcftools.yaml"
+    group: "vg_surject"
     benchmark:
         "benchmarks/samtools_sort/unpaired_{read}_{SID}_{PID}.bench"
     shell:
@@ -506,6 +529,7 @@ rule samtools_sort_paired:
         temp("samtools_sort_results/paired_{SID}_{PID}.bam"),
     conda:
         "../envs/bcftools.yaml"
+    group: "vg_surject"
     benchmark:
         "benchmarks/samtools_sort/paired_{SID}_{PID}.bench"
     shell:
@@ -525,6 +549,7 @@ rule samtools_merge:
         "benchmarks/samtools_merge/{SID}_{PID}.bench"
     conda:
         "../envs/bcftools.yaml"
+    group: "vg_surject"
     shell:
         "samtools merge -o {output} {input}"
 
@@ -537,6 +562,7 @@ rule samtools_markdup:
         "../envs/bcftools.yaml"
     benchmark:
         "benchmarks/samtools_markdup/{SID}_{PID}.bench"
+    group: "vg_surject"
     shell:
         "samtools collate -@ {threads} -O -u {input} | samtools fixmate -@ {threads} -m -u - - | samtools sort -@ {threads} -u - | samtools markdup -@ {threads} - {output}"
 
@@ -548,13 +574,14 @@ rule freebayes_vg:
         vcf="slim_results/samples_{SID}_{PID}.vcf.gz",
         tbi="slim_results/samples_{SID}_{PID}.vcf.gz.tbi",
     output:
-        "freebayes_vg_results/{SID}_{PID}.vcf",
+        temp("freebayes_vg_results/{SID}_{PID}.vcf"),
     conda:
         "../envs/freebayes.yaml"
     benchmark:
         "benchmarks/freebayes_vg/{SID}_{PID}.bench"
     params:
         n=get_pool,
+    group: "freebayes"
     shell:
         "freebayes -f {input.reffasta} -p {params.n} --use-best-n-alleles 2 --variant-input {input.vcf} --only-use-input-alleles --pooled-discrete {input.trimbam} 1> {output}"
 
@@ -591,6 +618,7 @@ rule poolsnp_vg:
         minfreq=config["minfreq"]
     conda:
         "../envs/poolsnp.yaml"
+    group: "poolsnp"
     benchmark:
         "benchmarks/poolsnp/{SID}_{PID}.bench"
     shell:

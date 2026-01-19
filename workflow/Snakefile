@@ -127,7 +127,7 @@ rule all_per_sim:
                     #"blast_results/{SID}_{PID}.txt",
                     #"hetmers_results/{SID}_{PID}_counts.csv",
                     #"seqkit_results/center_kmer_pairs_{SID}.txt",
-                    "freqk_results/{SID}_{PID}_counts.txt",
+                    "freqk_results/{SID}_{PID}_calls.txt",
                     "exact_kmc_histo_results/{SID}.histo"),
                 "sweep": ("blast_results/{SID}_{PID}.txt", 
                     "slim_results/allele_freqs_{SID}_{PID}.txt"),
