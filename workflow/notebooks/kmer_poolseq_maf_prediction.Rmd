@@ -15,7 +15,7 @@ library(vcfR)
 library(ggplot2)
 library(dplyr)
 library(MASS)
-library(reshape)
+library(reshape2)
 library(ggpubr)
 library(ggforce)
 library(VGAM)
@@ -503,17 +503,251 @@ plot_fig1 <- grid.arrange(plot_point_zeta_example, plot_violin_boxplot_shape, pl
 ggsave(paste("../../results/", today, "/fig1.pdf", sep = ""), plot_fig1, device = cairo_pdf, width = 10, height = 7)
 ```
 
-# process single population simulations
+# load simulation parameters
+
 ```{r}
 params <- read.table("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/config/parameters.tsv", header = T)
 
-dones <- sort(as.numeric(gsub("_0", "", gsub(".done", "", list.files(path = "/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/finished/", pattern = ".done")))))
+# get only simulations that completed
+#dones <- sort(as.numeric(gsub("_0", "", gsub(".done", "", list.files(path = "/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/finished/", pattern = ".done")))))
+
+dones <- sort(as.numeric(gsub("_0", "", gsub("_calls.txt", "", list.files(path = "/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/freqk_results/", pattern = "_calls.txt")))))
 
 params <- params[(params$ID %in% dones),]
+```
 
-# if looking at data before workflow is finished, may need to separate out all simulations that are done
-# dones = read.table("/global/scratch/users/milesroberts/poolseq-kmers/workflow/dones.txt")
-# dones = dones$V1
+# benchmarks - runtime and memory
+
+```{r}
+bench_file_names <- list.files(path = "/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks", recursive = T, full.names = T)
+
+bench_files <- lapply(bench_file_names, read.table, header = T, sep = "\t")
+
+#bench_files <- lapply(bench_file_names, fread, header = T, sep = "\t")
+
+bench_files <- do.call("rbind", bench_files)
+
+#bench_files <- vroom(bench_file_names, id = "files", altrep = F)
+
+#bench_files <- map_dfr(bench_file_names, read.table, header = T, sep = "\t")
+
+# get names
+bench_files$files <- bench_file_names
+
+bench_files$tool <- gsub("/.*", "", gsub("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks/", "", bench_files$files))
+
+bench_files$ID <- as.numeric(gsub(".*/|.bench|_0.bench|.bam|_0.bam|unpaired_R._|paired_", "", gsub("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks/", "", bench_files$files)))
+
+# merge with workflow parameters
+bench_params <- merge(params[(params$simtype == "onepop"), c("ID", "cov", "n")], bench_files, by = "ID")
+
+# time for each workflow step
+bench_summary <- bench_params %>%
+  group_by(ID) %>%
+  summarize(
+    freqk_index = sum(s[(tool == "freqk_index") | (tool == "freqk_var_dedup")  | (tool == "freqk_ref_dedup")], na.rm = TRUE),
+    freqk_count = sum(s[(tool == "freqk_count") | (tool == "freqk_call")], na.rm = TRUE),
+    vg_autoindex = max(s[tool == "vg_autoindex"], na.rm = TRUE),
+    vg_giraffe_varscan = max(s[tool == "vg_giraffe"], na.rm = TRUE) + max(s[tool == "vg_surject"], na.rm = TRUE) + max(s[tool == "samtools_sort"], na.rm = TRUE) + max(s[tool == "samtools_merge"], na.rm = TRUE) + max(s[tool == "varscan"], na.rm = TRUE),
+    vg_giraffe_poolsnp = max(s[tool == "vg_giraffe"], na.rm = TRUE) + max(s[tool == "vg_surject"], na.rm = TRUE) + max(s[tool == "samtools_sort"], na.rm = TRUE) + max(s[tool == "samtools_merge"], na.rm = TRUE) + max(s[tool == "poolsnp"], na.rm = TRUE),
+    vg_giraffe_freebayes = max(s[tool == "vg_giraffe"], na.rm = TRUE) + max(s[tool == "vg_surject"], na.rm = TRUE) + max(s[tool == "samtools_sort"], na.rm = TRUE) + max(s[tool == "samtools_merge"], na.rm = TRUE) + max(s[tool == "freebayes_vg"], na.rm = TRUE),
+    .groups = 'drop' # Recommended to drop grouping after summarization
+  )
+
+bench_summary <- melt(bench_summary, id = "ID")
+
+bench_summary <- merge(params, bench_summary, by = "ID")
+
+bench_summary$index_step <- "Calling"
+bench_summary$index_step[(bench_summary$variable == "freqk_index") | ((bench_summary$variable == "vg_autoindex"))] <- "Indexing"
+
+bench_summary$variable <- gsub("_", " ", bench_summary$variable)
+bench_summary$variable <- gsub("giraffe ", "giraffe+", bench_summary$variable)
+
+plot_bench_s_call <- ggplot(subset(bench_summary, index_step == "Calling"), aes(x = variable, y = value, color = as.factor(cov))) +
+  geom_boxplot() +
+  #facet_wrap(index_step~., scales = "free") +
+  #theme(axis.text.x = element_text(angle = 45, hjust=1), legend.position = "top", legend.title = element_text(hjust = 0.5)) +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        legend.position = "top",
+        legend.title = element_text(hjust = 0.5)) +
+  guides(colour = guide_legend(title.position = "top")) +
+  scale_color_scico_d(palette = "hawaii") +
+  labs(y = "Runtime (s)", color = "Coverage", x = "Workflow")
+
+plot_bench_s_index <- ggplot(subset(bench_summary, index_step == "Indexing"), aes(x = variable, y = value, color = as.factor(n))) +
+  geom_boxplot() +
+  #facet_wrap(index_step~., scales = "free") +
+  #theme(axis.text.x = element_text(angle = 45, hjust=1), legend.position = "top", legend.title.align=0.5) +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        legend.position = "top",
+        legend.title = element_text(hjust = 0.5)) +
+  guides(colour = guide_legend(title.position = "top")) +
+  scale_color_scico_d(palette = "lajolla", begin = 0.05, end = 0.95) +
+  labs(y = "Runtime (s)", color = "Pool size", x = "Workflow")
+
+ggarrange(plot_bench_s_index, plot_bench_s_call, nrow = 1, ncol = 2, labels = c("A", "B"), font.label = list(size = 16, family = "Helvetica"))
+
+ggsave(paste("../../results/", today, "/time.pdf", sep = ""), height = 4, width = 8)
+
+## plot memory
+
+bench_memory <- bench_params %>%
+  group_by(ID) %>%
+  summarize(
+    freqk_index = max(max_rss[(tool == "freqk_index") | (tool == "freqk_var_dedup")  | (tool == "freqk_ref_dedup")], na.rm = TRUE),
+    freqk_count = max(max_rss[(tool == "freqk_count") | (tool == "freqk_call")], na.rm = TRUE),
+    vg_autoindex = max(max_rss[tool == "vg_autoindex"], na.rm = TRUE),
+    vg_giraffe_varscan = max(max_rss[(tool == "vg_giraffe") | (tool == "vg_surject") | (tool == "samtools_sort") | (tool == "samtools_merge") | (tool == "varscan")], na.rm = TRUE),
+    vg_giraffe_poolsnp = max(max_rss[(tool == "vg_giraffe") | (tool == "vg_surject") | (tool == "samtools_sort") | (tool == "samtools_merge") | (tool == "poolsnp")], na.rm = TRUE),
+    vg_giraffe_freebayes = max(max_rss[(tool == "vg_giraffe") | (tool == "vg_surject") | (tool == "samtools_sort") | (tool == "samtools_merge") | (tool == "freebayes_vg")], na.rm = TRUE),
+    .groups = "drop"
+)
+
+bench_memory <- melt(bench_memory, id = "ID")
+
+bench_memory <- merge(params, bench_memory, by = "ID")
+
+bench_memory$index_step <- "Calling"
+bench_memory$index_step[(bench_memory$variable == "freqk_index") | ((bench_memory$variable == "vg_autoindex"))] <- "Indexing"
+
+bench_memory$variable <- gsub("_", " ", bench_memory$variable)
+bench_memory$variable <- gsub("giraffe ", "giraffe+", bench_memory$variable)
+
+plot_bench_mem_call <- ggplot(subset(bench_memory, index_step == "Calling"), aes(x = variable, y = value, color = as.factor(cov))) +
+  geom_boxplot() +
+  facet_zoom(y = value <= 2000, show.area = T, zoom.size = 1.5) +
+  theme(axis.text.x = element_text(angle = 45, hjust=1), legend.position = "none", legend.title = element_text(hjust = 0.5), zoom = element_rect(colour = "red", linewidth = 0.3, fill = NA)) +
+  scale_color_scico_d(palette = "hawaii") +
+  labs(y = "Memory (Mb)", color = "Coverage", x = "Workflow")
+
+plot_bench_mem_index <- ggplot(subset(bench_memory, index_step == "Indexing"), aes(x = variable, y = value, color = as.factor(n))) +
+  geom_boxplot() +
+  #facet_wrap(index_step~., scales = "free") +
+  theme(axis.text.x = element_text(angle = 45, hjust=1), legend.position = "none") +
+  scale_color_scico_d(palette = "lajolla", begin = 0.05, end = 0.95) +
+  labs(y = "Memory (Mb)", color = "Pool size", x = "Workflow")
+
+ggarrange(plot_bench_mem_index, plot_bench_mem_call, nrow = 1, ncol = 2, labels = c("C", "D"), font.label = list(size = 16, family = "Helvetica"))
+
+ggsave(paste("../../results/", today, "/memory.pdf", sep = ""), height = 4, width = 8)
+
+## bring it all together
+
+ggarrange(plot_bench_s_index, plot_bench_s_call, plot_bench_mem_index, plot_bench_mem_call, nrow = 2, ncol = 2, labels = c("A", "B", "C", "D"), font.label = list(size = 16, family = "Helvetica"))
+
+ggsave(paste("../../results/", today, "/time_memory.pdf", sep = ""), height = 7, width = 9)
+```
+
+# benchmarks - accuracy
+```{r}
+
+results <- NULL
+
+for (i in params$ID) {
+  print(paste("Processing simulation ", i, "...", sep = ""))
+  
+  # load in actual allele freqs from simulations
+  true_af <- read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/slim_results/allele_freqs_", i, "_0.txt", sep = ""), col.names = c("chrom", "pos", "ref", "alt", "ns", "af", "ac"))
+
+  true_af$ac <- as.numeric(true_af$ac)
+
+  true_af <- true_af[complete.cases(true_af), ]
+  
+  # include varscan calls
+  varscan <- read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/varscan_results/", i, "_0.tsv", sep = ""), header = T)
+
+  #varscan <- varscan[(varscan$Reads1 >= thresh) & (varscan$Reads2 >= thresh), ]
+
+  #varscan$snp_maf_varscan <- pmin(varscan$Reads1, varscan$Reads2) / (varscan$Reads1 + varscan$Reads2)
+
+  names(varscan)[1] <- "chrom"
+  names(varscan)[2] <- "pos"
+
+  varscan$varscan_af <- as.numeric(gsub("%", "", varscan$VarFreq))/100
+  
+  # load poolsnp calls
+  poolsnp <- read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/poolsnp_results/", i, "_0.txt", sep = ""), col.names = c("chrom", "pos", "ref", "alt", "ac", "an"), fill = T, na.strings = "")
+
+  poolsnp$poolsnp_af <- poolsnp$ac/poolsnp$an
+
+  #poolsnp$snp_maf_poolsnp <- pmin(poolsnp$c1 / poolsnp$t, 1 - poolsnp$c1 / poolsnp$t)
+
+  # include freebayes calls
+  freebayes <- read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/freebayes_vg_results/", i, "_0.txt", sep = ""), col.names = c("chrom", "pos", "ref", "alt", "ns", "freebayes_af", "ac"), fill = T, na.strings = "")
+
+  #freebayes$snp_maf_freebayes <- pmin(freebayes$af, 1 - freebayes$af)
+  
+  #
+  freqk_freq <- read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/freqk_results/", i, "_0_calls.txt", sep = ""), sep = "|", header = F, col.names = c("rf", "freqk_af"))
+  
+  freqk_index <- read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/freqk_ref_dedup/", i, "_0.txt", sep = ""), sep = ",", header = F)
+  
+  freqk <- cbind(freqk_index, freqk_freq)
+  
+  names(freqk)[2:3] <- c("chrom", "pos")
+  
+  freqk$pos <- freqk$pos + 2
+  
+  # merge all results with ground truth
+  true_af <- merge(true_af[,c("chrom", "pos", "af")], freqk[,c("chrom", "pos", "freqk_af")], by = c("chrom", "pos"), all.x = T)
+    
+  true_af <- merge(true_af, freebayes[,c("chrom", "pos", "freebayes_af")], by = c("chrom", "pos"), all.x = T)
+  
+  true_af <- merge(true_af, varscan[,c("chrom", "pos", "varscan_af")], by = c("chrom", "pos"), all.x = T)
+    
+  true_af <- merge(true_af, poolsnp[,c("chrom", "pos", "poolsnp_af")], by = c("chrom", "pos"), all.x = T)
+  
+  plotdata <- melt(true_af, id = c("chrom", "pos", "af"))
+  
+  plotdata$variable <- gsub("_af", "", plotdata$variable)
+  
+  plotdata$variable <- as.factor(plotdata$variable)
+  
+  levels(plotdata$variable) <- c("vg giraffe+freebayes", "freqk", "vg giraffe+poolsnp", "vg giraffe+varscan")
+  
+  plotdata$variable <- factor(plotdata$variable, levels = c("freqk", "vg giraffe+freebayes", "vg giraffe+poolsnp", "vg giraffe+varscan"))
+  
+  
+  cor_by_sim <- plotdata %>% 
+    dplyr::group_by(variable) %>% 
+    summarise(correlation = cor.test(af, value)$estimate, n = n())
+  
+  cor_by_sim$ID = i
+  
+  results <- rbind(results, cor_by_sim)
+  
+  ggplot(plotdata, aes(x = af, y = value)) +
+     geom_point() +
+     geom_abline(slope = 1, intercept = 0) +
+     facet_wrap(~variable, nrow = 1, ncol = 4) +
+     stat_cor(method = "pearson") +
+     theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+     labs(x = "True allele frequency", y = "Predicted allele frequency")
+   
+  ggsave(paste("../../results/", today, "/", i, "_true_vs_pred_af",".pdf", sep = ""), height = 4, width = 10)
+}
+
+params_corr <- merge(params, results, by = "ID")
+
+params_corr$variable <- as.factor(params_corr$variable)
+
+ggplot(params_corr, aes(x = variable, y = correlation, color = as.factor(cov))) +
+    geom_boxplot() +
+    scale_color_scico_d(palette = "hawaii")
+
+ggplot(params_corr, aes(x = variable, y = correlation, color = as.factor(n.x))) +
+    geom_boxplot() +
+    scale_color_scico_d(palette = "lajolla", begin = 0.05, end = 0.95)
+```
+
+# single population simulations
+
+```{r}
 
 # empty frame to store results
 results <- NULL
@@ -2010,202 +2244,7 @@ ggplot(vg_vs_real, aes(x = allele_counts.y, fill = MATCH)) +
 ggsave(paste("../../results/", today, "/", "true_vs_vg_brassica_napus.pdf", sep = ""), height = 7, width = 9)
 ```
 
-# benchmarks
-```{r}
-bench_file_names <- list.files(path = "/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks", recursive = T, full.names = T)
 
-# bench_file_names = bench_file_names[!grepl("masked", bench_file_names)] # remove benchmarks from masked experiments for now
-
-bench_files <- lapply(bench_file_names, read.table, header = T, sep = "\t")
-
-bench_files <- do.call("rbind", bench_files)
-
-#
-bench_files$files <- bench_file_names
-
-bench_files$tool <- gsub("/.*", "", gsub("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks/", "", bench_files$files))
-
-bench_files$ID <- as.numeric(gsub(".*/|.bench|_0.bench|.bam|_0.bam|unpaired_R._|paired_", "", gsub("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks/", "", bench_files$files)))
-
-# merge with workflow parameters
-bench_params <- merge(params[(params$simtype == "onepop"), c("ID", "cov", "n")], bench_files, by = "ID")
-
-#
-#bench_params$ID <- as.character(bench_params$ID)
-
-bench_summary <- bench_params %>%
-  group_by(ID) %>%
-  summarize(
-    freqk_index = sum(s[(tool == "freqk_index") | (tool == "freqk_var_dedup")  | (tool == "freqk_ref_dedup")], na.rm = TRUE),
-    freqk_count = sum(s[(tool == "freqk_count") | (tool == "freqk_call")], na.rm = TRUE),
-    vg_autoindex = max(s[tool == "vg_autoindex"], na.rm = TRUE),
-    vg_giraffe_varscan = max(s[tool == "vg_giraffe"], na.rm = TRUE) + max(s[tool == "vg_surject"], na.rm = TRUE) + max(s[tool == "samtools_sort"], na.rm = TRUE) + max(s[tool == "samtools_merge"], na.rm = TRUE) + max(s[tool == "varscan"], na.rm = TRUE),
-    vg_giraffe_poolsnp = max(s[tool == "vg_giraffe"], na.rm = TRUE) + max(s[tool == "vg_surject"], na.rm = TRUE) + max(s[tool == "samtools_sort"], na.rm = TRUE) + max(s[tool == "samtools_merge"], na.rm = TRUE) + max(s[tool == "poolsnp"], na.rm = TRUE),
-    vg_giraffe_freebayes = max(s[tool == "vg_giraffe"], na.rm = TRUE) + max(s[tool == "vg_surject"], na.rm = TRUE) + max(s[tool == "samtools_sort"], na.rm = TRUE) + max(s[tool == "samtools_merge"], na.rm = TRUE) + max(s[tool == "freebayes_vg"], na.rm = TRUE),
-    .groups = 'drop' # Recommended to drop grouping after summarization
-  )
-
-bench_summary <- melt(bench_summary, id = "ID")
-
-bench_summary <- merge(params, bench_summary, by = "ID")
-
-bench_summary$index_step <- "Calling"
-bench_summary$index_step[(bench_summary$variable == "freqk_index") | ((bench_summary$variable == "vg_autoindex"))] <- "Indexing"
-
-bench_summary$variable <- gsub("_", " ", bench_summary$variable)
-bench_summary$variable <- gsub("giraffe ", "giraffe+", bench_summary$variable)
-
-ggplot(bench_summary, aes(x = variable, y = value, color = as.factor(cov))) +
-  geom_boxplot() +
-  facet_wrap(index_step~., scales = "free") +
-  theme(axis.text.x = element_text(angle = 45, hjust=1)) +
-  scale_color_scico_d(palette = "hawaii") +
-  labs(y = "Runtime (s)", color = "Coverage", x = "Workflow")
-
-ggsave(paste("../../results/", today, "/time.pdf", sep = ""), height = 5, width = 7)
-
-
-
-
-
-
-
-
-
-
-
-
-# summarize time and memory by simulation parameters
-bench_summary_time <- aggregate(s ~ tool + cov, data = bench_params, FUN = "sum")
-
-bench_summary_cpu_time <- aggregate(cpu_time ~ tool + cov, data = bench_params, FUN = "sum")
-
-bench_summary_max_rss <- aggregate(max_rss ~ tool + cov, data = bench_params, FUN = "sum")
-
-bench_summary_max_vms <- aggregate(max_vms ~ tool + cov, data = bench_params, FUN = "sum")
-
-bench_summary_max_uss <- aggregate(max_uss ~ tool + cov, data = bench_params, FUN = "sum")
-
-# try to summarize time and memory into snp calling workflow and kmer calling workflow
-workflow_summary <- function(x, lev_col, resource_col) {
-  levs <- unique(x[, lev_col])
-
-  results <- NULL
-  for (lev in levs) {
-    bwa_mem <- x[(x$tool == "bwa_mem") & (x[, lev_col] == lev), resource_col]
-
-    varscan <- x[(x$tool == "varscan") & (x[, lev_col] == lev), resource_col]
-
-    poolsnp <- x[(x$tool == "poolsnp") & (x[, lev_col] == lev), resource_col]
-
-    kmc <- x[(x$tool == "kmc") & (x[, lev_col] == lev), resource_col]
-
-    smudgeplot <- x[(x$tool == "smudgeplot") & (x[, lev_col] == lev), resource_col]
-
-    hetmers <- x[(x$tool == "hetmers") & (x[, lev_col] == lev), resource_col]
-
-    discosnp <- x[(x$tool == "discosnp") & (x[, lev_col] == lev), resource_col]
-
-    unitig_caller <- x[(x$tool == "unitig_caller") & (x[, lev_col] == lev), resource_col]
-
-    result <- data.frame(
-      lev_col = lev,
-      bwa_varscan = bwa_mem + varscan,
-      bwa_poolsnp = bwa_mem + poolsnp,
-      kmc_smudgeplot = kmc + smudgeplot,
-      kmc_hetmers = kmc + hetmers,
-      kmc_unitig_caller = kmc + unitig_caller,
-      discosnp = discosnp
-    )
-
-    results <- rbind(results, result)
-  }
-
-  names(results) <- c("lev_col", "bwa+varscan", "bwa+poolsnp", "kmc+smudgeplot", "kmc+hetmers", "kmc+unitig-caller", "discosnp")
-
-  return(results)
-}
-
-# bench_summary_time_by_flow = workflow_summary(bench_summary_time, "cov", "s")
-# bench_summary_time_by_flow = melt(bench_summary_time_by_flow, id = "lev_col")
-
-bench_summary_cpu_time_by_flow <- workflow_summary(bench_summary_cpu_time, "cov", "cpu_time")
-bench_summary_cpu_time_by_flow <- melt(bench_summary_cpu_time_by_flow, id = "lev_col")
-
-# bench_summary_max_rss_by_flow = workflow_summary(bench_summary_max_rss, "cov", "max_rss")
-# bench_summary_max_rss_by_flow = melt(bench_summary_max_rss_by_flow, id = "lev_col")
-#
-# bench_summary_max_vms_by_flow = workflow_summary(bench_summary_max_vms, "cov", "max_vms")
-# bench_summary_max_vms_by_flow = melt(bench_summary_max_vms_by_flow, id = "lev_col")
-#
-# bench_summary_max_uss_by_flow = workflow_summary(bench_summary_max_uss, "cov", "max_uss")
-# bench_summary_max_uss_by_flow = melt(bench_summary_max_uss_by_flow, id = "lev_col")
-
-# calculate average times
-# bench_summary_time_by_flow$value = bench_summary_time_by_flow$value/length(unique(bench_params$ID))
-
-bench_summary_cpu_time_by_flow$value <- bench_summary_cpu_time_by_flow$value / length(unique(bench_params$ID))
-
-bench_summary_max_rss$max_rss <- bench_summary_max_rss$max_rss / length(unique(bench_params$ID))
-
-# bench_summary_max_vms_by_flow$value = bench_summary_max_vms_by_flow$value/length(unique(bench_params$ID))
-#
-# bench_summary_max_uss_by_flow$value = bench_summary_max_uss_by_flow$value/length(unique(bench_params$ID))
-
-# time plots
-my_colors <- scico(4, palette = "hawaii")
-names(my_colors) <- unique(bench_summary_cpu_time_by_flow$lev_col)
-
-# ggplot(bench_summary_time_by_flow, aes(x = variable, y = value, fill = as.factor(lev_col))) +
-#   geom_bar(stat = "identity", position = "dodge") +
-#   theme_classic() +
-#   scale_fill_manual(values = my_colors) +
-#   labs(x = "Workflow", y = "Average time (s)", fill = "Coverage")
-
-plot_time <- ggplot(bench_summary_cpu_time_by_flow, aes(x = variable, y = value, fill = as.factor(lev_col))) +
-  geom_bar(stat = "identity", position = "dodge") +
-  theme_classic() +
-  theme(
-    axis.line = element_line(colour = "black", linewidth = 1),
-    axis.ticks = element_line(colour = "black", linewidth = 1),
-    axis.text.x = element_text(angle = 45, hjust = 1),
-    text = element_text(family = "Sans")
-  ) +
-  scale_fill_manual(values = my_colors) +
-  labs(x = "Workflow", y = "Average CPU Time (s)", fill = "Coverage")
-
-# memory plots
-bench_summary_max_rss$tool[(bench_summary_max_rss$tool == "unitig_caller")] <- "unitig-caller"
-
-bench_summary_max_rss$tool <- factor(bench_summary_max_rss$tool, levels = c("bwa_index", "bwa_mem", "varscan", "poolsnp", "freebayes", "kmc", "smudgeplot", "hetmers", "unitig-caller", "discosnp"))
-
-plot_memory <- ggplot(bench_summary_max_rss, aes(x = tool, y = max_rss * 1.04858, fill = as.factor(cov))) +
-  geom_bar(stat = "identity", position = "dodge") +
-  labs(x = "Tool", y = "Average Memory (MB)", fill = "Coverage") +
-  theme_classic() +
-  theme(
-    axis.line = element_line(colour = "black", linewidth = 1),
-    axis.ticks = element_line(colour = "black", linewidth = 1),
-    axis.text.x = element_text(angle = 45, hjust = 1),
-    text = element_text(family = "Sans")
-  ) +
-  scale_fill_manual(values = my_colors)
-
-# ggplot(bench_summary_max_vms_by_flow, aes(x = variable, y = value, fill = as.factor(lev_col))) +
-#   geom_bar(stat = "identity", position = "dodge") +
-#   labs(x = "workflow", y = "Average Maximum Virtual Memory Size (MiB)", fill = "coverage") +
-#   theme_classic() +
-#   scale_fill_manual(values = my_colors)
-#
-# ggplot(bench_summary_max_uss_by_flow, aes(x = variable, y = value, fill = as.factor(lev_col))) +
-#   geom_bar(stat = "identity", position = "dodge") +
-#   labs(x = "workflow", y = "Average Maximum Unique Set Size (MiB)", fill = "coverage") +
-#   theme_classic() +
-#   scale_fill_manual(values = my_colors)
-
-ggarrange(plot_time, plot_memory, common.legend = T, font.label = list(size = 16), labels = c("A", "B"))
-ggsave(paste("../results/", today, "/memory_and_time.jpg", sep = ""), dpi = 450)
-```
 
 # How does performance vary with sequencing parameters?
 ```{r}

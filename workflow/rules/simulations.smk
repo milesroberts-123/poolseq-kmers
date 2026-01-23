@@ -125,7 +125,10 @@ rule bcftools_remove_ref:
 rule bcftools_get_samples:
     input:
         samplevcf="slim_results/samples_{SID}.vcf.gz",
+        genome="ancestral_genome_results/{SID}.fasta"
     output:
+        normvcf=temp("slim_results/norm_{SID}_{PID}.vcf.gz"),
+        normtbi=temp("slim_results/norm_{SID}_{PID}.vcf.gz.tbi"),
         popvcf=temp("slim_results/samples_{SID}_{PID}.vcf.gz"),
         tbi=temp("slim_results/samples_{SID}_{PID}.vcf.gz.tbi"),
         filledvcf=temp("slim_results/filled_{SID}_{PID}.vcf.gz"),
@@ -140,8 +143,11 @@ rule bcftools_get_samples:
         # get a subpopulation
         bcftools view --samples {params.sammies} -Oz -o {output.popvcf} {input}
         tabix {output.popvcf}
+        # normalize
+        bcftools norm --check-ref s -Oz -o {output.normvcf} -f {input.genome} {output.popvcf}
+        tabix {output.normvcf}
         # calculate allele frequencies
-        bcftools +fill-tags {output.popvcf} -Oz -o {output.filledvcf}
+        bcftools +fill-tags {output.normvcf} -Oz -o {output.filledvcf}
         bcftools query -f '%CHROM %POS %REF %ALT %NS %AF %AC\n' -o {output.allelefreq} {output.filledvcf}
         """
 
@@ -344,7 +350,7 @@ rule fastp:
 
 rule freqk_index:
     input:
-        vcf="slim_results/samples_{SID}_{PID}.vcf.gz",
+        vcf="slim_results/norm_{SID}_{PID}.vcf.gz",
         fasta="ancestral_genome_results/{SID}.fasta",
         fai="ancestral_genome_results/{SID}.fasta.fai",
     output:
@@ -376,7 +382,7 @@ rule freqk_var_dedup:
 rule freqk_ref_dedup:
     input:
         index="freqk_var_dedup/{SID}_{PID}.txt",
-        vcf="slim_results/samples_{SID}_{PID}.vcf.gz",
+        vcf="slim_results/norm_{SID}_{PID}.vcf.gz",
         fasta="ancestral_genome_results/{SID}.fasta",
         fai="ancestral_genome_results/{SID}.fasta.fai",
     output:
@@ -431,7 +437,7 @@ rule freqk_call:
 rule vg_autoindex:
     input:
         fasta="ancestral_genome_results/{SID}.fasta",
-        vcf="slim_results/samples_{SID}_{PID}.vcf.gz",
+        vcf="slim_results/norm_{SID}_{PID}.vcf.gz",
     output:
         dist=temp("{SID}_{PID}.dist"),
         gbz=temp("{SID}_{PID}.giraffe.gbz"),
@@ -571,8 +577,8 @@ rule freebayes_vg:
         reffasta="ancestral_genome_results/{SID}.fasta",
         index="ancestral_genome_results/{SID}.fasta.fai",
         trimbam="samtools_markdup_results/{SID}_{PID}.bam",
-        vcf="slim_results/samples_{SID}_{PID}.vcf.gz",
-        tbi="slim_results/samples_{SID}_{PID}.vcf.gz.tbi",
+        vcf="slim_results/norm_{SID}_{PID}.vcf.gz",
+        tbi="slim_results/norm_{SID}_{PID}.vcf.gz.tbi",
     output:
         temp("freebayes_vg_results/{SID}_{PID}.vcf"),
     conda:
