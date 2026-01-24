@@ -644,9 +644,12 @@ ggsave(paste("../../results/", today, "/time_memory.pdf", sep = ""), height = 7,
 ```
 
 # benchmarks - accuracy
+
 ```{r}
 
 results <- NULL
+
+to_plot <- c(10:12)
 
 for (i in params$ID) {
   print(paste("Processing simulation ", i, "...", sep = ""))
@@ -659,7 +662,13 @@ for (i in params$ID) {
   true_af <- true_af[complete.cases(true_af), ]
   
   # include varscan calls
-  varscan <- read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/varscan_results/", i, "_0.tsv", sep = ""), header = T)
+  varscan <- tryCatch({
+    read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/varscan_results/", i, "_0.tsv", sep = ""), header = T)
+  }, error=function(e){})
+  
+  if(is.null(varscan)){
+    next
+  }
 
   #varscan <- varscan[(varscan$Reads1 >= thresh) & (varscan$Reads2 >= thresh), ]
 
@@ -683,7 +692,14 @@ for (i in params$ID) {
   #freebayes$snp_maf_freebayes <- pmin(freebayes$af, 1 - freebayes$af)
   
   #
-  freqk_freq <- read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/freqk_results/", i, "_0_calls.txt", sep = ""), sep = "|", header = F, col.names = c("rf", "freqk_af"))
+  freqk_freq <- tryCatch({
+    read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/freqk_results/", i, "_0_calls.txt", sep = ""), sep = "|", header = F, col.names = c("rf", "freqk_af"))}
+  , error = function(e){}  
+  )
+  
+  if(is.null(freqk_freq)){
+    next
+  }
   
   freqk_index <- read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/freqk_ref_dedup/", i, "_0.txt", sep = ""), sep = ",", header = F)
   
@@ -721,7 +737,8 @@ for (i in params$ID) {
   
   results <- rbind(results, cor_by_sim)
   
-  ggplot(plotdata, aes(x = af, y = value)) +
+  if (i %in% to_plot){
+    ggplot(plotdata, aes(x = af, y = value)) +
      geom_point() +
      geom_abline(slope = 1, intercept = 0) +
      facet_wrap(~variable, nrow = 1, ncol = 4) +
@@ -729,7 +746,8 @@ for (i in params$ID) {
      theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
      labs(x = "True allele frequency", y = "Predicted allele frequency")
    
-  ggsave(paste("../../results/", today, "/", i, "_true_vs_pred_af",".pdf", sep = ""), height = 4, width = 10)
+    ggsave(paste("../../results/", today, "/", i, "_true_vs_pred_af",".pdf", sep = ""), height = 4, width = 10)
+  }
 }
 
 params_corr <- merge(params, results, by = "ID")
@@ -738,11 +756,19 @@ params_corr$variable <- as.factor(params_corr$variable)
 
 ggplot(params_corr, aes(x = variable, y = correlation, color = as.factor(cov))) +
     geom_boxplot() +
-    scale_color_scico_d(palette = "hawaii")
+    scale_color_scico_d(palette = "hawaii") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(x = "workflow", y = "Correlation\ntrue vs predicted AF", color = "coverage")
+
+ggsave(paste("../../results/", today, "/true_vs_pred_by_cov",".pdf", sep = ""), height = 5, width = 6)
 
 ggplot(params_corr, aes(x = variable, y = correlation, color = as.factor(n.x))) +
     geom_boxplot() +
-    scale_color_scico_d(palette = "lajolla", begin = 0.05, end = 0.95)
+    scale_color_scico_d(palette = "lajolla", begin = 0.05, end = 0.95) +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(x = "workflow", y = "Correlation\ntrue vs predicted AF", color = "Pool size")
+
+ggsave(paste("../../results/", today, "/true_vs_pred_by_n",".pdf", sep = ""), height = 5, width = 6)
 ```
 
 # single population simulations

@@ -138,13 +138,15 @@ rule bcftools_get_samples:
         "../envs/bcftools.yaml"
     params:
         sammies=get_samples,
+    log:
+        "logs/bcftools_get_samples/{SID}_{PID}.log"
     shell:
         """
         # get a subpopulation
         bcftools view --samples {params.sammies} -Oz -o {output.popvcf} {input}
         tabix {output.popvcf}
         # normalize
-        bcftools norm --check-ref s -Oz -o {output.normvcf} -f {input.genome} {output.popvcf}
+        bcftools norm --check-ref s -Oz -o {output.normvcf} -f {input.genome} {output.popvcf} &> {log}
         tabix {output.normvcf}
         # calculate allele frequencies
         bcftools +fill-tags {output.normvcf} -Oz -o {output.filledvcf}

@@ -137,6 +137,7 @@ rule all_per_sim:
         )
     output:
         touch("finished/{SID}_{PID}.done")
+    priority: 1000
 
 # helper functions
 include: "rules/common.smk"
