@@ -431,6 +431,7 @@ rule freqk_call:
     output:
         "freqk_results/{SID}_{PID}_calls.txt",
     group: "freqk_count"
+    priority: 1000
     benchmark:
         "benchmarks/freqk_call/{SID}_{PID}.bench"
     shell:

@@ -9,7 +9,6 @@ rule sra:
         N=config["num_reads"],
     shell:
         """
-        #fastq-dump --split-3 --skip-technical -X {params.N} --clip -M {params.k} {wildcards.ID}
         fasterq-dump --threads {threads} --split-files --skip-technical {wildcards.ID}
         """
 
@@ -29,7 +28,6 @@ rule downsample:
         seqkit sample -s 21 -p 0.1 {input.r1} | seqkit head -n {wildcards.num} > {output.r1}
         seqkit sample -s 21 -p 0.1 {input.r2} | seqkit head -n {wildcards.num} > {output.r2}
         """
-
 
 rule real_fastp:
     input:
@@ -274,10 +272,24 @@ rule real_samtools_merge:
         samtools merge -o {output} {input}
         """
 
+rule real_samtools_index:
+    input:
+        "samtools_merge_results/{num}.bam"
+    output:
+        "samtools_merge_results/{num}.bam.bai"
+    benchmark:
+        "benchmarks/real_data/samtools_index_{num}.bench"
+    conda:
+        "../envs/bcftools.yaml"
+    shell:
+        """
+        samtools index {input}
+        """
 
 rule split_merged_bam:
     input:
         "samtools_merge_results/{num}.bam",
+        "samtools_merge_results/{num}.bam.bai"
     output:
         "splits/{num}/{chr}.bam",
     conda:
@@ -286,7 +298,6 @@ rule split_merged_bam:
         "benchmarks/real_data/split_merged_bam/{num}/{chr}.bench"
     shell:
         "samtools view -b {input} {wildcards.chr} > {output}"
-
 
 rule split_vcf:
     input:
@@ -300,6 +311,17 @@ rule split_vcf:
     shell:
         "bcftools view -r {wildcards.chr} -Oz -o {output} {input}"
 
+rule index_vcf:
+    input:
+        "splits/{chr}.vcf.gz"
+    output:
+        "splits/{chr}.vcf.gz.tbi"
+    benchmark:
+        "benchmarks/real_data/index_vcf/{chr}.bench"
+    conda:
+        "../envs/bcftools.yaml"
+    shell:
+        "tabix {input}"
 
 rule real_freebayes_vg:
     input:
@@ -308,6 +330,7 @@ rule real_freebayes_vg:
         trimbam="splits/{num}/{chr}.bam",
         #vcf=config["real_vcf"],
         vcf="splits/{chr}.vcf.gz",
+        tbi="splits/{chr}.vcf.gz.tbi"
     output:
         "real_freebayes_results/{num}_{chr}.vcf",
     conda:
@@ -318,28 +341,9 @@ rule real_freebayes_vg:
         n=config["poolsize"],
     shell:
         """
-        freebayes-parallel <(fasta_generate_regions.py ref.fa.fai 100000) {threads} -f {input.reffasta} -p {params.n} --min-alternate-count 2 --min-alternate-fraction 0.001 --use-best-n-alleles 4 -g 1000 --variant-input {input.vcf} --only-use-input-alleles --pooled-discrete {input.trimbam} > {output}
+        freebayes-parallel <(fasta_generate_regions.py {input.fai} 100000) {threads} -f {input.reffasta} -p {params.n} --min-alternate-count 2 --min-alternate-fraction 0.001 --use-best-n-alleles 4 -g 1000 --variant-input {input.vcf} --only-use-input-alleles --pooled-discrete {input.trimbam} > {output}
         #freebayes -f {input.reffasta} -p {params.n} --min-alternate-count 2 --min-alternate-fraction 0.001 --use-best-n-alleles 4 -g 1000 --variant-input {input.vcf} --only-use-input-alleles --pooled-discrete {input.trimbam} > {output}
         """
-
-
-rule real_bcftools_vg:
-    input:
-        reffasta=config["real_fasta"],
-        trimbam="splits/{num}/{chr}.bam",
-    output:
-        "real_bcftools_call_results/{num}_{chr}.vcf",
-    conda:
-        "../envs/bcftools.yaml"
-    benchmark:
-        "benchmarks/real_data/bcftools_vg_{num}_{chr}.bench"
-    params:
-        n=config["poolsize"],
-    shell:
-        """
-        bcftools mpileup -Ou -f {input.reffasta} {input.trimbam} | bcftools call --ploidy {params.n} -mv -Ou -o {output}
-        """
-
 
 rule real_varscan_vg:
     input:
@@ -355,7 +359,6 @@ rule real_varscan_vg:
         """
         samtools mpileup -f {input.reffasta} {input.trimbam} | varscan pileup2snp 1> {output}
         """
-
 
 rule real_poolsnp_vg:
     input:
@@ -388,5 +391,5 @@ rule real_poolsnp_vg:
         miss-frac=0 \
         badsites=1 \
         allsites=0 \
-        output={params.wd}{wildcards.chr}_real_poolsnp_results
+        output={params.wd}{wildcards.chr}_{wildcards.num}_real_poolsnp_results
         """

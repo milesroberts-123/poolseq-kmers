@@ -68,13 +68,12 @@ rule all:
         expand("finished/{SID}_0.done", SID=one_pop_params.index.get_level_values("ID")),
         expand("finished/{SID}_0.done", SID=sweep_params.index.get_level_values("ID")),
         expand("finished/{SID}_{PID}.done", SID=two_pop_params.index.get_level_values("ID"), PID=[0,1]),
-        "multiqc_report.html"
+        #"multiqc_report.html"
 
 # rule to apply freqk and vg giraffe to real data 
 rule all_empirical:
     input:
         expand("real_freqk_results/{num}/calls.txt", num = config["num_reads"]),
-        expand("real_bcftools_call_results/{num}_{chr}.vcf", chr = config["chroms"], num = config["num_reads"]),
         expand("real_freebayes_results/{num}_{chr}.vcf", chr = config["chroms"], num = config["num_reads"]),
         expand("real_varscan_results/{num}_{chr}.tsv", chr = config["chroms"], num = config["num_reads"]),
         expand("{chr}_{num}_real_poolsnp_results.vcf.gz", chr = config["chroms"], num = config["num_reads"])
@@ -92,7 +91,7 @@ rule all_sims:
         expand("finished/{SID}_0.done", SID=one_pop_params.index.get_level_values("ID")),
         expand("finished/{SID}_0.done", SID=sweep_params.index.get_level_values("ID")),
         expand("finished/{SID}_{PID}.done", SID=two_pop_params.index.get_level_values("ID"), PID=[0,1]),
-        "multiqc_report.html"
+        #"multiqc_report.html"
 
 rule all_neutral_sims:
     input:
