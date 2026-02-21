@@ -519,6 +519,9 @@ params <- params[(params$ID %in% dones),]
 # benchmarks - runtime and memory
 
 ```{r}
+
+bench <- read.table("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/bench.txt", sep = "\t", col.names = c("file", "s", "h:m:s", "max_rss", "max_vms", "max_uss", "max_pss", "io_in", "io_out",  "mean_load", "cpu_time"))
+
 bench_file_names <- list.files(path = "/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks", recursive = T, full.names = T)
 
 bench_files <- lapply(bench_file_names, read.table, header = T, sep = "\t")
