@@ -509,9 +509,8 @@ ggsave(paste("../../results/", today, "/fig1.pdf", sep = ""), plot_fig1, device 
 params <- read.table("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/config/parameters.tsv", header = T)
 
 # get only simulations that completed
-#dones <- sort(as.numeric(gsub("_0", "", gsub(".done", "", list.files(path = "/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/finished/", pattern = ".done")))))
-
-dones <- sort(as.numeric(gsub("_0", "", gsub("_calls.txt", "", list.files(path = "/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/freqk_results/", pattern = "_calls.txt")))))
+dones <- sort(as.numeric(gsub("_0", "", gsub(".done", "", list.files(path = "/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/finished/", pattern = ".done")))))
+#dones <- sort(as.numeric(gsub("_0", "", gsub("_calls.txt", "", list.files(path = "/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/freqk_results/", pattern = "_calls.txt")))))
 
 params <- params[(params$ID %in% dones),]
 ```
@@ -522,27 +521,32 @@ params <- params[(params$ID %in% dones),]
 
 bench <- read.table("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/bench.txt", sep = "\t", col.names = c("file", "s", "h:m:s", "max_rss", "max_vms", "max_uss", "max_pss", "io_in", "io_out",  "mean_load", "cpu_time"))
 
-bench_file_names <- list.files(path = "/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks", recursive = T, full.names = T)
+#bench_file_names <- list.files(path = "/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks", recursive = T, full.names = T)
 
-bench_files <- lapply(bench_file_names, read.table, header = T, sep = "\t")
+#bench_files <- lapply(bench_file_names, read.table, header = T, sep = "\t")
 
 #bench_files <- lapply(bench_file_names, fread, header = T, sep = "\t")
 
-bench_files <- do.call("rbind", bench_files)
+#bench_files <- do.call("rbind", bench_files)
 
 #bench_files <- vroom(bench_file_names, id = "files", altrep = F)
 
 #bench_files <- map_dfr(bench_file_names, read.table, header = T, sep = "\t")
 
 # get names
-bench_files$files <- bench_file_names
+#bench_files$files <- bench_file_names
 
-bench_files$tool <- gsub("/.*", "", gsub("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks/", "", bench_files$files))
+# get tool names
+#bench_files$tool <- gsub("/.*", "", gsub("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks/", "", bench_files$files))
+bench$tool <- gsub("/.*", "", gsub("benchmarks/", "", bench$file))
 
-bench_files$ID <- as.numeric(gsub(".*/|.bench|_0.bench|.bam|_0.bam|unpaired_R._|paired_", "", gsub("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/benchmarks/", "", bench_files$files)))
+bench$ID <- as.numeric(gsub(".*/|.bench|_0.bench|.bam|_0.bam|unpaired_R._|paired_", "", gsub("benchmarks/", "", bench$file)))
 
 # merge with workflow parameters
-bench_params <- merge(params[(params$simtype == "onepop"), c("ID", "cov", "n")], bench_files, by = "ID")
+bench_params <- merge(params[(params$simtype == "onepop"), c("ID", "cov", "n")], bench, by = "ID")
+
+# replace NA with 0
+bench_params[is.na(bench_params)] <- 0
 
 # time for each workflow step
 bench_summary <- bench_params %>%
@@ -598,7 +602,6 @@ ggarrange(plot_bench_s_index, plot_bench_s_call, nrow = 1, ncol = 2, labels = c(
 ggsave(paste("../../results/", today, "/time.pdf", sep = ""), height = 4, width = 8)
 
 ## plot memory
-
 bench_memory <- bench_params %>%
   group_by(ID) %>%
   summarize(
@@ -623,15 +626,20 @@ bench_memory$variable <- gsub("giraffe ", "giraffe+", bench_memory$variable)
 
 plot_bench_mem_call <- ggplot(subset(bench_memory, index_step == "Calling"), aes(x = variable, y = value, color = as.factor(cov))) +
   geom_boxplot() +
-  facet_zoom(y = value <= 2000, show.area = T, zoom.size = 1.5) +
-  theme(axis.text.x = element_text(angle = 45, hjust=1), legend.position = "none", legend.title = element_text(hjust = 0.5), zoom = element_rect(colour = "red", linewidth = 0.3, fill = NA)) +
+  facet_zoom(y = value <= 1100, show.area = T, zoom.size = 1.5) +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(), 
+        legend.position = "none", 
+        legend.title = element_text(hjust = 0.5), 
+        zoom = element_rect(colour = "red", linewidth = 0.3, fill = NA)) +
   scale_color_scico_d(palette = "hawaii") +
   labs(y = "Memory (Mb)", color = "Coverage", x = "Workflow")
 
 plot_bench_mem_index <- ggplot(subset(bench_memory, index_step == "Indexing"), aes(x = variable, y = value, color = as.factor(n))) +
   geom_boxplot() +
   #facet_wrap(index_step~., scales = "free") +
-  theme(axis.text.x = element_text(angle = 45, hjust=1), legend.position = "none") +
+  theme(axis.title.x=element_blank(), legend.position = "none") +
   scale_color_scico_d(palette = "lajolla", begin = 0.05, end = 0.95) +
   labs(y = "Memory (Mb)", color = "Pool size", x = "Workflow")
 
@@ -670,6 +678,7 @@ for (i in params$ID) {
   }, error=function(e){})
   
   if(is.null(varscan)){
+    print("Skipping because no varscan output detected.")
     next
   }
 
@@ -701,6 +710,7 @@ for (i in params$ID) {
   )
   
   if(is.null(freqk_freq)){
+    print("Skipping because no freqk output detected.")
     next
   }
   
@@ -731,10 +741,9 @@ for (i in params$ID) {
   
   plotdata$variable <- factor(plotdata$variable, levels = c("freqk", "vg giraffe+freebayes", "vg giraffe+poolsnp", "vg giraffe+varscan"))
   
-  
   cor_by_sim <- plotdata %>% 
     dplyr::group_by(variable) %>% 
-    summarise(correlation = cor.test(af, value)$estimate, n = n())
+    summarise(correlation = cor(af, value, use = "pairwise.complete.obs"), n = n())
   
   cor_by_sim$ID = i
   
@@ -757,21 +766,44 @@ params_corr <- merge(params, results, by = "ID")
 
 params_corr$variable <- as.factor(params_corr$variable)
 
-ggplot(params_corr, aes(x = variable, y = correlation, color = as.factor(cov))) +
+write.table(params_corr, paste("../../results/", today, "/parameters_correlations.tsv", sep = ""), row.names = F, quote = F, sep = "\t")
+
+```
+
+# plot correlations between truth and predictions
+
+```{r}
+
+params_corr <- read.table(paste("../../results/", today, "/parameters_correlations.tsv", sep = ""), header = T, sep = "\t")
+
+plot_bench_corr <- ggplot(params_corr, aes(x = variable, y = correlation, color = as.factor(cov))) +
     geom_boxplot() +
+    facet_wrap(~as.factor(cov), ncol = 5, nrow = 1) +
     scale_color_scico_d(palette = "hawaii") +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  labs(x = "workflow", y = "Correlation\ntrue vs predicted AF", color = "coverage")
+    theme(axis.title.x=element_blank(),
+          axis.text.x = element_text(angle = 45, hjust = 1),
+          legend.position = "None",
+          strip.background = element_blank(),
+          strip.text.x = element_blank()) +
+  labs(x = "workflow", y = "Correlation\ntrue vs estimated AF", color = "coverage")
 
-ggsave(paste("../../results/", today, "/true_vs_pred_by_cov",".pdf", sep = ""), height = 5, width = 6)
+ggarrange(
+          ggarrange(plot_bench_s_index, 
+            plot_bench_s_call, 
+            plot_bench_mem_index, 
+            plot_bench_mem_call, 
+            nrow = 2, 
+            ncol = 2, 
+            labels = c("A", "B", "C", "D"), 
+            font.label = list(size = 16, family = "Helvetica")
+          ),
+          plot_bench_corr,
+          nrow = 2,
+          labels = c("A","E"),
+          font.label = list(size = 16, family = "Helvetica"))
 
-ggplot(params_corr, aes(x = variable, y = correlation, color = as.factor(n.x))) +
-    geom_boxplot() +
-    scale_color_scico_d(palette = "lajolla", begin = 0.05, end = 0.95) +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  labs(x = "workflow", y = "Correlation\ntrue vs predicted AF", color = "Pool size")
 
-ggsave(paste("../../results/", today, "/true_vs_pred_by_n",".pdf", sep = ""), height = 5, width = 6)
+ggsave(paste("../../results/", today, "/sim_benchmark",".pdf", sep = ""), height = 9, width = 8)
 ```
 
 # single population simulations
