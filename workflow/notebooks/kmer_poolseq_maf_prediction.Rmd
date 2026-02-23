@@ -45,6 +45,27 @@ theme_set(
 
 # common functions
 ```{r}
+# get allele counts from vcfR object
+get_allele_counts <- function(vcf) {
+  gt <- vcf@gt[, -1]
+
+  gt <- as.data.frame(gt)
+  
+  gt[] <- sapply(gt, as.numeric)
+
+  print(head(gt))
+
+  pos <- vcf@fix
+
+  allele_counts <- rowSums(gt == 1, na.rm = TRUE)
+  
+  multi <- rowSums(gt >= 2, na.rm = TRUE)
+
+  pos <- cbind(pos, allele_counts, multi)
+
+  return(pos)
+}
+
 # Source - https://stackoverflow.com/a
 # Posted by Zheyuan Li, modified by community. See post 'Timeline' for change history
 # Retrieved 2025-12-29, License - CC BY-SA 4.0
@@ -857,6 +878,72 @@ plot(mod)
 
 ```{r}
 
+real_vcf <- read.vcfR("/global/scratch/users/milesroberts/tmp/arabidopsis_thaliana_plantpan_data/at.genetics.variation/final.vcf.gz")
+
+#real_pos <- as.data.frame(real_vcf@fix)
+
+real_ac <- get_allele_counts(real_vcf)
+real_ac <- as.data.frame(real_ac)
+real_ac$POS <- as.numeric(real_ac$POS)
+real_ac$allele_counts <- as.numeric(real_ac$allele_counts)
+real_ac$multi <- as.numeric(real_ac$multi)
+real_ac$af = real_ac$allele_counts/7
+
+rm(real_vcf)
+gc()
+
+# filter out multi-alleleic sites
+real_ac <- real_ac[(real_ac$multi == 0),]
+
+
+#real_pos$POS <- as.numeric(real_pos$POS)
+
+# load varscan results
+real_varscan_files <- list.files("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/real_varscan_results", full.names = T) 
+
+real_varscan <- lapply(real_varscan_files, read.table, header = T, sep = "\t")
+
+cov_levels <- as.numeric(gsub("_.*", "", gsub(".*/|","", real_varscan_files)))
+
+# Add coverage info to df
+# Source - https://stackoverflow.com/a/13407388
+# Posted by Ricardo Saporta
+# Retrieved 2026-02-23, License - CC BY-SA 3.0
+real_varscan <- mapply(cbind, real_varscan, "cov"=cov_levels, SIMPLIFY=F)
+real_varscan <- do.call("rbind", real_varscan)
+
+#subset
+real_varscan <- real_varscan[(real_varscan$Position %in% real_ac$POS) & (real_varscan$Chrom %in% real_ac$CHROM),]
+
+names(real_varscan)[1:2] = c("CHROM", "POS")
+
+#
+real_vs_varscan <- merge(real_ac[,c("CHROM", "POS", "af")], real_varscan[c("CHROM", "POS", "VarFreq", "cov")], by = c("CHROM", "POS"))
+
+real_vs_varscan$VarFreq = as.numeric(gsub("%", "", real_vs_varscan$VarFreq))/100
+
+correlate_data <- real_vs_varscan %>%
+                group_by(cov) %>% 
+                summarise(r = cor(round(af*7), round(VarFreq*7)), n = n())
+
+correlate_data$n <- correlate_data$n/nrow(real_ac)*100
+
+new_names <- paste(c("~1x", "~2x", "~4x", "~8x", "~16x"), "\nn = ", signif(correlate_data$n, 2), "%",  ", r = ", signif(correlate_data$r, 2),sep = "")
+
+names(new_names) <- c("2e+05", "4e+05", "8e+05", "1600000", "3200000")
+
+ggplot(real_vs_varscan, aes(x = as.factor(round(af*7)), y = round(VarFreq*7))) +
+  geom_boxplot() +
+  #geom_violin() +
+  #geom_bin2d(binwidth = 1) +
+  #geom_count() +
+  facet_wrap(~as.factor(cov), ncol = 5, labeller = as_labeller(new_names), scales = "free") +
+  theme(legend.position = "top") +
+  geom_abline(slope = 1, intercept = 0, color = "red", lwd = 2) +
+  labs(x = "Pseudo-pool count", y = "Varscan count")
+  #scale_fill_gradient(trans = "log")
+
+ggsave(paste("../../results/", today, "/emp_benchmark",".pdf", sep = ""), height = 3, width = 9)
 ```
 
 
