@@ -94,6 +94,7 @@ calc_rates <- function(truth, test, sample_space) {
 ```
 
 # Get genome size statistics from NCBI
+
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 assembly_info <- read.table("../../data/ncbi_dataset_2025-12-11.tsv", header = T, sep = "\t", fill = T)
 
@@ -770,11 +771,11 @@ write.table(params_corr, paste("../../results/", today, "/parameters_correlation
 
 ```
 
-# plot correlations between truth and predictions
+# plot - simulations: correlations between truth and predictions
 
 ```{r}
 
-params_corr <- read.table(paste("../../results/", today, "/parameters_correlations.tsv", sep = ""), header = T, sep = "\t")
+params_corr <- read.table(paste("../../results/2026-02-21/parameters_correlations.tsv", sep = ""), header = T, sep = "\t")
 
 plot_bench_corr <- ggplot(params_corr, aes(x = variable, y = correlation, color = as.factor(cov))) +
     geom_boxplot() +
@@ -805,6 +806,62 @@ ggarrange(
 
 ggsave(paste("../../results/", today, "/sim_benchmark",".pdf", sep = ""), height = 9, width = 8)
 ```
+
+# plot - simulations: compare accuracy across shape and shuffle
+
+```{r}
+
+ggplot(params_corr, aes(x = variable, y = correlation, color = as.factor(cov))) +
+    geom_boxplot() +
+    facet_grid(shuffle+shape~as.factor(cov), labeller = labeller(shuffle = c("TRUE" = "dispersed", "FALSE" = "tandem"))) +
+    scale_color_scico_d(palette = "hawaii") +
+    theme(axis.title.x=element_blank(),
+          axis.text.x = element_text(angle = 45, hjust = 1),
+          legend.position = "top",
+          strip.text.x = element_blank(),
+          strip.background.x = element_blank()) +
+  labs(y = "Correlation\ntrue vs estimated AF", color = "coverage")
+
+ggsave(paste("../../results/", today, "/sim_benchmark_shape_shuffle",".pdf", sep = ""), height = 10, width = 7)
+```
+
+# plot - simulations: compare accuracy across error models
+
+```{r}
+
+ggplot(params_corr, aes(x = variable, y = correlation, color = as.factor(cov))) +
+    geom_boxplot() +
+    facet_grid(sequencer~as.factor(cov)) +
+    scale_color_scico_d(palette = "hawaii") +
+    theme(axis.title.x=element_blank(),
+          axis.text.x = element_text(angle = 45, hjust = 1),
+          legend.position = "top",
+          strip.text.x = element_blank(),
+          strip.background.x = element_blank()) +
+  labs(y = "Correlation\ntrue vs estimated AF", color = "coverage")
+
+ggsave(paste("../../results/", today, "/sim_benchmark_sequencer",".pdf", sep = ""), height = 7, width = 7)
+```
+
+# plot - simulations: lm of factors affecting accuracy
+
+```{r}
+mod <- lm(correlation ~ k + L + shape + shuffle + sequencer + variable + cov,params_corr)
+
+summary(mod)
+
+plot(mod)
+```
+
+# benchmarks - empirical
+
+```{r}
+
+```
+
+
+
+
 
 # single population simulations
 
