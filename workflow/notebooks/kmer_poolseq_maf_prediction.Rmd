@@ -921,7 +921,7 @@ real_vs_varscan$VarFreq = as.numeric(gsub("%", "", real_vs_varscan$VarFreq))/100
 # calculate correlations between varscan and truth
 correlate_data <- real_vs_varscan %>%
                 group_by(cov) %>% 
-                summarise(r = cor(round(af*7), round(VarFreq*7)), n = n())
+                summarise(r = cor(round(af*7), VarFreq*7), n = n())
 
 correlate_data$n <- correlate_data$n/nrow(real_ac)*100
 
@@ -930,8 +930,8 @@ new_names <- paste(c("~1x", "~2x", "~4x", "~8x", "~16x"), "\nn = ", signif(corre
 
 names(new_names) <- c("2e+05", "4e+05", "8e+05", "1600000", "3200000")
 
-plot_real_vs_varscan <- ggplot(real_vs_varscan, aes(x = as.factor(round(af*7)), y = round(VarFreq*7))) +
-  geom_boxplot() +
+plot_real_vs_varscan <- ggplot(real_vs_varscan, aes(x = as.factor(round(af*7)), y = VarFreq*7)) +
+  geom_boxplot(outlier.shape = NA, coef = 0) +
   #geom_violin() +
   #geom_bin2d(binwidth = 1) +
   #geom_count() +
@@ -976,7 +976,7 @@ names(real_freqk)[1:2] = c("CHROM", "POS")
 
 real_vs_freqk <- merge(real_ac[,c("CHROM", "POS", "af")], real_freqk[,c("CHROM", "POS", "X2", "cov")], by = c("CHROM", "POS"))
 
-rm(real_freqk, freqk_pos, freqk_index, freqk_field_len)
+rm(real_freqk, freqk_pos, freqk_index, freqk_field_len, real_varscan)
 gc()
 
 # calculate correlations between varscan and truth
@@ -984,7 +984,7 @@ real_vs_freqk$cov <- as.numeric(real_vs_freqk$cov)
 
 correlate_freqk_data <- real_vs_freqk %>%
                 group_by(cov) %>% 
-                summarise(r = cor(round(af*7), round(X2*7), use = "pairwise.complete.obs"), n = n())
+                summarise(r = cor(round(af*7), X2*7, use = "pairwise.complete.obs"), n = n())
 
 correlate_freqk_data$n <- correlate_freqk_data$n/nrow(real_ac)*100
 
@@ -992,8 +992,9 @@ correlate_freqk_data$n <- correlate_freqk_data$n/nrow(real_ac)*100
 new_freqk_names <- paste("n = ", signif(correlate_freqk_data$n, 2), "%",  ", r = ", signif(correlate_freqk_data$r, 2),sep = "")
 names(new_freqk_names) <- c("2e+05", "4e+05", "8e+05", "1600000", "3200000")
 
-plot_real_vs_freqk <- ggplot(real_vs_freqk, aes(x = as.factor(round(af*7)), y = round(X2*7))) +
-  geom_boxplot() +
+plot_real_vs_freqk <- ggplot(real_vs_freqk, aes(x = as.factor(round(af*7)), y = X2*7)) +
+  geom_boxplot(outlier.shape = NA, coef = 0) +
+  #geom_violin() +
   facet_wrap(~as.factor(cov), ncol = 5, labeller = as_labeller(new_freqk_names)) +
   geom_abline(slope = 1, intercept = 0, color = "red", lwd = 2) +
   labs(x = "Pseudo-pool count", y = "Freqk count")

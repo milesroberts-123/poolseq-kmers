@@ -341,8 +341,8 @@ rule real_freebayes_vg:
         n=config["poolsize"],
     shell:
         """
-        freebayes-parallel <(fasta_generate_regions.py {input.fai} 100000) {threads} -f {input.reffasta} -p {params.n} --min-alternate-count 2 --min-alternate-fraction 0.001 --use-best-n-alleles 4 -g 1000 --variant-input {input.vcf} --only-use-input-alleles --pooled-discrete {input.trimbam} > {output}
-        #freebayes -f {input.reffasta} -p {params.n} --min-alternate-count 2 --min-alternate-fraction 0.001 --use-best-n-alleles 4 -g 1000 --variant-input {input.vcf} --only-use-input-alleles --pooled-discrete {input.trimbam} > {output}
+        #freebayes-parallel <(fasta_generate_regions.py {input.fai} 100000) {threads} -f {input.reffasta} -p {params.n} --use-best-n-alleles 2 --variant-input {input.vcf} --only-use-input-alleles --pooled-discrete {input.trimbam} > {output}
+        freebayes -f {input.reffasta} -p {params.n} --use-best-n-alleles 2 --variant-input {input.vcf} --only-use-input-alleles --pooled-discrete {input.trimbam} > {output}
         """
 
 rule real_varscan_vg:
@@ -353,11 +353,14 @@ rule real_varscan_vg:
         "real_varscan_results/{num}_{chr}.tsv",
     conda:
         "../envs/varscan.yaml"
+    params:
+        mincount=config["mincount"],
+        minfreq=config["minfreq"]
     benchmark:
         "benchmarks/real_data/varscan_vg_{num}_{chr}.bench"
     shell:
         """
-        samtools mpileup -f {input.reffasta} {input.trimbam} | varscan pileup2snp 1> {output}
+        samtools mpileup -f {input.reffasta} {input.trimbam} | varscan pileup2snp --min-coverage {params.mincount} --min-var-freq {params.minfreq} 1> {output}
         """
 
 rule real_poolsnp_vg:
@@ -372,6 +375,7 @@ rule real_poolsnp_vg:
     params:
         wd=get_wd,
         mincount=config["mincount"],
+        minfreq=config["minfreq"]
     conda:
         "../envs/poolsnp.yaml"
     benchmark:
@@ -386,8 +390,8 @@ rule real_poolsnp_vg:
         names=foobar \
         max-cov=0.9999 \
         min-cov={params.mincount} \
-        min-count={params.mincount} \
-        min-freq=0.01 \
+        min-count=1 \
+        min-freq={params.minfreq} \
         miss-frac=0 \
         badsites=1 \
         allsites=0 \
