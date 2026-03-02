@@ -5,14 +5,15 @@ mamba activate bcftools
 # path to reference genome
 # chromosome names should be same as vcf
 # all letters should be capital
-#ref=/global/scratch/users/milesroberts/tmp/arabidopsis_thaliana_tair10_ncbi/data/GCF_000001735.4/at_upper.fa
+ref=/global/scratch/users/milesroberts/tmp/arabidopsis_thaliana_tair10_ncbi/data/GCF_000001735.4/at_upper.fa
 #ref=/global/scratch/users/milesroberts/tmp/brassica_rapa_plantpan_data/br.genome.gene/Chiifu.genome.fasta
 #ref=/global/scratch/users/milesroberts/tmp/brassica_napus_plantpan_data/bn.genome.gene/zs11_upper.fa
-ref=/global/scratch/users/milesroberts/tmp/solanum_lycopersicum_plantpan_data/to.genome.gene/SL5.genome.fasta
+#ref=/global/scratch/users/milesroberts/tmp/solanum_lycopersicum_plantpan_data/to.genome.gene/SL5.genome.fasta
 
 # loop through variant types from plantpan
 #declare -a vartype=("snp" "ins" "cpg" "cpl" "del" "dup" "hdr" "inval" "invdp" "invtr" "tdm" "trans")
 declare -a vartype=("snp" "ins" "del")
+declare -a vartype=("cpg" "cpl")
 
 for var in "${vartype[@]}"
 do

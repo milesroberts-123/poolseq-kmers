@@ -350,7 +350,8 @@ rule real_varscan_vg:
         reffasta=config["real_fasta"],
         trimbam="splits/{num}/{chr}.bam",
     output:
-        "real_varscan_results/{num}_{chr}.tsv",
+        snp="real_varscan_results/{num}_{chr}_snp.tsv",
+        indel="real_varscan_results/{num}_{chr}_indel.tsv"
     conda:
         "../envs/varscan.yaml"
     params:
@@ -360,7 +361,8 @@ rule real_varscan_vg:
         "benchmarks/real_data/varscan_vg_{num}_{chr}.bench"
     shell:
         """
-        samtools mpileup -f {input.reffasta} {input.trimbam} | varscan pileup2snp --min-coverage {params.mincount} --min-var-freq {params.minfreq} 1> {output}
+        samtools mpileup -f {input.reffasta} {input.trimbam} | varscan pileup2snp --min-coverage {params.mincount} --min-var-freq {params.minfreq} 1> {output.snp}
+        samtools mpileup -f {input.reffasta} {input.trimbam} | varscan pileup2indel --min-coverage {params.mincount} --min-var-freq {params.minfreq} 1> {output.indel}
         """
 
 rule real_poolsnp_vg:

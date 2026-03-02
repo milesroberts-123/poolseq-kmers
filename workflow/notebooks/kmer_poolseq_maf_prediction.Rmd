@@ -47,6 +47,7 @@ theme_set(
 ```{r}
 # get allele counts from vcfR object
 get_allele_counts <- function(vcf) {
+  print("Counting alleles...")
   gt <- vcf@gt[, -1]
 
   gt <- as.data.frame(gt)
@@ -879,7 +880,7 @@ plot(mod)
 ```{r}
 
 # ground truth vcf data
-real_vcf <- read.vcfR("/global/scratch/users/milesroberts/tmp/arabidopsis_thaliana_plantpan_data/at.genetics.variation/final.vcf.gz")
+real_vcf <- read.vcfR("/global/scratch/users/milesroberts/tmp/arabidopsis_thaliana_plantpan_data/at.genetics.variation/athal_snps_ins_del.vcf.gz")
 
 real_ac <- get_allele_counts(real_vcf)
 real_ac <- as.data.frame(real_ac)
@@ -931,7 +932,7 @@ new_names <- paste(c("~1x", "~2x", "~4x", "~8x", "~16x"), "\nn = ", signif(corre
 names(new_names) <- c("2e+05", "4e+05", "8e+05", "1600000", "3200000")
 
 plot_real_vs_varscan <- ggplot(real_vs_varscan, aes(x = as.factor(round(af*7)), y = VarFreq*7)) +
-  geom_boxplot(outlier.shape = NA, coef = 0) +
+  geom_boxplot(outlier.shape = NA, coef = 3) +
   #geom_violin() +
   #geom_bin2d(binwidth = 1) +
   #geom_count() +
@@ -993,7 +994,7 @@ new_freqk_names <- paste("n = ", signif(correlate_freqk_data$n, 2), "%",  ", r =
 names(new_freqk_names) <- c("2e+05", "4e+05", "8e+05", "1600000", "3200000")
 
 plot_real_vs_freqk <- ggplot(real_vs_freqk, aes(x = as.factor(round(af*7)), y = X2*7)) +
-  geom_boxplot(outlier.shape = NA, coef = 0) +
+  geom_boxplot(outlier.shape = NA, coef = 3) +
   #geom_violin() +
   facet_wrap(~as.factor(cov), ncol = 5, labeller = as_labeller(new_freqk_names)) +
   geom_abline(slope = 1, intercept = 0, color = "red", lwd = 2) +
@@ -1001,10 +1002,39 @@ plot_real_vs_freqk <- ggplot(real_vs_freqk, aes(x = as.factor(round(af*7)), y = 
 
 ggsave(paste("../../results/", today, "/emp_benchmark_freqk",".pdf", sep = ""), height = 3, width = 9)
 
+# load freebayes data
+real_freebayes_files <- list.files("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/real_freebayes_results", full.names = T) 
+
+real_freebayes <- lapply(real_freebayes_files, read.vcfR)
+
+cov_levels_freebayes <- as.numeric(gsub("_.*", "", gsub(".*/", "", real_freebayes_files)))
+
+real_freebayes_ac <- lapply(real_freebayes, get_allele_counts)
+
+real_freebayes_ac <- mapply(cbind, real_freebayes_ac, "cov"=cov_levels_freebayes, SIMPLIFY=F)
+real_freebayes_ac <- do.call("rbind", real_freebayes_ac)
+
+real_freebayes_ac <- as.data.frame(real_freebayes_ac)
+
+real_freebayes_ac$allele_counts <- as.numeric(real_freebayes_ac$allele_counts)
+
+real_freebayes_ac$freeFreq <- real_freebayes_ac$allele_counts/14
+
+real_vs_freebayes <- merge(real_ac[,c("CHROM", "POS", "af")], real_freebayes_ac[c("CHROM", "POS", "freeFreq", "cov")], by = c("CHROM", "POS"))
+
+# calculate correlations between freebayes and truth
+real_vs_freebayes$cov <- as.numeric(real_vs_freebayes$cov)
+
+correlate_freebayes_data <- real_vs_freebayes %>%
+                group_by(cov) %>% 
+                summarise(r = cor(round(af*7), freeFreq*7, use = "pairwise.complete.obs"), n = n())
+
+correlate_freebayes_data$n <- correlate_freebayes_data$n/nrow(real_ac)*100
+
 # bring it all together!
 ggarrange(plot_real_vs_varscan, plot_real_vs_freqk, nrow = 2, labels = c("A", "B"), font.label = list(size = 16, color = "black", family = "Helvetica"))
 
-ggsave(paste("../../results/", today, "/emp_benchmark",".pdf", sep = ""), height = 7, width = 9)
+ggsave(paste("../../results/", today, "/emp_benchmark",".pdf", sep = ""), height = 5, width = 9)
 ```
 
 
