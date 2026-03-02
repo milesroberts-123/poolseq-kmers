@@ -342,7 +342,7 @@ rule real_freebayes_vg:
     shell:
         """
         #freebayes-parallel <(fasta_generate_regions.py {input.fai} 100000) {threads} -f {input.reffasta} -p {params.n} --use-best-n-alleles 2 --variant-input {input.vcf} --only-use-input-alleles --pooled-discrete {input.trimbam} > {output}
-        freebayes -f {input.reffasta} -p {params.n} --use-best-n-alleles 2 --variant-input {input.vcf} --only-use-input-alleles --pooled-discrete {input.trimbam} > {output}
+        freebayes -f {input.reffasta} -p {params.n} --use-best-n-alleles 2 --pooled-discrete {input.trimbam} > {output}
         """
 
 rule real_varscan_vg:
