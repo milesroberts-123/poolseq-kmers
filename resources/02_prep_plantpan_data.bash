@@ -12,8 +12,8 @@ ref=/global/scratch/users/milesroberts/tmp/brassica_rapa_plantpan_data/br.genome
 
 # loop through variant types from plantpan
 #declare -a vartype=("snp" "ins" "cpg" "cpl" "del" "dup" "hdr" "inval" "invdp" "invtr" "tdm" "trans")
-#declare -a vartype=("snp" "ins" "del")
-declare -a vartype=("cpg" "cpl" "dup" "hdr" "inval" "invdp" "invtr" "tdm" "trans")
+declare -a vartype=("snp" "ins" "del")
+#declare -a vartype=("cpg" "cpl" "dup" "hdr" "inval" "invdp" "invtr" "tdm" "trans")
 
 for var in "${vartype[@]}"
 do

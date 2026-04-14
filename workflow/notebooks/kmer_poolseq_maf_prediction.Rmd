@@ -23,6 +23,8 @@ library(fitPS)
 library(scico)
 library(stringr)
 library(XML)
+#library(ggbeeswarm)
+library(ggforce)
 
 # date to mark plots/outputs
 today <- Sys.Date()
@@ -45,6 +47,12 @@ theme_set(
 
 # common functions
 ```{r}
+
+#
+rmse <- function(obs, pred){
+  sqrt(mean((obs - pred)^2))
+}
+
 # get allele counts from vcfR object
 get_allele_counts <- function(vcf) {
   print("Counting alleles...")
@@ -165,7 +173,8 @@ for (i in 1:nrow(assembly_info)) {
 write.table(results, paste("assembly_completeness_stats_", today, ".tsv", sep = ""), sep = "\t", row.names = F, quote = F)
 ```
 
-# Fit zeta distributions to k-mer count histograms and compare to genome size estimates
+# Fit zeta distributions to k-mer count histograms
+
 ```{r}
 my_histos <- list.files(path = "/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/kmc_histo_results/", pattern = ".histo")
 
@@ -176,14 +185,14 @@ histos_to_plot <- my_histos[grepl(paste(ref_seq_ids_to_plot, collapse = "|"), my
 results <- NULL
 num_skipped <- 0
 
+output <- paste("../../results/", today, "/kmc_histo_fits.txt", sep = "")
+
 for (one_histo in my_histos) {
   # for(one_histo in histos_to_plot) {
   # Initialize a flag to indicate if an error occurred in this iteration
   skip_to_next <- FALSE
 
   histo <- read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/kmc_histo_results/", one_histo, sep = ""), header = F)
-
-  # plot(log10(histo$V1), log10(histo$V2))
 
   data <- histo$V2
 
@@ -224,11 +233,6 @@ for (one_histo in my_histos) {
 
   r2 <- rsq(log10(compare$data), log10(compare$zeta))
 
-  # sse = sum( (compare$data - compare$zeta)^2 )
-  # sst = sum( (compare$data - mean(compare$data))^2 )
-
-  # r2 = 1 - sse/sst
-
   # plot some fits
   if (one_histo %in% histos_to_plot) {
     print("Plotting...")
@@ -258,8 +262,17 @@ for (one_histo in my_histos) {
     r2 = r2
   )
 
-  results <- rbind(results, result)
+  #results <- rbind(results, result)
+  
+  write.table(result, output, row.names = F, quote = F, sep = "\t", append = T, col.names=!file.exists(output))
 }
+
+```
+
+## Plot zeta distributions
+
+```{r}
+results <- read.table("../../results/2026-03-19/kmc_histo_fits.txt", sep = "\t", header = T)
 
 # separate data by k
 results$k <- NA
@@ -350,7 +363,7 @@ extra_point_data <- data.frame(
 shape_sample_size <- results %>% dplyr::count(k, kingdom)
 
 plot_violin_boxplot_shape <- ggplot(results, aes(x = as.factor(k), y = shape)) +
-  geom_violin(lwd = 1.1) +
+  geom_violin(lwd = 1.1, draw_quantiles = c(0.5)) +
   facet_wrap(~kingdom, ncol = 1) +
   geom_point(
     data = extra_point_data,
@@ -371,25 +384,13 @@ plot_violin_boxplot_shape <- ggplot(results, aes(x = as.factor(k), y = shape)) +
       "worm" = "grey80"
     )
   ) +
-  geom_boxplot(width = 0.25, color = "grey", alpha = 0.4) +
+  #geom_boxplot(width = 0.25, color = "grey", alpha = 0.4) +
   geom_text(data = shape_sample_size, aes(as.factor(k), 17.5, label = paste("n =", n)), vjust = 1.25) +
   theme(legend.position = "None", axis.title.y = element_text(angle = 0, vjust = 0.5)) +
-  labs(x = "k", y = "\u03b6 shape parameter") +
+  labs(x = "k", y = "\u03D5") +
   coord_flip()
 
 ggsave(paste("../../results/", today, "/shape_dist.pdf", sep = ""), device = cairo_pdf, width = 5, height = 5)
-
-# percent unique k-mers
-# ggplot(results, aes(x = as.factor(k), y = perc_uniq_kmers)) +
-#   geom_violin(lwd = 1.1) +
-#   facet_wrap(~ kingdom, ncol = 1) +
-#   theme_minimal() +
-#   theme(text = element_text(size = 20, family = "Helvetica", colour = "black"),
-#         axis.text = element_text(colour = "black"),
-#         legend.position = "None",
-#         axis.title.y = element_text(angle = 0, vjust = 0.5)) +
-#   labs(x = "k", y = "Percent uni-mers") +
-#   coord_flip()
 
 # compare plants vs animals
 median(results[(results$k == 31) & (results$kingdom == "Plants"), "shape"])
@@ -425,7 +426,7 @@ plot_point_size_shape <- ggplot(results_genome_size, aes(x = expected_ungapped_l
     axis.text = element_text(colour = "black")
   ) +
   scale_y_continuous(limits = c(1, 7)) +
-  labs(x = "Expected genome size (bp)", y = "\u03b6 shape parameter")
+  labs(x = "Expected genome size (bp)", y = "\u03D5")
 
 ggsave(paste("../../results/", today, "/shape_vs_genome_size.pdf", sep = ""), device = cairo_pdf, width = 9, height = 3)
 
@@ -447,7 +448,7 @@ plot_point_size_shape_k31 <- ggplot(results_genome_size[(results_genome_size$k =
     axis.text = element_text(colour = "black")
   ) +
   scale_y_continuous(limits = c(1, 6)) +
-  labs(x = "Expected genome size (bp)", y = "\u03b6 shape parameter", title = bquote(R^2 == .(signif(r2_size_shape_k31, 3))))
+  labs(x = "Expected genome size (bp)", y = "\u03D5", title = bquote(R^2 == .(signif(r2_size_shape_k31, 3))))
 
 ggsave(paste("../../results/", today, "/shape_vs_genome_size_k31.pdf", sep = ""), device = cairo_pdf, width = 9, height = 3)
 
@@ -514,7 +515,7 @@ plot_point_zeta_sampling <- ggplot(zeta_sampling_results, aes(x = as.numeric(ran
   facet_wrap(~L, labeller = label_both) +
   guides(size = "none") +
   theme(plot.title = element_text(hjust = 1)) +
-  labs(x = "k-mer count in genome", y = "Number of k-mers", color = "s", shape = "k")
+  labs(x = "k-mer count in genome", y = "Number of k-mers", color = "\u03D5", shape = "k")
 
 ggsave(paste("../../results/", today, "/zeta_ksL.pdf", sep = ""), device = cairo_pdf, width = 9, height = 3)
 
@@ -523,7 +524,7 @@ plot_fig1 <- grid.arrange(plot_point_zeta_example, plot_violin_boxplot_shape, pl
 
 # plot_fig1_patchwork <- ((plot_point_zeta_example + plot_violin_boxplot_shape + plot_point_size_shape_k31) / plot_point_zeta_sampling) + plot_annotation(tag_levels = "A")
 
-ggsave(paste("../../results/", today, "/fig1.pdf", sep = ""), plot_fig1, device = cairo_pdf, width = 10, height = 7)
+ggsave(paste("../../results/", today, "/zeta_distributions.pdf", sep = ""), plot_fig1, device = cairo_pdf, width = 10, height = 7)
 ```
 
 # load simulation parameters
@@ -594,10 +595,14 @@ bench_summary$index_step[(bench_summary$variable == "freqk_index") | ((bench_sum
 bench_summary$variable <- gsub("_", " ", bench_summary$variable)
 bench_summary$variable <- gsub("giraffe ", "giraffe+", bench_summary$variable)
 
-plot_bench_s_call <- ggplot(subset(bench_summary, index_step == "Calling"), aes(x = variable, y = value, color = as.factor(cov))) +
-  geom_boxplot() +
-  #facet_wrap(index_step~., scales = "free") +
-  #theme(axis.text.x = element_text(angle = 45, hjust=1), legend.position = "top", legend.title = element_text(hjust = 0.5)) +
+#### PLOT ####
+bench_summary_calling <- subset(bench_summary, index_step == "Calling") %>% sample_frac(size = 0.01)
+
+plot_bench_s_call <- ggplot(bench_summary_calling, aes(x = variable, y = value, color = as.factor(cov))) +
+  #geom_violin(draw_quantiles = c(0.25,0.5,0.75)) +
+  geom_sina(alpha = 0.1, maxwidth = 1) +
+  geom_sina(shape = 1, stroke = .8) +
+  #geom_point(bench_summary_calling %>% group_by(variable, cov) %>% mutate(med = median(value)), mapping = aes(x = variable, y = med, group = cov)) +
   theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
         axis.ticks.x=element_blank(),
@@ -607,10 +612,10 @@ plot_bench_s_call <- ggplot(subset(bench_summary, index_step == "Calling"), aes(
   scale_color_scico_d(palette = "hawaii") +
   labs(y = "Runtime (s)", color = "Coverage", x = "Workflow")
 
-plot_bench_s_index <- ggplot(subset(bench_summary, index_step == "Indexing"), aes(x = variable, y = value, color = as.factor(n))) +
-  geom_boxplot() +
-  #facet_wrap(index_step~., scales = "free") +
-  #theme(axis.text.x = element_text(angle = 45, hjust=1), legend.position = "top", legend.title.align=0.5) +
+bench_summary_index <- subset(bench_summary, index_step == "Indexing")
+
+plot_bench_s_index <- ggplot(bench_summary_index, aes(x = variable, y = value, color = as.factor(n))) +
+  geom_violin(draw_quantiles = c(0.25,0.5,0.75)) +
   theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
         axis.ticks.x=element_blank(),
@@ -622,7 +627,7 @@ plot_bench_s_index <- ggplot(subset(bench_summary, index_step == "Indexing"), ae
 
 ggarrange(plot_bench_s_index, plot_bench_s_call, nrow = 1, ncol = 2, labels = c("A", "B"), font.label = list(size = 16, family = "Helvetica"))
 
-ggsave(paste("../../results/", today, "/time.pdf", sep = ""), height = 4, width = 8)
+ggsave(paste("../../results/", today, "/time.pdf", sep = ""), height = 4, width = 10)
 
 ## plot memory
 bench_memory <- bench_params %>%
@@ -647,8 +652,14 @@ bench_memory$index_step[(bench_memory$variable == "freqk_index") | ((bench_memor
 bench_memory$variable <- gsub("_", " ", bench_memory$variable)
 bench_memory$variable <- gsub("giraffe ", "giraffe+", bench_memory$variable)
 
-plot_bench_mem_call <- ggplot(subset(bench_memory, index_step == "Calling"), aes(x = variable, y = value, color = as.factor(cov))) +
-  geom_boxplot() +
+#### PLOT ####
+bench_memory_calling <- subset(bench_memory, index_step == "Calling") %>% sample_frac(size = 0.1)
+
+plot_bench_mem_call <- ggplot(bench_memory_calling, aes(x = variable, y = value, color = as.factor(cov))) +
+  #geom_boxplot() +
+  geom_sina(alpha = 0.1, maxwidth = 1) +
+  #geom_sina(shape = 1, stroke = .8) +
+  #stat_gradientinterval() +
   facet_zoom(y = value <= 1100, show.area = T, zoom.size = 1.5) +
   theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
@@ -660,7 +671,7 @@ plot_bench_mem_call <- ggplot(subset(bench_memory, index_step == "Calling"), aes
   labs(y = "Memory (Mb)", color = "Coverage", x = "Workflow")
 
 plot_bench_mem_index <- ggplot(subset(bench_memory, index_step == "Indexing"), aes(x = variable, y = value, color = as.factor(n))) +
-  geom_boxplot() +
+  geom_violin(draw_quantiles = c(0.25, 0.5, 0.75)) +
   #facet_wrap(index_step~., scales = "free") +
   theme(axis.title.x=element_blank(), legend.position = "none") +
   scale_color_scico_d(palette = "lajolla", begin = 0.05, end = 0.95) +
@@ -683,10 +694,14 @@ ggsave(paste("../../results/", today, "/time_memory.pdf", sep = ""), height = 7,
 
 results <- NULL
 
+output <- paste("../../results/", today, "/parameters_correlations.tsv", sep = "")
+
 to_plot <- c(10:12)
 
 for (i in params$ID) {
-  print(paste("Processing simulation ", i, "...", sep = ""))
+  if(i %% 10 == 0){
+    print(paste(Sys.time(), " - Processing simulation ", i, "...", sep = ""))
+  }
   
   # load in actual allele freqs from simulations
   true_af <- read.table(paste("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/slim_results/allele_freqs_", i, "_0.txt", sep = ""), col.names = c("chrom", "pos", "ref", "alt", "ns", "af", "ac"))
@@ -754,7 +769,7 @@ for (i in params$ID) {
     
   true_af <- merge(true_af, poolsnp[,c("chrom", "pos", "poolsnp_af")], by = c("chrom", "pos"), all.x = T)
   
-  plotdata <- melt(true_af, id = c("chrom", "pos", "af"))
+  plotdata <- reshape2::melt(true_af, id = c("chrom", "pos", "af"))
   
   plotdata$variable <- gsub("_af", "", plotdata$variable)
   
@@ -766,11 +781,13 @@ for (i in params$ID) {
   
   cor_by_sim <- plotdata %>% 
     dplyr::group_by(variable) %>% 
-    summarise(correlation = cor(af, value, use = "pairwise.complete.obs"), n = n())
+    summarise(correlation = cor(af, value, use = "pairwise.complete.obs"), n = n(), rmse = rmse(af, value)))
   
   cor_by_sim$ID = i
   
-  results <- rbind(results, cor_by_sim)
+  #results <- rbind(results, cor_by_sim)
+  
+  write.table(cor_by_sim, output, row.names = F, quote = F, sep = "\t", append = T, col.names=!file.exists(output))
   
   if (i %in% to_plot){
     ggplot(plotdata, aes(x = af, y = value)) +
@@ -785,11 +802,11 @@ for (i in params$ID) {
   }
 }
 
-params_corr <- merge(params, results, by = "ID")
+#params_corr <- merge(params, results, by = "ID")
 
-params_corr$variable <- as.factor(params_corr$variable)
+#params_corr$variable <- as.factor(params_corr$variable)
 
-write.table(params_corr, paste("../../results/", today, "/parameters_correlations.tsv", sep = ""), row.names = F, quote = F, sep = "\t")
+#write.table(params_corr, paste("../../results/", today, "/parameters_correlations.tsv", sep = ""), row.names = F, quote = F, sep = "\t")
 
 ```
 
@@ -797,7 +814,9 @@ write.table(params_corr, paste("../../results/", today, "/parameters_correlation
 
 ```{r}
 
-params_corr <- read.table(paste("../../results/2026-02-21/parameters_correlations.tsv", sep = ""), header = T, sep = "\t")
+corr_results <- read.table(paste("../../results/2026-03-17/parameters_correlations.tsv", sep = ""), header = T, sep = "\t")
+
+params_corr <- merge(params, corr_results, by = "ID")
 
 plot_bench_corr <- ggplot(params_corr, aes(x = variable, y = correlation, color = as.factor(cov))) +
     geom_boxplot() +
@@ -810,6 +829,20 @@ plot_bench_corr <- ggplot(params_corr, aes(x = variable, y = correlation, color 
           strip.text.x = element_blank()) +
   labs(x = "workflow", y = "Correlation\ntrue vs estimated AF", color = "coverage")
 
+cov_labs <- c("10x", "25x", "50x", "100x", "150x")
+names(cov_labs) <- c("10", "25", "50", "100", "150")
+
+params_corr$cov <- factor(params_corr$cov, levels = c(10, 25, 50, 100, 150), labels = c("10x", "25x", "50x", "100x", "150x"))
+
+plot_bench_rmse <- ggplot(params_corr, aes(x = variable, y = rmse, color = cov)) +
+    geom_violin(draw_quantiles = c(0.25, 0.5, 0.75)) +
+    facet_wrap(cov~., ncol = 5, nrow = 1) +
+    scale_color_scico_d(palette = "hawaii") +
+    theme(axis.title.x=element_blank(),
+          axis.text.x = element_text(angle = 45, hjust = 1),
+          legend.position = "None") +
+  labs(x = "Workflow", y = "RMSE\ntrue vs estimated AF", color = "Coverage")
+
 ggarrange(
           ggarrange(plot_bench_s_index, 
             plot_bench_s_call, 
@@ -820,7 +853,7 @@ ggarrange(
             labels = c("A", "B", "C", "D"), 
             font.label = list(size = 16, family = "Helvetica")
           ),
-          plot_bench_corr,
+          plot_bench_rmse,
           nrow = 2,
           labels = c("A","E"),
           font.label = list(size = 16, family = "Helvetica"))
@@ -833,8 +866,8 @@ ggsave(paste("../../results/", today, "/sim_benchmark",".pdf", sep = ""), height
 
 ```{r}
 
-ggplot(params_corr, aes(x = variable, y = correlation, color = as.factor(cov))) +
-    geom_boxplot() +
+ggplot(params_corr, aes(x = variable, y = rmse, color = as.factor(cov))) +
+    geom_violin(draw_quantiles = c(0.25,0.5,0.75)) +
     facet_grid(shuffle+shape~as.factor(cov), labeller = labeller(shuffle = c("TRUE" = "dispersed", "FALSE" = "tandem"))) +
     scale_color_scico_d(palette = "hawaii") +
     theme(axis.title.x=element_blank(),
@@ -842,7 +875,7 @@ ggplot(params_corr, aes(x = variable, y = correlation, color = as.factor(cov))) 
           legend.position = "top",
           strip.text.x = element_blank(),
           strip.background.x = element_blank()) +
-  labs(y = "Correlation\ntrue vs estimated AF", color = "coverage")
+  labs(y = "RMSE\ntrue vs estimated AF", color = "coverage")
 
 ggsave(paste("../../results/", today, "/sim_benchmark_shape_shuffle",".pdf", sep = ""), height = 10, width = 7)
 ```
@@ -851,8 +884,8 @@ ggsave(paste("../../results/", today, "/sim_benchmark_shape_shuffle",".pdf", sep
 
 ```{r}
 
-ggplot(params_corr, aes(x = variable, y = correlation, color = as.factor(cov))) +
-    geom_boxplot() +
+ggplot(params_corr, aes(x = variable, y = rmse, color = as.factor(cov))) +
+    geom_violin(draw_quantiles = c(0.25,0.5,0.75)) +
     facet_grid(sequencer~as.factor(cov)) +
     scale_color_scico_d(palette = "hawaii") +
     theme(axis.title.x=element_blank(),
@@ -860,7 +893,7 @@ ggplot(params_corr, aes(x = variable, y = correlation, color = as.factor(cov))) 
           legend.position = "top",
           strip.text.x = element_blank(),
           strip.background.x = element_blank()) +
-  labs(y = "Correlation\ntrue vs estimated AF", color = "coverage")
+  labs(y = "RMSE\ntrue vs estimated AF", color = "coverage")
 
 ggsave(paste("../../results/", today, "/sim_benchmark_sequencer",".pdf", sep = ""), height = 7, width = 7)
 ```
@@ -896,7 +929,7 @@ gc()
 real_ac <- real_ac[(real_ac$multi == 0),]
 
 # load varscan results
-real_varscan_files <- list.files("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/real_varscan_results", full.names = T) 
+real_varscan_files <- list.files("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/real_athal_7_results/real_varscan_results", full.names = T) 
 
 real_varscan <- lapply(real_varscan_files, read.table, header = T, sep = "\t")
 
@@ -931,23 +964,28 @@ new_names <- paste(c("~1x", "~2x", "~4x", "~8x", "~16x"), "\nn = ", signif(corre
 
 names(new_names) <- c("2e+05", "4e+05", "8e+05", "1600000", "3200000")
 
+x_range_varscan <- seq(min(real_vs_varscan$af*7) - 1, max(real_vs_varscan$af*7) + 1)
+y_range_varscan <- seq(min(round(real_vs_varscan$VarFreq*7), na.rm = T) - 1, max(round(real_vs_varscan$VarFreq*7), na.rm = T) + 1)
+
 plot_real_vs_varscan <- ggplot(real_vs_varscan, aes(x = as.factor(round(af*7)), y = VarFreq*7)) +
-  geom_boxplot(outlier.shape = NA, coef = 3) +
+  #geom_boxplot(outlier.shape = NA, coef = 3) +
   #geom_violin() +
   #geom_bin2d(binwidth = 1) +
+  geom_bin_2d(breaks = list(x = x_range_varscan - 0.5, y = y_range_varscan - 0.5)) +
+  scale_fill_scico(palette = "buda", trans = "log10") +
   #geom_count() +
   facet_wrap(~as.factor(cov), ncol = 5, labeller = as_labeller(new_names)) +
   theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
         axis.ticks.x=element_blank()) +
-  geom_abline(slope = 1, intercept = 0, color = "red", lwd = 2) +
+  geom_abline(slope = 1, intercept = 0, color = "black", lwd = 1.2) +
   labs(x = "Pseudo-pool count", y = "Varscan count")
   #scale_fill_gradient(trans = "log")
 
 ggsave(paste("../../results/", today, "/emp_benchmark_varscan",".pdf", sep = ""), height = 3, width = 9)
 
 #
-real_freqk_files <- list.files("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/real_freqk_results", pattern = "calls.txt", recursive = T, full.names = T) 
+real_freqk_files <- list.files("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/real_athal_7_results/real_freqk_results", pattern = "calls.txt", recursive = T, full.names = T) 
 
 freqk_field_len <- lapply(real_freqk_files, function(x){ max(count.fields(x, sep = "|")) })
 
@@ -963,7 +1001,7 @@ real_freqk <- mapply(cbind, real_freqk, "cov"=freqk_cov_levels, SIMPLIFY=F)
 real_freqk <- do.call("rbind", real_freqk)
 
 # load index
-freqk_index <- read.table("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/ref_index.txt", sep = ",", header = F)
+freqk_index <- read.table("/global/scratch/users/milesroberts/moi_lab_projects/poolseq-kmers/workflow/real_athal_7_results/ref_index.txt", sep = ",", header = F)
 
 freqk_pos <- rbind(freqk_index[,2:3], freqk_index[,2:3], freqk_index[,2:3], freqk_index[,2:3], freqk_index[,2:3])
 
@@ -985,7 +1023,7 @@ real_vs_freqk$cov <- as.numeric(real_vs_freqk$cov)
 
 correlate_freqk_data <- real_vs_freqk %>%
                 group_by(cov) %>% 
-                summarise(r = cor(round(af*7), X2*7, use = "pairwise.complete.obs"), n = n())
+                summarise(r = cor(round(af*7), X2*7, use = "pairwise.complete.obs"), n = n(), rmse = rmse(round(af*7), X2*7))
 
 correlate_freqk_data$n <- correlate_freqk_data$n/nrow(real_ac)*100
 
@@ -993,11 +1031,20 @@ correlate_freqk_data$n <- correlate_freqk_data$n/nrow(real_ac)*100
 new_freqk_names <- paste("n = ", signif(correlate_freqk_data$n, 2), "%",  ", r = ", signif(correlate_freqk_data$r, 2),sep = "")
 names(new_freqk_names) <- c("2e+05", "4e+05", "8e+05", "1600000", "3200000")
 
+x_range <- seq(min(real_vs_freqk$af*7) - 1, max(real_vs_freqk$af*7) + 1)
+y_range <- seq(min(real_vs_freqk$X2*7, na.rm = T) - 1, max(real_vs_freqk$X2*7, na.rm = T) + 1)
+
 plot_real_vs_freqk <- ggplot(real_vs_freqk, aes(x = as.factor(round(af*7)), y = X2*7)) +
-  geom_boxplot(outlier.shape = NA, coef = 3) +
+  #geom_boxplot(outlier.shape = NA, coef = 3) +
   #geom_violin() +
+  #geom_hex() +
+  geom_bin_2d(breaks = list(x = x_range - 0.5, y = y_range - 0.5)) +
+  #geom_density_2d() +
   facet_wrap(~as.factor(cov), ncol = 5, labeller = as_labeller(new_freqk_names)) +
-  geom_abline(slope = 1, intercept = 0, color = "red", lwd = 2) +
+  scale_fill_scico(palette = "buda", trans = "log10") +
+  #scale_fill_gradient(trans = "log10") +
+  geom_abline(slope = 1, intercept = 0, color = "black", lwd = 1.2) +
+  #geom_line(mapping=aes(x = x, y = y), data = data.frame(x=1:6,y=1:6), lwd = 1.2) +
   labs(x = "Pseudo-pool count", y = "Freqk count")
 
 ggsave(paste("../../results/", today, "/emp_benchmark_freqk",".pdf", sep = ""), height = 3, width = 9)
@@ -1032,10 +1079,61 @@ ggsave(paste("../../results/", today, "/emp_benchmark_freqk",".pdf", sep = ""), 
 # correlate_freebayes_data$n <- correlate_freebayes_data$n/nrow(real_ac)*100
 
 # bring it all together!
-ggarrange(plot_real_vs_varscan, plot_real_vs_freqk, nrow = 2, labels = c("A", "B"), font.label = list(size = 16, color = "black", family = "Helvetica"))
+ggarrange(plot_real_vs_varscan, plot_real_vs_freqk, nrow = 2, labels = c("A", "B"), font.label = list(size = 16, color = "black", family = "Helvetica"), common.legend = T, legend = "right")
 
-ggsave(paste("../../results/", today, "/emp_benchmark",".pdf", sep = ""), height = 5, width = 9)
+ggsave(paste("../../results/", today, "/emp_benchmark.pdf", sep = ""), height = 5, width = 9)
 ```
+
+# plot - structural variant simulations
+
+```{r}
+
+#### Spanning k-mer lengths ####
+
+sv_sims <- read.csv("../../data/results_rep.csv", header = T)
+
+sv_sims$region_type <- gsub(" repeat", "", sv_sims$region_type)
+sv_sims$k <- gsub("^", "k: ", sv_sims$k)
+sv_sims$coverage <- gsub("$", "X", sv_sims$coverage)
+
+ggplot(sv_sims, aes(x = as.factor(freq_nominal), y = af_alt, color = as.factor(coverage))) +
+  geom_violin(alpha = 0.1, draw_quantiles = 0.5) +
+  ggforce::geom_sina(alpha = 0.2) +
+  scale_color_scico_d(palette = "hawaii") +
+  facet_grid(as.factor(region_type)+as.factor(size)~as.factor(coverage)+as.factor(k)) +
+  theme(legend.position = "none") +
+  labs(x = "True allele frequency", y = "Freqk estimated frequency")
+
+ggsave(paste("../../results/", today, "/sim_benchmark_visor_k_span",".pdf", sep = ""), height = 11, width = 9)
+
+#### Spanning all repeat levels ####
+sv_sims_repeat_span <- read.csv("../../data/results_var_selectedpos_w_repeatscore.csv", header = T)
+
+sv_sims_repeat_span$region_type <- gsub(" repeat", "", sv_sims_repeat_span$region_type)
+
+sv_sims_repeat_span$region_type <- gsub("moderate", "mid", sv_sims_repeat_span$region_type)
+
+sv_sims_repeat_span$k <- gsub("^", "k: ", sv_sims_repeat_span$k)
+sv_sims_repeat_span$coverage <- gsub("$", "X", sv_sims_repeat_span$coverage)
+
+ggplot(sv_sims_repeat_span, aes(x = as.factor(freq_nominal), y = af_alt, color = as.factor(coverage))) +
+  #geom_violin(alpha = 0.1, draw_quantiles = 0.5) +
+  ggforce::geom_sina(alpha = 0.75) +
+  scale_color_scico_d(palette = "hawaii") +
+  facet_grid(as.factor(region_type)+as.factor(size)~as.factor(coverage)) +
+  theme(legend.position = "none") +
+  labs(x = "True allele frequency", y = "Freqk estimated frequency")
+
+ggsave(paste("../../results/", today, "/sim_benchmark_visor_repeat_span",".pdf", sep = ""), height = 11, width = 6)
+```
+
+
+
+
+
+
+
+
 
 
 
