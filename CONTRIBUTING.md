@@ -1,6 +1,24 @@
-# Contributing to Our Project
+# Contributing
 
 Thank you for considering contributing to our project! We welcome contributions from the community and are grateful for your support.
+
+## Contribution suggestions
+
+- [ ] add more variant callers
+
+- [ ] add structural variants randomly to samples VCF file output from slim
+
+- [ ] add more types of slim simulations: time series slim simulation, purifying selection simulations, bulk-segregant analysis simulation, >2 population simulations, etc.
+
+- [ ] add more sequencing simulators: dwgsim, mason, or add another sequencer error profile
+
+- [ ] [Try rewriting discosnp as a shadow rule](https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#shadow-rules)
+
+- [ ] add R notebook to snakemake
+
+- [ ] unit tests
+
+- [ ] integration tests
 
 ## How to Contribute
 

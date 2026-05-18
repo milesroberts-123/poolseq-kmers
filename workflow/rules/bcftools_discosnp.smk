@@ -30,3 +30,4 @@ rule bcftools_discosnp:
         # output allele depths
         bcftools query -f '%CHROM %POS %REF %ALT [ %AD]\n' {output.bgzip} | sed 's:,:\t:g' > {output.final}
         """
+

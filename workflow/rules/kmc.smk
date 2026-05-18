@@ -8,15 +8,15 @@ rule kmc:
         counts=temp("kmc_results/kmer_counts_{SID}_{PID}.txt"),
         list=temp("{SID}_{PID}.list"),
         pre=temp("tmp_counts_{SID}_{PID}.kmc_pre"),
-        suf=temp("tmp_counts_{SID}_{PID}.kmc_suf")
+        suf=temp("tmp_counts_{SID}_{PID}.kmc_suf"),
     conda:
         "../envs/kmc.yaml"
     benchmark:
         "benchmarks/kmc/{SID}_{PID}.bench"
     params:
-        mincount=config["mincount"],
-        maxcount=config["maxcount"],
-        k=config["k"],
+        mincount=1,
+        maxcount=10000,
+        k=lookup(query="ID == '{ID}'", within=parameters, cols="k"),
     shell:
         """
         # create directory

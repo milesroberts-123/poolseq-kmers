@@ -7,7 +7,7 @@ def get_samples(wildcards):
     p = int(wildcards.PID)
 
     # create list of sample names from slim convention
-    samples = list(range(1 + n*p, n*(p+1) + 1))
+    samples = list(range(1 + n * p, n * (p + 1) + 1))
     samples = ["i" + str(x) for x in samples]
 
     # create comma-sep list for bcftools

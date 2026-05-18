@@ -1,6 +1,9 @@
+# snakemake arguments
 executor: slurm
-jobs: 10000
-cores: 10000
+jobs: unlimited
+cores: all
+max-jobs-per-timespan: 1000/1s
+scheduler-subsample: 100000
 
 # rules to execute locally, because they're too fast to bother with cluster submission
 # localrules: all_one_pops, all_two_pops, all
@@ -10,16 +13,28 @@ default-resources:
     slurm_account: "co_moilab"
     slurm_partition: "savio3_htc"
     slurm_qos: "savio_lowprio"
-    #slurm_extra: "--qos=savio_lowprio"
+    #slurm_extra: "--exclude n0187.savio3"
     ntasks: 1
     cpus_per_task: 1
-    runtime: "180m"
+    runtime: "30m"
     mem_mb: 0
 
 # here only rules, which require different (more) resources:
 set-resources:
+    ancestral_genome:
+        runtime: "15m"
+    ancestral_samtools_faidx:
+        runtime: "2m"
+    exact_kmc_histo:
+        runtime: "2m"
+    bcftools_remove_ref:
+        runtime: "5m"
+    bcftools_get_samples:
+        runtime: "5m"
+    seqkit_get_samples:
+        runtime: "5m"
     datasets_rehydrate:
-        time: "2880m"
+        runtime: "2880m"
         cpus_per_task: 10
         retries: 3
     real_fastp:
@@ -29,19 +44,54 @@ set-resources:
     bwa_mem:
         cpus_per_task: 4
     iss:
+        runtime: "120m"
         cpus_per_task: 2
     fastp:
-        cpus_per_task: 2
+        runtime: "15m"
+        cpus_per_task: 1
+    combine_fastqs:
+        runtime: "10m"
+    freqk_index:
+        runtime: "5m"
+    freqk_var_dedup:
+        runtime: "5m"
+    freqk_ref_dedup:
+        runtime: "5m"
     freqk_count:
-        cpus_per_task: 4
+        runtime: "10m"
+        cpus_per_task: 2
+    freqk_call:
+        runtime: "5m"
     real_freqk_count:
         cpus_per_task: 16
+    vg_autoindex:
+        runtime: "5m"
+        cpus_per_task: 2
     vg_giraffe_paired:
-        cpus_per_task: 4
+        cpus_per_task: 2
     vg_giraffe_unpaired:
-        cpus_per_task: 4
-    vg_surject:
-        cpus_per_task: 4
+        cpus_per_task: 2
+    #vg_surject_unpaired:
+    #    cpus_per_task: 2
+    #vg_surject_paired:
+    #    cpus_per_task: 2
+    samtools_sort_paired:
+        runtime: "2m"
+    samtools_sort_unpaired:
+        runtime: "2m"
+    samtools_merge:
+        runtime: "2m"
+    samtools_markdup:
+        runtime: "2m"
+        cpus_per_task: 2
+    varscan_vg:
+        runtime: "15m"
+    freebayes_vg:
+        runtime: "15m"
+    bcftools_freebayes_vg:
+        runtime: "2m"
+    bcftools_poolsnp:
+        runtime: "2m"
     real_vg_autoindex:
         cpus_per_task: 16
     real_vg_giraffe_paired:
@@ -52,6 +102,9 @@ set-resources:
     real_vg_surject:
         cpus_per_task: 16
         runtime: "2880m"
+    freebayes_vg:
+        runtime: "6m"
+        cpus_per_task: 2
     freebayes_a_priori:
         cpus_per_task: 2
     freebayes_de_novo:
@@ -73,14 +126,18 @@ set-threads:
     bwa_mem: 4
     fastp: 2
     iss: 2
-    freqk_count: 4
+    freqk_count: 2
     real_freqk_count: 16
-    vg_giraffe_paired: 4
-    vg_giraffe_unpaired: 4
-    vg_surject: 4
+    vg_autoindex: 2
+    vg_giraffe_paired: 2
+    vg_giraffe_unpaired: 2
+    #vg_surject_paired: 2
+    #vg_surject_unpaired: 2
+    samtools_markdup: 2
     real_vg_giraffe_paired: 16
     real_vg_giraffe_unpaired: 16
     real_vg_surject: 16
     freebayes_a_priori: 1 
     freebayes_de_novo: 1
+    freebayes_vg: 1
     real_freebayes_vg: 16

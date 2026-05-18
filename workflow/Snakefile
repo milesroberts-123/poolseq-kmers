@@ -42,12 +42,11 @@ wildcard_constraints:
     ID="[a-zA-Z0-9]+",
     SID="[a-zA-Z0-9]+",
     PID="[a-zA-Z0-9]+",
-    num="[0-9]+"
-    #chr="[a-zA-Z0-9]+"
+    num="[0-9]+",
+    read="[a-zA-Z0-9]+",
 
 localrules: all_per_sim
 
-#
 # create histograms across reference genomes
 # input function for the rule aggregate
 def aggregate_histos(wildcards):
@@ -60,35 +59,30 @@ def aggregate_stats(wildcards):
     print(checkpoint_output)
     return expand("seqkit_stats_results/{species}.txt", species = glob_wildcards(os.path.join(checkpoint_output, "{i}.fna")).i)
 
-#
+# run all workflow branches at once
 rule all:
     input:
         "calls.txt",
         aggregate_histos,
         aggregate_stats,
-        #expand("kmc_histo_results/{species}_{k}.histo", species = config["species"], k = config["k_zeta"]),
         expand("finished/{SID}_0.done", SID=one_pop_params.index.get_level_values("ID")),
         expand("finished/{SID}_0.done", SID=sweep_params.index.get_level_values("ID")),
         expand("finished/{SID}_{PID}.done", SID=two_pop_params.index.get_level_values("ID"), PID=[0,1]),
-        "multiqc_report.html"
-        #expand("calls_{chr}.vcf", chr = ["A01", "A02", "A03", "A04", "A05", "A06", "A07", "A08", "A09", "A10"])
+        #"multiqc_report.html"
 
 # rule to apply freqk and vg giraffe to real data 
 rule all_empirical:
     input:
         expand("real_freqk_results/{num}/calls.txt", num = config["num_reads"]),
-        expand("real_bcftools_call_results/{num}_{chr}.vcf", chr = config["chroms"], num = config["num_reads"]),
         expand("real_freebayes_results/{num}_{chr}.vcf", chr = config["chroms"], num = config["num_reads"]),
-        expand("real_varscan_results/{num}_{chr}.tsv", chr = config["chroms"], num = config["num_reads"]),
+        expand("real_varscan_results/{num}_{chr}_{var}.tsv", var = ["snp", "indel"],chr = config["chroms"], num = config["num_reads"]),
         expand("{chr}_{num}_real_poolsnp_results.vcf.gz", chr = config["chroms"], num = config["num_reads"])
-        #"real.vcf"
 
 # create histograms across reference genomes
 rule all_histos:
     input:
         aggregate_histos,
         aggregate_stats
-        #expand("kmc_histo_results/{species}_{k}.histo", species = config["species"], k = config["k_zeta"])
 
 # perform simulations
 # additional rule helps with batching
@@ -97,7 +91,7 @@ rule all_sims:
         expand("finished/{SID}_0.done", SID=one_pop_params.index.get_level_values("ID")),
         expand("finished/{SID}_0.done", SID=sweep_params.index.get_level_values("ID")),
         expand("finished/{SID}_{PID}.done", SID=two_pop_params.index.get_level_values("ID"), PID=[0,1]),
-        "multiqc_report.html"
+        #"multiqc_report.html"
 
 rule all_neutral_sims:
     input:
@@ -110,66 +104,6 @@ rule all_sweep_sims:
 rule all_two_sims:
     input:
         expand("finished/{SID}_{PID}.done", SID=two_pop_params.index.get_level_values("ID"), PID=[0,1]),
-
-#rule all_per_sim:
-#    input:
-#        "varscan_results/{SID}_{PID}.tsv",
-#        "smudgeplot_results/{SID}_{PID}_coverages.tsv",
-#        "disco_results/{SID}_{PID}.txt",
-#        "slim_results/allele_freqs_{SID}_{PID}.txt",
-#        "poolsnp_results/{SID}_{PID}.txt",
-#        "freebayes_de_novo_results/{SID}_{PID}.txt",
-#        "freebayes_a_priori_results/{SID}_{PID}.txt",
-#        "freebayes_vg_results/{SID}_{PID}.txt",
-#        "blast_results/{SID}_{PID}.txt",
-#        "hetmers_results/{SID}_{PID}_counts.csv",
-#        "seqkit_results/center_kmer_pairs_{SID}.txt",   
-#        "freqk_results/{SID}_{PID}_counts.txt",
-#        branch(
-#            lookup(query="ID == '{SID}'", within=parameters, cols="simtype") == "twopop",
-#            then="distances_{SID}.txt",
-#            otherwise=None
-#        )
-#    output:
-#        touch("finished/{SID}_{PID}.done")
-
-#def test_if_twopop(wildcards):
-#    simtype = parameters.loc[parameters["ID"] == wildcards.SID, "simtype"]
-#    simtype = str(simtype.iloc[0])
-#    return(simtype == "twopop")
-
-#rule all_per_sim:
-#    input:
-#        branch(
-#            condition=test_if_twopop,
-#            then=["varscan_results/{SID}_{PID}.tsv",
-#                "smudgeplot_results/{SID}_{PID}_coverages.tsv",
-#                "disco_results/{SID}_{PID}.txt",
-#                "slim_results/allele_freqs_{SID}_{PID}.txt",
-#                "poolsnp_results/{SID}_{PID}.txt",
-#                "freebayes_de_novo_results/{SID}_{PID}.txt",
-#                "freebayes_a_priori_results/{SID}_{PID}.txt",
-#                "freebayes_vg_results/{SID}_{PID}.txt",
-#                "blast_results/{SID}_{PID}.txt",
-#                "hetmers_results/{SID}_{PID}_counts.csv",
-#                "seqkit_results/center_kmer_pairs_{SID}.txt",
-#                "freqk_results/{SID}_{PID}_counts.txt",
-#                "distances_{SID}.txt"],
-#            otherwise=["varscan_results/{SID}_{PID}.tsv",
-#                "smudgeplot_results/{SID}_{PID}_coverages.tsv",
-#                "disco_results/{SID}_{PID}.txt",
-#                "slim_results/allele_freqs_{SID}_{PID}.txt",
-#                "poolsnp_results/{SID}_{PID}.txt",
-#                "freebayes_de_novo_results/{SID}_{PID}.txt",
-#                "freebayes_a_priori_results/{SID}_{PID}.txt",
-#                "freebayes_vg_results/{SID}_{PID}.txt",
-#                "blast_results/{SID}_{PID}.txt",
-#                "hetmers_results/{SID}_{PID}_counts.csv",
-#                "seqkit_results/center_kmer_pairs_{SID}.txt",
-#                "freqk_results/{SID}_{PID}_counts.txt"]
-#            )
-#    output:
-#        touch("finished/{SID}_{PID}.done")
 
 def get_simtype(wildcards):
     simtype = parameters.loc[parameters["ID"] == wildcards.SID, "simtype"]
@@ -192,7 +126,8 @@ rule all_per_sim:
                     #"blast_results/{SID}_{PID}.txt",
                     #"hetmers_results/{SID}_{PID}_counts.csv",
                     #"seqkit_results/center_kmer_pairs_{SID}.txt",
-                    "freqk_results/{SID}_{PID}_counts.txt"),
+                    "freqk_results/{SID}_{PID}_calls.txt",
+                    "exact_kmc_histo_results/{SID}.histo"),
                 "sweep": ("blast_results/{SID}_{PID}.txt", 
                     "slim_results/allele_freqs_{SID}_{PID}.txt"),
                 "twopop": ("slim_results/allele_freqs_{SID}_{PID}.txt",
@@ -201,6 +136,7 @@ rule all_per_sim:
         )
     output:
         touch("finished/{SID}_{PID}.done")
+    priority: 1000
 
 # helper functions
 include: "rules/common.smk"
@@ -211,38 +147,14 @@ include: "rules/datasets.smk"
 # empirical data
 include: "rules/empirical.smk"
 
-# other rules
-include: "rules/ancestral_genome.smk"
-include: "rules/bcftools_discosnp.smk"
-include: "rules/bcftools_poolsnp.smk"
-include: "rules/bcftools_remove_ref.smk"
-include: "rules/bcftools_get_samples.smk"
-include: "rules/bcftools_fill_tags.smk"
-include: "rules/bcftools_freebayes.smk"
-include: "rules/blast.smk"
-include: "rules/makeblastdb.smk"
-include: "rules/bwa_index.smk"
-include: "rules/bwa_mem.smk"
-include: "rules/compress.smk"
-include: "rules/discosnp.smk"
-include: "rules/fastp.smk"
-include: "rules/freebayes.smk"
-include: "rules/hetmers.smk"
-include: "rules/freqk.smk"
-include: "rules/iss.smk"
+# simulations
+include: "rules/simulations.smk"
+
+## sweep simulation specific rules
+include: "rules/sweep.smk"
+
+## two population simulation specific rules
+include: "rules/two_pop.smk"
+
+## rules used in different simulations
 include: "rules/kmc.smk"
-include: "rules/multiqc.smk"
-#include: "rules/poolsnp.smk"
-include: "rules/samtools_faidx.smk"
-include: "rules/seqkit_get_ref.smk"
-include: "rules/seqkit_get_samples.smk"
-include: "rules/seqkit_hetmer_key.smk"
-include: "rules/seqkit_rename.smk"
-include: "rules/slim.smk"
-include: "rules/smudgeplot.smk"
-include: "rules/unitig_caller.smk"
-#include: "rules/varscan.smk"
-include: "rules/vg.smk"
-include: "rules/kmer_distances.smk"
-include: "rules/counting_bloom_filter.smk"
-include: "rules/cbind.smk"
