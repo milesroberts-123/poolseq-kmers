@@ -9,11 +9,19 @@ mamba activate bcftools
 ref=/global/scratch/users/milesroberts/tmp/brassica_rapa_plantpan_data/br.genome.gene/Chiifu.genome.fasta
 #ref=/global/scratch/users/milesroberts/tmp/brassica_napus_plantpan_data/bn.genome.gene/zs11_upper.fa
 #ref=/global/scratch/users/milesroberts/tmp/solanum_lycopersicum_plantpan_data/to.genome.gene/SL5.genome.fasta
+<<<<<<< Updated upstream
 
 # loop through variant types from plantpan
 #declare -a vartype=("snp" "ins" "cpg" "cpl" "del" "dup" "hdr" "inval" "invdp" "invtr" "tdm" "trans")
 declare -a vartype=("snp" "ins" "del")
 #declare -a vartype=("cpg" "cpl" "dup" "hdr" "inval" "invdp" "invtr" "tdm" "trans")
+=======
+ref=/home/miles/moi_lab_projects/poolseq-kmers/data/ncbi_dataset/ncbi_dataset/data/GCF_000001735.4/GCF_000001735.4_TAIR10.1_genomic.fna
+
+# loop through variant types from plantpan
+declare -a vartype=("snp" "ins" "cpg" "cpl" "del" "dup" "hdr" "inval" "invdp" "invtr" "tdm" "trans")
+#declare -a vartype=("snp" "ins" "del")
+>>>>>>> Stashed changes
 
 for var in "${vartype[@]}"
 do
@@ -63,12 +71,12 @@ done
 
 # concatenate all variants
 echo Concatenating all variants...
-bcftools concat -a -Oz -o all.vcf.gz all.*.vcf.gz
+bcftools concat -a -Oz -o all.snp.ins.del.vcf.gz all.snp.vcf.gz all.ins.vcf.gz all.del.vcf.gz
 
 # realign indels and remove duplicates
 # merge bi-alleleic records
 echo Normalizing variants...
-bcftools norm -m +any -d all -o norm.vcf.gz -c s -Oz -f $ref all.vcf.gz
+bcftools norm -m +any -d all -o norm.vcf.gz -c s -Oz -f $ref all.snp.ins.del.vcf.gz
 
 # filter out rare variants
 echo Filtering out rare variants...

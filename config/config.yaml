@@ -47,6 +47,7 @@ real_k: 31
 
 ## Arabidopsis thaliana - 7 genomes
 #real_fasta: "/global/scratch/users/milesroberts/tmp/arabidopsis_thaliana_tair10_ncbi/data/GCF_000001735.4/at_upper.fa"
+<<<<<<< Updated upstream
 #real_vcf: "/global/scratch/users/milesroberts/tmp/arabidopsis_thaliana_plantpan_data/at.genetics.variation/final.vcf.gz"
 #num_reads: 
 # - 3200000
@@ -69,6 +70,32 @@ real_k: 31
 # - "ERR3624576"
 # - "ERR3624574"
 # - "ERR3624575"
+=======
+real_fasta: "../data/ncbi_dataset/ncbi_dataset/data/GCF_000001735.4/GCF_000001735.4_TAIR10.1_genomic.fna"
+#real_vcf: "/global/scratch/users/milesroberts/tmp/arabidopsis_thaliana_plantpan_data/at.genetics.variation/final.vcf.gz"
+real_vcf: "../data/at.genetics.variation/norm.cpg.vcf.gz"
+num_reads: 
+ #- 3200000
+ #- 1600000
+ #- 800000
+ #- 400000
+ - 200000
+poolsize: 14
+chroms:
+ - "NC_003070.9"
+ - "NC_003071.7"
+ - "NC_003074.8"
+ - "NC_003075.7"
+ - "NC_003076.8" 
+real_accessions:
+ - "ERR3624579"
+ - "ERR3624577"
+ - "ERR3624578"
+ - "ERR3624573"
+ - "ERR3624576"
+ - "ERR3624574"
+ - "ERR3624575"
+>>>>>>> Stashed changes
 
 ## Brassica rapa
 real_fasta: "/global/scratch/users/milesroberts/tmp/brassica_rapa_plantpan_data/br.genome.gene/Chiifu.genome.fasta"

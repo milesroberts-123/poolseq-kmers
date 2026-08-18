@@ -1,3 +1,9 @@
+**.cast
+**.gif
+**.ncbi/
+**.deb
+**/data
+**.Identifier
 **.png
 **/.parallel
 **/.snakemake
